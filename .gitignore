@@ -16,7 +16,6 @@ server/*.json
 public/*.json
 McserverConfig.json
 core/*.json
-public/common/URL.js
 property.js
 !model/init_config/property.js
 
