@@ -25,6 +25,7 @@ jobs:
       - name: body
         env:
           signKey: ${{ secrets.SIGNKEY }}
+          packerNoRestart : 1
         run: |
           npm install
           node-prune

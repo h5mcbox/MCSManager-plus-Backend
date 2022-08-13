@@ -59,14 +59,6 @@ const cookieParser = require("cookie-parser");
 //gzip压缩
 const compression = require("compression");
 
-//各类层装载 与 初始化
-const ServerModel = require("./model/ServerModel");
-const UserModel = require("./model/UserModel");
-const permission = require("./helper/Permission");
-const counter = require("./core/counter");
-const Schedule = require("./helper/Schedule");
-//const NewsCenter = require("./model/NewsCenter");
-
 //控制台颜色
 const colors = require("colors");
 colors.setTheme({
@@ -82,6 +74,43 @@ colors.setTheme({
   error: "red"
 });
 
+//装载log记录器
+require("./core/log");
+MCSERVER.info("控制面板正在启动中...");
+
+//初始化目录结构环境
+(function initializationRun() {
+  const USERS_PATH = "./users/";
+  const WORKERS_PATH = "./workers/";
+  const SERVER_PATH = "./server/";
+  const SERVER_PATH_SCH = "./server/schedule/";
+  const CENTEN_LOG_JSON_PATH = "./core/info.json";
+  const PUBLIC_URL_PATH = "./public/common/URL.js";
+  const RECORD_PARH = "./server/record_tmp/";
+
+  try {
+    if (!fs.existsSync(USERS_PATH)) fs.mkdirSync(USERS_PATH);
+    if (!fs.existsSync(WORKERS_PATH)) fs.mkdirSync(WORKERS_PATH);
+    if (!fs.existsSync(SERVER_PATH)) fs.mkdirSync(SERVER_PATH);
+    if (!fs.existsSync(SERVER_PATH_SCH)) fs.mkdirSync(SERVER_PATH_SCH);
+    if (!fs.existsSync(RECORD_PARH)) fs.mkdirSync(RECORD_PARH);
+
+    // 生成不 git 同步的文件
+    if (!fs.existsSync(CENTEN_LOG_JSON_PATH)) tools.mCopyFileSync(INIT_CONFIG_PATH + "info_reset.json", CENTEN_LOG_JSON_PATH);
+    if (!fs.existsSync(PUBLIC_URL_PATH)) tools.mCopyFileSync(INIT_CONFIG_PATH + "INIT_URL.js", PUBLIC_URL_PATH);
+  } catch (err) {
+    MCSERVER.error("初始化文件环境失败,建议重启,请检查以下报错:", err);
+  }
+})();
+
+//各类层装载 与 初始化
+const ServerModel = require("./model/ServerModel");
+const UserModel = require("./model/UserModel");
+const permission = require("./helper/Permission");
+const counter = require("./core/counter");
+const Schedule = require("./helper/Schedule");
+//const NewsCenter = require("./model/NewsCenter");
+
 //logo输出
 const LOGO_FILE_PATH = "./core/logo.txt";
 let data = fs.readFileSync(LOGO_FILE_PATH, "utf-8");
@@ -89,10 +118,6 @@ console.log(data);
 
 //全局数据中心 记录 CPU 内存
 MCSERVER.dataCenter = {};
-
-//装载log记录器
-require("./core/log");
-MCSERVER.info("控制面板正在启动中...");
 
 //全局登陆记录器
 MCSERVER.login = {};
@@ -301,31 +326,6 @@ function errorHandler(reason) {
 
 process.on("uncaughtException", errorHandler);
 process.on("unhandledRejection", errorHandler);
-
-//初始化目录结构环境
-(function initializationRun() {
-  const USERS_PATH = "./users/";
-  const WORKERS_PATH = "./workers/";
-  const SERVER_PATH = "./server/";
-  const SERVER_PATH_SCH = "./server/schedule/";
-  const CENTEN_LOG_JSON_PATH = "./core/info.json";
-  const PUBLIC_URL_PATH = "./public/common/URL.js";
-  const RECORD_PARH = "./server/record_tmp/";
-
-  try {
-    if (!fs.existsSync(USERS_PATH)) fs.mkdirSync(USERS_PATH);
-    if (!fs.existsSync(WORKERS_PATH)) fs.mkdirSync(WORKERS_PATH);
-    if (!fs.existsSync(SERVER_PATH)) fs.mkdirSync(SERVER_PATH);
-    if (!fs.existsSync(SERVER_PATH_SCH)) fs.mkdirSync(SERVER_PATH_SCH);
-    if (!fs.existsSync(RECORD_PARH)) fs.mkdirSync(RECORD_PARH);
-
-    // 生成不 git 同步的文件
-    if (!fs.existsSync(CENTEN_LOG_JSON_PATH)) tools.mCopyFileSync(INIT_CONFIG_PATH + "info_reset.json", CENTEN_LOG_JSON_PATH);
-    if (!fs.existsSync(PUBLIC_URL_PATH)) tools.mCopyFileSync(INIT_CONFIG_PATH + "INIT_URL.js", PUBLIC_URL_PATH);
-  } catch (err) {
-    MCSERVER.error("初始化文件环境失败,建议重启,请检查以下报错:", err);
-  }
-})();
 
 
 //开始对 Oneline File Manager 模块进行必要的初始化
