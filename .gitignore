@@ -2,6 +2,7 @@
 server/
 users/
 workers/
+!core/workers/
 .vscode/
 testServer/
 *.exe
