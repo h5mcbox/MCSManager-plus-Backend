@@ -73,6 +73,10 @@
                 <span class="input-group-addon"> 初始内存堆 </span>
                 <input v-bind:disabled="isHighCommande" type="text" class="form-control" v-model="Xms" placeholder="[自动 如需修改请加单位]" />
               </div>
+              <div class="input-group input-group-sm">
+                <span class="input-group-addon"> 服务器存放的Worker </span>
+                <input v-bind:disabled="isHighCommande" type="text" class="form-control" v-model="location" disabled/>
+              </div>
               <div class="row">
                 <div class="col-lg-12">
                   <p>
@@ -134,7 +138,7 @@
                 &nbsp;|&nbsp;
                 <button class="btn btn-primary" v-on:click="toConsole(name)">控制面板</button>
                 &nbsp;|&nbsp;
-                <button class="btn btn-success" v-on:click="toRebulider()">保存设置</button>
+                <button class="btn btn-success" v-on:click="toRebuilder()">保存设置</button>
               </div>
             </div>
           </div>
@@ -177,7 +181,7 @@
           MCSERVER.listenServername = this.oldServerName;
           RES.redirectPage("./template/component/console.html", "server/console", this.oldServerName);
         },
-        toRebulider: function () {
+        toRebuilder: function () {
           var addCmdList = this.addCmd.split(" ");
           if (!TOOLS.isStdText(this.name)) {
             TOOLS.pushMsgWindow("服务器名字不合法！仅限字母数字下划线！");
@@ -202,7 +206,7 @@
             timeLimitDate: this.timeLimitDate,
             stopCommand: this.stopCommand
           };
-          WS.sendMsg("server/rebulider", JSON.stringify(obj));
+          WS.sendMsg("server/rebuilder", JSON.stringify(obj));
           setTimeout(function () {
             RES.redirectPage("./template/server.html", "server/view");
           }, 100);

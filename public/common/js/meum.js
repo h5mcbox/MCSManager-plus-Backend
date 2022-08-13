@@ -2,6 +2,22 @@
   // 菜单 数据
   MCSERVER.meumObject = {};
 
+  MCSERVER.meumObject.bannedMeum = [
+    {
+      class: "glyphicon-home",
+      name: "首页",
+      link: "./template/banned.html",
+      api: "genuser/banned",
+      select: true
+    },
+    {
+      class: "glyphicon-equalizer",
+      name: "技术支持",
+      link: "./template/gen_about.html",
+      api: null,
+      select: false
+    }
+  ];
   //非管理员
   MCSERVER.meumObject.notMasterMeum = [
     {
@@ -23,6 +39,13 @@
       name: "技术支持",
       link: "./template/gen_about.html",
       api: null,
+      select: false
+    },
+    {
+      class: "glyphicon-qrcode",
+      name: "双因素认证",
+      link: "./template/2FA.html",
+      api: "userset/2fa/getAuthURL",
       select: false
     }
   ];
@@ -63,6 +86,20 @@
       name: "服务",
       link: "./template/feelback.html",
       api: null,
+      select: false
+    },
+    {
+      class: "glyphicon-qrcode",
+      name: "双因素认证",
+      link: "./template/2FA.html",
+      api: "userset/2fa/getAuthURL",
+      select: false
+    },
+    {
+      class: "glyphicon-tasks",
+      name: "分布式服务",
+      link: "./template/workers.html",
+      api: "workers",
       select: false
     }
   ];

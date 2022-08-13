@@ -4,12 +4,20 @@ const DataModel = require("../DataModel");
 const { createPassword } = require("./CryptoMine");
 const fs = require("fs");
 const uuid = require("uuid");
+const totp = require("../../helper/totp");
+
 
 const USER_SAVE_PATH = "users/";
 class User {
   constructor(username, password, salt) {
     let now = new Date().toLocaleString();
-    this.dataModel = new DataModel(USER_SAVE_PATH + username);
+    if(username.startsWith("#_")||username.startsWith("_")){
+      this.dataModel = new DataModel(USER_SAVE_PATH + username, true);  
+      this.dataModel.OnlyMemoryUser=true;
+    }else{
+      this.dataModel = new DataModel(USER_SAVE_PATH + username);
+      this.dataModel.OnlyMemoryUser=false;
+    }
 
     this.dataModel.username = username;
     this.dataModel.password = password || undefined;
@@ -23,16 +31,19 @@ class User {
   }
 
   load() {
+    if(this.dataModel.OnlyMemoryUser)return this;
     this.dataModel.load();
     return this;
   }
 
   save() {
+    if(this.dataModel.OnlyMemoryUser)return this;
     this.dataModel.save();
     return this;
   }
 
   delete() {
+    if(this.dataModel.OnlyMemoryUser)return undefined;
     let path = "./" + USER_SAVE_PATH + this.dataModel.username + ".json";
     fs.unlinkSync(path);
   }
@@ -46,7 +57,7 @@ class User {
     return false;
   }
 
-  getPasswordMD5() {
+  getPasswordHash() {
     return this.dataModel.password;
   }
 

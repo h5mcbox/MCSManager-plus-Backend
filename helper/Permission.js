@@ -1,4 +1,48 @@
 const loginedContainer = require("./LoginedContainer");
+const userCenter=require("../model/UserModel").userCenter();
+
+let groupRights={
+  loaded:false
+};
+/**
+ * @param {String} username
+ * @returns {String}
+*/
+function getUserGroup(username){
+  let user=userCenter.get(username);
+  if(username.substring(0,1)==="#")return "master";
+  if(user){
+    return user.dataModel.group;
+  }else{
+    return "";
+  }
+}
+function loadRights(){
+  var props=MCSERVER.localProperty;
+  for(let i of Object.keys(props.rights)){
+    let t=props.rights[i],a=new Set();
+    do{
+      for(let f of t.rights)a.add(f);
+      t=props.rights[t.inherits];
+    }while(t);
+    groupRights[i]=a;
+  };
+  return groupRights.loaded=true;
+};
+/**
+ * @returns {Set}
+ * @param {String} group 
+ */
+function getRights(group){
+  return groupRights[group];
+}
+function hasRights(username,rname){
+  if(!groupRights.loaded)loadRights();
+  if(username.substring(0,1)==="#")return true;
+  let group=getUserGroup(username);
+  let rights=getRights(group);
+  return rights.has(rname);
+}
 
 function randomString(len) {
   len = len || 32;
@@ -24,7 +68,7 @@ function defaultFalseCallBack(req, res, ResponseKey, ResponseValue, notAjaxRedir
 }
 
 module.exports.randomString = randomString;
-
+module.exports.groups = ()=>Object.keys(groupRights).filter(e=>e!=="loaded");
 module.exports.needLogin = (req, res, trueCallBack, falseCallBack) => {
   let username = req.session["username"];
   if (req.session["login"] && loginedContainer.isLogined(req.sessionID, username)) {
@@ -37,33 +81,14 @@ module.exports.needLogin = (req, res, trueCallBack, falseCallBack) => {
   return false;
 };
 
-const counter = require("../core/counter");
+module.exports.hasRights=(u,r)=>hasRights(u,r);
+module.exports.getUserGroup=u=>getUserGroup(u);
 
-module.exports.isMaster = (wsSession, notPermssionCounter) => {
-  if (!wsSession.username || typeof wsSession.username != "string") {
-    return false;
-  }
-  if (!loginedContainer.isLogined(wsSession.sessionID, wsSession.username)) {
-    return false;
-  }
-  let username = wsSession.username.trim() || "";
-  if (username) {
-    if (username.substr(0, 1) == "#") {
-      return true;
-    }
-  }
-  //某些可能只是单纯的检查，并不需要无权记录
-  if (notPermssionCounter) counter.plus("notPermssionCounter");
-  return false;
-};
-
-// 基于 SESSION 的管理员判断
-module.exports.IsSessionMaster = (req, res) => {
+// 基于 SESSION 的权限判断
+module.exports.hasSessionRights = (req, res,r) => {
   if (this.needLogin(req, res)) {
     const username = req.session["username"];
-    if (username.substr(0, 1) == "#") {
-      return true;
-    }
+    return hasRights(username,r);
   }
   return false;
 };
@@ -91,7 +116,7 @@ module.exports.isCanServer = (userName, serverName) => {
   userName = userName.trim();
   serverName = serverName.trim();
   if (userName == "" || serverName == "") return false;
-  if (userName.substr(0, 1) == "#") return true;
+  if (getUserGroup(userName)==="master") return true;
 
   if (userModel.userCenter().isExist(userName)) {
     let user = userModel.userCenter().get(userName);

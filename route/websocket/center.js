@@ -7,6 +7,7 @@ const permssion = require("../../helper/Permission");
 const userModel = require("../../model/UserModel");
 const os = require("os");
 const mversion = require("../../helper/version");
+const workerModel=require("../../model/WorkerModel");
 
 const MB_SIZE = 1024 * 1024;
 let serverM = serverModel.ServerManager();
@@ -32,7 +33,7 @@ MCSERVER.logCenter.initLogData("CPU", 24);
 MCSERVER.logCenter.initLogData("RAM", 24);
 
 // 数据缓存，以避免频繁请求带来的损耗
-setInterval(function () {
+setInterval(async function () {
   // CPU 值缓存
   osUtils.cpuUsage(function (v) {
     cacheCPU = (v * 100).toFixed(2);
@@ -53,7 +54,15 @@ setInterval(function () {
   }
   //统计封号ip数量
   for (let k in MCSERVER.login) MCSERVER.login[k] > 10 ? banipc++ : banipc;
-
+  //获取正在运行服务器的数量
+  let allOnlineServers=0;
+  for(let item of workerModel.getOnlineWorkers()){
+    var view=await item.send("server/view");
+    var split=(view).split("\n\n")
+    var res=JSON.parse(split[0]);
+    if(res.ResponseKey!=="server/view")return false;
+    res.ResponseValue.items.forEach(e=>{if(e.data.run)allOnlineServers++});
+  }
   //缓存值
   cacheSystemInfo = {
     rss: (usage.rss / MB_SIZE).toFixed(1),
@@ -65,7 +74,7 @@ setInterval(function () {
     uptime: os.uptime(),
     //more
     serverCounter: serverM.getServerCounter(),
-    runServerCounter: serverM.getRunServerCounter(),
+    runServerCounter: allOnlineServers,
     userCounter: userM.getUserCounter(),
     userOnlineCounter: onliec,
     WebsocketCounter: sockec,
@@ -77,7 +86,8 @@ setInterval(function () {
     root: mversion.root,
     verisonA: mversion.verisonA,
     verisonB: mversion.verisonB,
-    system: mversion.system
+    system: mversion.system,
+    isPanel:true
   };
 
   let useMemBai = ((os.freemem() / os.totalmem()) * 100).toFixed(0);
@@ -88,8 +98,16 @@ setInterval(function () {
   setTimeout(() => counter.save(), 0); //让其异步地去保存
 }, MCSERVER.localProperty.data_center_times);
 
+//重启逻辑
+WebSocketObserver().listener("center/restart", (data) => {
+  if(!permssion.hasRights(data.WsSession.username,"restart"))return;
+  MCSERVER.log("面板重启...");
+  process.send({restart:"./_app.js"});
+  process.emit("SIGINT");
+});
+
 //数据中心
 WebSocketObserver().listener("center/show", (data) => {
-  if (!permssion.isMaster(data.WsSession)) return;
+  if(!permssion.hasRights(data.WsSession.username,"center"))return;
   response.wsSend(data.ws, "center/show", cacheSystemInfo);
 });

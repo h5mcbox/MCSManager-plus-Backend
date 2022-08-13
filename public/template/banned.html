@@ -1,0 +1,25 @@
+<div id="BannedPanel" class="OneContainer">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="Panel">
+        <div class="PanelTitle">通知</div>
+        <div class="PanelBody">
+          <h2>您的账号已被禁用</h2>
+          <p>操作者:{{bannedBy}}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  MI.rListener("onload", function () {
+    // 定义页面地址
+    TOOLS.definePage("template/banned", "genuser/banned", "");
+    VIEW_MODEL.newVue("BannedPanel", {
+      el: "#BannedPanel"
+    });
+  });
+
+  MI.rListener("onend", function () {});
+</script>

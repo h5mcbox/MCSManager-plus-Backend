@@ -1,0 +1,110 @@
+<div id="TwoFA" class="OneContainer">
+  <div class="row">
+    <div class="col-md-8">
+      <div class="Panel PanelBlack">
+        <div class="PanelTitle">两步验证</div>
+        <div class="PanelBody" style="max-height: 90vh; overflow-y: scroll">
+          <p></p>
+          <div id="gen_re_2fa" class="OneContainer">
+            <div class="row">
+              <div class="col-sm-5">
+                <div class="Panel PanelBlue">
+                  <div class="PanelItem">设置两步验证</div>
+                  <div class="PanelBody" v-if="!randomPassword">
+                    <p>设置两步验证，让您的账号更安全。</p>
+                  </div>
+                  <div class="PanelBody" v-if="randomPassword">
+                    <p>设置两步验证，让您的账号更安全。</p>
+                    <p>注意,只使用公钥登录的用户无法启用2FA,请先点击下方按钮,重置密码</p>
+                    <div class="PanelItem text-center" v-on:click="toRePassword()">
+                      <span class="glyphicon glyphicon-lock" aria-hidden="true"></span>
+                      修改密码
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-7" v-if="!randomPassword">
+                <div class="Panel PanelBlack">
+                  <div id="qrc" style="text-align: center;align-content: center;"></div>
+                  <div class="PanelItem">验证码表单</div>
+                  <div class="PanelBody">
+                    <div class="row">
+                      <div class="col-lg-12">
+                        <table class="PropertiesList" width="100%">
+                          <tr>
+                            <th>项目标题</th>
+                            <th></th>
+                          </tr>
+                          <tr>
+                            <th>验证码</th>
+                            <th>
+                              <div class="input-group input-group-sm">
+                                <input type="password" class="form-control" aria-describedby="basic-addon1" v-model="TwoFACode" />
+                              </div>
+                            </th>
+                          </tr>
+                        </table>
+                        <br />
+                        <p>确认无误后，您可以进行以下操作:</p>
+                        <div class="Line"></div>
+                        <div class="PanelItemMuem">
+                          <button class="btn btn-info" v-on:click="toReCode()">启用两步验证</button>
+                          <button class="btn btn-info" v-on:click="toDisableTwoFA()">禁用两步验证</button>
+                          <button class="btn btn-info" v-on:click="toUpdate()">更新两步验证密钥</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  MI.rListener("onload", function () {
+    // 定义页面地址
+    TOOLS.definePage("template/2fa", "userset/2fa/getAuthURL", null);
+    VIEW_MODEL.newVue("TwoFA",{
+      el: "#TwoFA",
+      data: {
+        TwoFACode: "",
+      },
+      methods: {
+        toUpdate: function () {
+          WS.sendMsg("userset/2fa/updateKey","{}")
+        },
+        toReCode: function () {
+          var obj = {
+            TwoFACode: Number(this.TwoFACode)
+          };
+          WS.sendMsg("userset/2fa/set", JSON.stringify(obj));
+        },
+        toRePassword: function () {
+          let username=MCSERVER.username;
+          if(MCSERVER.group==="master"){
+            RES.redirectPage("./template/component/user.html","userset/view",username);
+          }else{
+            RES.redirectPage("./template/component/gen_repassword.html","genuser/view","");
+          }
+        },
+        toDisableTwoFA: function(){
+          var obj = {
+            TwoFACode: Number(this.TwoFACode)
+          };
+          WS.sendMsg("userset/2fa/disable", JSON.stringify(obj));
+        }
+      }
+    });
+    setTimeout(()=>{
+      new QRCode(document.querySelector("#qrc"),{text:VIEW_MODEL["TwoFA"].authURL,width:180,height:180});
+    },700);
+  });
+
+  MI.rListener("onend", function () {});
+</script>

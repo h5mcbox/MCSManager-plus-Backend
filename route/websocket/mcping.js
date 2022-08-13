@@ -3,6 +3,7 @@ const { userCenter } = require("../../model/UserModel");
 const serverModel = require("../../model/ServerModel");
 const permssion = require("../../helper/Permission");
 const response = require("../../helper/Response");
+const workerModel = require("../../model/WorkerModel");
 
 // 保存配置
 WebSocketObserver().listener("mcping/config_save", (data) => {
@@ -14,17 +15,14 @@ WebSocketObserver().listener("mcping/config_save", (data) => {
     return;
   }
   if (permssion.isCanServer(userName, serverName)) {
-    const mcserver = serverModel.ServerManager().getServer(serverName);
-    mcserver.dataModel.mcpingConfig = {
-      mcpingName: jsonObject.mcpingConfig.mcpingName || "",
-      mcpingHost: jsonObject.mcpingConfig.mcpingHost || "",
-      mcpingPort: jsonObject.mcpingConfig.mcpingPort || "",
-      mcpingMotd: jsonObject.mcpingConfig.mcpingMotd || ""
-    };
-    // console.log('mcping mcserver.dataModel:', mcserver.dataModel)
-    mcserver.dataModel.save();
+    const server = serverModel.ServerManager().getServer(serverName);
+    let serverLocation = server.dataModel.location;
+    if(!workerModel.get(serverLocation)){
+      response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
+    }
+    workerModel.get(serverLocation).send("mcping/config_save",data.body).then((_)=>{data.ws.send(_)});
   }
-  response.wsSend(data.ws, "mcping/config_save", true);
+  //response.wsSend(data.ws, "mcping/config_save", true);
 });
 
 // 获取配置
@@ -32,8 +30,11 @@ WebSocketObserver().listener("mcping/config_save", (data) => {
 WebSocketObserver().listener("mcping/config", (data) => {
   const serverName = data.body || "";
   if (serverName) {
-    const mcserver = serverModel.ServerManager().getServer(serverName);
-    response.wsSend(data.ws, "mcping/config", mcserver.dataModel.mcpingConfig);
-    mcserver.dataModel.save();
+    const server = serverModel.ServerManager().getServer(serverName);
+    let serverLocation = server.dataModel.location;
+    if(!workerModel.get(serverLocation)){
+      response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
+    }
+    workerModel.get(serverLocation).send("mcping/config",data.body).then((_)=>{data.ws.send(_)})
   }
 });

@@ -1,6 +1,7 @@
 # myself files
 server/
 users/
+workers/
 .vscode/
 testServer/
 *.exe
@@ -16,6 +17,7 @@ McserverConfig.json
 core/*.json
 public/common/URL.js
 property.js
+!model/init_config/property.js
 
 tmp_upload/
 
@@ -88,3 +90,12 @@ typings/
 .env
 
 start.bat
+
+# Tls Server Cert
+
+cert.pem
+key.pem
+
+#Deleted files
+
+README-traditional.md

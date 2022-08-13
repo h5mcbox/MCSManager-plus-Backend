@@ -1,0 +1,223 @@
+<div id="Workers" class="OneContainer">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="Panel PanelBlack">
+        <div class="PanelTitle">Worker管理</div>
+        <div class="PanelBody">
+          <div class="row">
+            <div class="col-sm-12 PanelItemF">
+              <div class="PanelItem" v-on:click="createWorker = !createWorker">
+                <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                添加服务器
+              </div>
+              <div class="PanelItem" v-on:click="refresh()">
+                <span class="glyphicon glyphicon-repeat" aria-hidden="true"></span>
+                从内存刷新
+              </div>
+            </div>
+          </div>
+          <div class="ItemTableList"></div>
+          <div class="PanelItem ItemTableList" v-for="item of items">
+            <div class="row">
+              <div class="col-md-7">
+                <div class="PanelItemInfo">
+                  <h4>
+                    <span class="color-green">[Worker] </span>
+                    <span v-text="item.workername"></span>
+                  </h4>
+                  <div>
+                    <span v-if="item.data.online" class="color-green">已连接</span>
+                    <span v-if="!item.data.online" class="color-red">未连接</span>
+                    | 创建时间:
+                    <span v-text="item.data.createDate"> </span>
+                    | 最后上线:
+                    <span v-text="item.data.lastDate"> </span>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-5 NextCol">
+                <div class="PanelItemMuem">
+                  <!-- <button class="btn btn-primary" v-on:click="">权限配置</button> -->
+
+                  <button class="btn btn-info" v-on:click="toWorkerView(item.workername)">详细信息</button>
+                  <button class="btn btn-info" v-if="item.data.online" v-on:click="toCenter(item.workername)">数据中心</button>
+                  <button class="btn btn-info" v-if="item.data.online" v-on:click="toUpdate(item.workername)">更新Worker</button>
+                  <button class="btn btn-success" v-if="!item.data.online" v-on:click="toOnline(item.workername)">连接</button>
+                  <button class="btn btn-warning" v-else v-on:click="toOffline(item.workername)">断开连接</button>
+                  <span style="margin-left: 8px"> | </span>
+                  <button class="btn btn-danger" v-on:click="toDeleteWorker(item.workername)">删除Worker</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <!--
+    <div class="col-lg-4">
+      <div class="Panel PanelRed">
+        <div class="PanelTitle">分布式服务机制须知</div>
+        <div class="PanelBody">
+          <p class="color-high-red">以#符合开头的均是最高权限账号,请慎重创建</p>
+          <p>Stub</p>
+        </div>
+      </div>
+    </div>
+  -->
+    <div class="col-lg-8">
+      <transition name="slide-fade">
+        <div class="Panel PanelGreen" v-if="createWorker">
+          <div class="PanelItem">创建Worker</div>
+          <div class="PanelBody">
+            <div class="row">
+              <div class="col-sm-6">
+                <p>Worker 名字</p>
+                <div class="input-group input-group-sm">
+                  <span class="input-group-addon"> Worker 名字 </span>
+                  <input type="text" class="form-control" v-model="workername" placeholder="Worker name:" />
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <p>主密钥</p>
+                <div class="input-group input-group-sm">
+                  <span class="input-group-addon"> 主密钥 </span>
+                  <input type="text" class="form-control" v-model="MasterKey" placeholder="主密钥" />
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <p>端点</p>
+                <div class="input-group input-group-sm">
+                  <span class="input-group-addon"> 端点 </span>
+                  <input type="text" class="form-control" v-model="endpoint" />
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-lg-12">
+                <p>当您的数据完善时，即可确认创建新的Worker</p>
+                <div class="Line"></div>
+                <div class="" style="float: right; margin-top: 20px">
+                  <button class="btn btn-primary" v-on:click="toAddWorker()">创建新Worker</button>
+                  <button class="btn btn-warning" v-on:click="createWorker =!createWorker">取消</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </transition>
+    </div>
+  </div>
+</div>
+<script>
+  MI.rListener("onload", function () {
+    // 定义页面地址
+    TOOLS.definePage("template/workers", "workers", null);
+
+    VIEW_MODEL.newVue("Workers", {
+      el: "#Workers",
+      data: {
+        createWorker: false,
+        workername: "",
+        MasterKey: "",
+        endpoint:"",
+      },
+      methods: {
+        toAddWorker: function () {
+          if (!TOOLS.isStdText(this.workername)) {
+            TOOLS.pushMsgWindow("Worker名不合法！请重新输入！");
+            return;
+          }
+          var obj = {
+            workername: this.workername,
+            MasterKey: this.MasterKey,
+            RemoteDescription: {
+              endpoint:this.endpoint
+            }
+          };
+          WS.sendMsg("workers/add", JSON.stringify(obj), function () {
+            PAGE.refresh();
+          });
+        },
+        toDeleteWorker: function (itemWorkername) {
+          var obj = {
+            workername: itemWorkername
+          };
+          var result = confirm("您真的打算删除这个这个Worker吗?");
+          if (!result) return;
+          WS.sendMsg("workers/delete", JSON.stringify(obj), function () {
+            PAGE.refresh();
+          });
+        },
+        toUpdate:async function(itemWorkername){
+          var input=document.createElement("input");
+          input.type="file";
+          var onChanged=new Promise((resolve,reject)=>input.oninput=resolve);
+          input.click();
+          await onChanged;
+          input.oninput=null;
+          blob=input.files[0];
+          if(!blob){
+            return;
+          }
+          var urlo=new URL(location.href);
+          urlo.pathname="/update/worker/"+itemWorkername;
+          await fetch(urlo.href,{
+            method:"POST",
+            body:blob
+          });
+          TOOLS.pushMsgWindow("Worker开始更新");
+        },
+        toCenter:async function(itemWorkername){
+          MCSERVER.workername=itemWorkername;
+          RES.redirectPage("./template/center.html", "workers/center", itemWorkername);
+        },
+        toOnline: function (itemWorkername) {
+          var obj = {
+            workername: itemWorkername
+          };
+          WS.sendMsg("workers/up", JSON.stringify(obj), function () {
+            PAGE.refresh();
+          });
+        },
+        toOffline: function (itemWorkername) {
+          var obj = {
+            workername: itemWorkername
+          };
+          WS.sendMsg("workers/down", JSON.stringify(obj), function () {
+            PAGE.refresh();
+          });
+        },
+        refresh: function () {
+          PAGE.refresh();
+          TOOLS.pushMsgWindow("刷新完毕√");
+        },
+
+        toWorkerView: function (_workername) {
+          RES.redirectPage("./template/component/worker.html", "workers/view", _workername);
+        },
+        toAPIKey: function (username) {
+          // 弹出用户密匙设置窗口
+          PAGE.username = username;
+          TOOLS.popWind({
+            style: {
+              maxWidth: "600px",
+              top: "24%"
+            },
+            title: "用户 " + PAGE.username + " 的密匙设置",
+            template: "template/dialog/apikey.html"
+          });
+        }
+      }
+    });
+    PAGE.time = setInterval(function () {
+      WS.sendMsg("workers", "");
+    }, 1000);
+  });
+
+  //关闭
+  MI.rListener("onend", function () {
+    clearInterval(PAGE.time);
+  });
+</script>

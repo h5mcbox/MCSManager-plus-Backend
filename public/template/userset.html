@@ -26,7 +26,8 @@
               <div class="col-md-7">
                 <div class="PanelItemInfo">
                   <h4>
-                    <span v-if="TOOLS.isMaster(item.username)" class="color-high-red">[管理账号] </span>
+                    <span v-if="item.data.group === 'master'" class="color-high-red">[管理账号] </span>
+                    <span v-else-if="item.data.group === 'banned'" class="color-black">[禁用账号] </span>
                     <span v-else class="color-green">[普通账号] </span>
                     <span v-text="item.username"></span>
                   </h4>
@@ -66,6 +67,7 @@
           <p>普通用户只可以在规定的服务器内操作。</p>
           <p>普通用户无法创建，删除服务器和编辑服务器启动时参数配置。</p>
           <p>普通用户无法查看具体内存值与CPU具体信息，保证主机的信息。</p>
+          <p>用户组设置为"master"为管理账号，"user"为普通账号，"banned"则禁用账号</p>
         </div>
       </div>
     </div>
@@ -83,10 +85,24 @@
                 </div>
               </div>
               <div class="col-sm-6">
-                <p>密码 [字母 数字 符号] (6~18位)</p>
+                <p>密码 [字母 数字 符号] (6~100位)</p>
                 <div class="input-group input-group-sm">
                   <span class="input-group-addon"> 密码 </span>
-                  <input type="text" class="form-control" v-model="password" placeholder="密码 [字母 数字 符号] (6~18位)" />
+                  <input type="text" class="form-control" v-model="password" placeholder="密码 [字母 数字 符号] (6~100位)" />
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <p>公钥 (66位,可选)</p>
+                <div class="input-group input-group-sm">
+                  <span class="input-group-addon"> 公钥 </span>
+                  <input type="text" class="form-control" v-model="LoginPublicKey" />
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <p>公钥 (66位,可选)</p>
+                <div class="input-group input-group-sm">
+                  <span class="input-group-addon"> 公钥 </span>
+                  <input type="text" class="form-control" v-model="userGroup" />
                 </div>
               </div>
             </div>
@@ -122,6 +138,8 @@
         createUser: false,
         username: "",
         password: "",
+        LoginPublicKey:"",
+        userGroup:"user",
         allowedServer: ""
       },
       methods: {
@@ -131,13 +149,19 @@
             TOOLS.pushMsgWindow("用户名不合法！请重新输入！");
             return;
           }
-          if (this.password.length < 6 || this.password.length > 18) {
+          if ((this.password.length < 6 || this.password.length > 18)&&!(this.password.length == 0 && this.LoginPublicKey.length == 66)) {
             TOOLS.pushMsgWindow("密码长度不正确！");
+            return;
+          }
+          if (this.LoginPublicKey.length != 66&&!(this.LoginPublicKey.length==0)) {
+            TOOLS.pushMsgWindow("公钥长度不正确！");
             return;
           }
           var obj = {
             username: this.username,
             password: this.password,
+            newLoginPublicKey: this.LoginPublicKey,
+            newGroup:this.userGroup,
             allowedServer: allwoedServers
           };
           WS.sendMsg("userset/create", JSON.stringify(obj), function () {

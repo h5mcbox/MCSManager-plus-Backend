@@ -99,6 +99,11 @@
               <span class="input-group-addon">项目位置</span>
               <input type="text" class="form-control" placeholder="[自动]" v-model="cwd" />
             </div>
+            <p>填写此框决定服务器存放的Worker(创建后不可再更改)</p>
+            <div class="input-group input-group-sm">
+              <span class="input-group-addon">Worker名</span>
+              <input type="text" class="form-control" v-model="location" required/>
+            </div>
             <div class="PAGE_NewserverNextWapper">
               <button class="btn btn-warning" v-on:click="previousStep">上一步</button>
               <button class="btn btn-success" v-on:click="nextStep">下一步</button>
@@ -237,7 +242,8 @@
         addCmd: "",
         java: "",
         highCommande: "",
-        uploadPercentComplete: 0
+        uploadPercentComplete: 0,
+        location:""
       },
       methods: {
         toCreateServer: function () {
@@ -254,7 +260,8 @@
             Xmx: this.Xmx,
             Xms: this.Xms,
             java: this.Java || "java",
-            highCommande: this.highCommande
+            highCommande: this.highCommande,
+            location:this.location,
           };
           WS.sendMsg("server/create", JSON.stringify(obj));
           RES.redirectPage("./template/server.html", "server/view");
@@ -262,7 +269,8 @@
         toCreaterDir: function () {
           var obj = {
             serverName: this.name,
-            cwd: this.cwd
+            cwd: this.cwd,
+            location:this.location
           };
           WS.sendMsg("server/create_dir", JSON.stringify(obj));
         },
@@ -294,7 +302,7 @@
             var that = this;
             TOOLS.fileupload(
               file,
-              "/fileupload",
+              "/fileupload?location="+this.location,
               {
                 cwd: this.cwd
               },
@@ -319,7 +327,7 @@
       },
       computed: {
         serverCwd: function () {
-          if (this.cwd == "") return "<面板所在目录>/server/server_core/" + this.name + "/";
+          if (this.cwd == "") return "<Worker所在目录>/server/server_core/" + this.name + "/";
           return this.cwd;
         }
       }

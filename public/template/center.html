@@ -4,21 +4,23 @@
       <div class="Panel">
         <div class="PanelTitle PanelBlack">
           <!--请不要怀疑这是在欺骗您数据统计日期来自前端，事实上，后端是在每月1日统计至今，所以是一致的-->
-          控制面板 {{ new Date().getMonth()+1 }}月1日 ~ {{ new Date().getMonth()+1 }}月{{ new Date().getDate() }}日 基础监控
+          {{isPanel?"控制面板":`Worker ${MCSERVER.workername}`}} {{ new Date().getMonth()+1 }}月1日 ~ {{ new Date().getMonth()+1 }}月{{ new Date().getDate() }}日 基础监控
         </div>
         <div class="PanelBody">
           <div class="row">
             <div class="col-md-2 col-sm-4">
               <div class="LogV">{{ loginCounter }} 次</div>
-              <div class="LogK">用户总计登陆次数</div>
+              <div class="LogK">{{isPanel?"用户":"Worker"}}总计{{isPanel?"登录":"连接"}}次数</div>
             </div>
-            <div class="col-md-2 col-sm-4">
-              <div class="LogV">{{ passwordError }} 次</div>
-              <div class="LogK">错误密码登陆次数</div>
-            </div>
-            <div class="col-md-2 col-sm-4">
-              <div class="LogV">{{ banip }} ip</div>
-              <div class="LogK">触发防火墙临时禁封</div>
+            <div v-if="isPanel">
+              <div class="col-md-2 col-sm-4">
+                <div class="LogV">{{ passwordError }} 次</div>
+                <div class="LogK">错误密码登录次数</div>
+              </div>
+              <div class="col-md-2 col-sm-4">
+                <div class="LogV">{{ banip }} ip</div>
+                <div class="LogK">触发防火墙临时禁封</div>
+              </div>
             </div>
             <div class="col-md-2 col-sm-4">
               <div class="LogV">{{ csrfCounter }} 次</div>
@@ -31,6 +33,48 @@
             <div class="col-md-2 col-sm-4">
               <div class="LogV" v-text="time()"></div>
               <div class="LogK">系统正常运行的时间</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row" v-if="isPanel">
+    <div class="col-md-12">
+      <div class="Panel">
+        <div class="PanelTitle">面板管理</div>
+        <div class="PanelBody">
+          <div class="row">
+            <div class="col-sm-12 PanelItemF">
+              <div class="PanelItem" v-on:click="toUpdate()">
+                <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                更新面板
+              </div>
+              <div class="PanelItem" v-on:click="toRestart()">
+                <span class="glyphicon glyphicon-refresh" aria-hidden="true"></span>
+                重启面板
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row" v-else>
+    <div class="col-md-12">
+      <div class="Panel">
+        <div class="PanelTitle">Worker管理</div>
+        <div class="PanelBody">
+          <div class="row">
+            <div class="col-sm-12 PanelItemF">
+              <div class="PanelItem" v-on:click="toUpdate(MCSERVER.workername)">
+                <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                更新Worker
+              </div>
+              <div class="PanelItem" v-on:click="toRestart(MCSERVER.workername)">
+                <span class="glyphicon glyphicon-refresh" aria-hidden="true"></span>
+                重启Worker
+              </div>
             </div>
           </div>
         </div>
@@ -65,7 +109,8 @@
 
     <div class="col-md-6 NextCol">
       <div class="Panel">
-        <div class="PanelTitle">控制面板内存监控</div>
+        <div class="PanelTitle" v-if="isPanel">控制面板内存监控</div>
+        <div class="PanelTitle" v-else>Worker内存监控</div>
         <div class="PanelBody">
           <div class="row">
             <div class="col-md-4 col-sm-4">
@@ -113,16 +158,19 @@
     <!--用户统计-->
     <div class="col-md-6 NextCol">
       <div class="Panel">
-        <div class="PanelTitle">用户管理权限监控</div>
+        <div class="PanelTitle" v-if="isPanel">用户管理权限监控</div>
+        <div class="PanelTitle" v-else>Worker链接监控</div>
         <div class="PanelBody">
           <div class="row">
-            <div class="col-sm-4">
-              <div class="LogV">{{ userCounter }} 个</div>
-              <div class="LogK">用户总数 (包括管理员)</div>
-            </div>
-            <div class="col-sm-4">
-              <div class="LogV">{{ userOnlineCounter }} 个</div>
-              <div class="LogK">正在线上的用户总数</div>
+            <div v-if="isPanel">
+              <div class="col-sm-4">
+                <div class="LogV">{{ userCounter }} 个</div>
+                <div class="LogK">用户总数 (包括管理员)</div>
+              </div>
+              <div class="col-sm-4">
+                <div class="LogV">{{ userOnlineCounter }} 个</div>
+                <div class="LogK">正在线上的用户总数</div>
+              </div>
             </div>
             <div class="col-sm-4">
               <div class="LogV">{{ WebsocketCounter }} 会话</div>
@@ -181,7 +229,10 @@
   //创建
   MI.rListener("onload", function () {
     // 定义页面地址
-    TOOLS.definePage("template/center", "center/show", null);
+    var isPanel=VIEW_MODEL["centerShow"].isPanel;
+    if(isPanel){
+      TOOLS.definePage("template/center","center/show","");
+    }
 
     PAGE.time = function (value) {
       return function () {
@@ -210,17 +261,61 @@
     VIEW_MODEL.newVue("centerShow", {
       el: "#CenterShow",
       methods: {
-        time: PAGE.time()
+        time: PAGE.time(),
+        toUpdate:async function(itemWorkername){
+          var input=document.createElement("input");
+          input.type="file";
+          var onChanged=new Promise((resolve,reject)=>input.oninput=resolve);
+          input.click();
+          await onChanged;
+          input.oninput=null;
+          blob=input.files[0];
+          if(!blob){
+            return;
+          }
+          var urlo=new URL(location.href);
+          urlo.pathname=itemWorkername?"/update/worker/"+itemWorkername:"/update";
+          await fetch(urlo.href,{
+            method:"POST",
+            body:blob
+          })
+          if(!itemWorkername){
+            TOOLS.pushMsgWindow("面板开始更新");
+          }else{
+            TOOLS.pushMsgWindow("Worker开始更新");
+            RES.redirectPage("./template/workers.html", "workers", "");
+          }
+        },
+        toRestart:async function(itemWorkername){
+          var onRestart=new Promise((resolve)=>WS.sendMsg(itemWorkername?"workers/restart":"center/restart", itemWorkername||"",resolve));
+          await onRestart;
+          if(!itemWorkername){
+            TOOLS.pushMsgWindow("面板重启");
+          }else{
+            TOOLS.pushMsgWindow("重启Worker...");
+            RES.redirectPage("./template/workers.html", "workers", "");
+          }
+        }
       }
     });
 
-    PAGE.time = setInterval(function () {
-      WS.sendMsg("center/show", "");
+    PAGE.time = setInterval(async function () {
+      var isPanel=VIEW_MODEL["centerShow"].isPanel;
+      var onRefresh=new Promise(_=>WS.sendMsg(isPanel?"center/show":"workers/center", isPanel?"":MCSERVER.workername,_));
+      var onTimeout=new Promise(_=>setTimeout(_,5000,false));
+      var result=await Promise.race([onRefresh,onTimeout]);
+      if(result===false){
+        RES.redirectPage("./template/workers.html", "workers", "");
+      }
     }, 2100);
   });
 
   //关闭
   MI.rListener("onend", function () {
     clearInterval(PAGE.time);
+    var isPanel=VIEW_MODEL["centerShow"].isPanel;
+    if(!isPanel){
+      delete MCSERVER.workername;
+    }
   });
 </script>

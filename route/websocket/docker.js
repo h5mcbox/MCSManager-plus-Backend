@@ -2,19 +2,28 @@ const { WebSocketObserver } = require("../../model/WebSocketModel");
 const serverModel = require("../../model/ServerModel");
 const response = require("../../helper/Response");
 const permssion = require("../../helper/Permission");
+/*
 const tools = require("../../core/tools");
 const fs = require("fs");
 const childProcess = require("child_process");
+*/
+const WorkerCenter = require("../../model/WorkerModel");
 
 //Docker 镜像构建结果储存
-MCSERVER.PAGE.DockerRes = [];
+//MCSERVER.PAGE.DockerRes = [];
 
 //Docker 容器创建路由
 WebSocketObserver().listener("docker/new", (data) => {
-  if (!permssion.isMaster(data.WsSession)) return;
+  if(!permssion.hasRights(data.WsSession.username,"docker"))return;
   let dockerConfig = JSON.parse(data.body);
   //{dockerImageName: "",
   //dockerfile: "FROM java:latest↵RUN mkdir -p /mcsd↵RUN echo "Asia…teractive tzdata↵WORKDIR / mcsd↵RUN apt - get update"}
+  let serverLocation = dockerConfig.workerName;
+  if(!WorkerCenter.get(serverLocation)){
+    response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
+  }
+  WorkerCenter.get(serverLocation).send("docker/new",data.body).then((_)=>{data.ws.send(_)});
+  /*
   let dockerImageName = dockerConfig.dockerImageName;
   let dockerfileData = dockerConfig.dockerfile;
 
@@ -65,29 +74,46 @@ WebSocketObserver().listener("docker/new", (data) => {
     MCSERVER.warning("创建出错：", err);
     pushRes("构建错误");
   }
+  */
 });
 
 //结果列表获取
 //路由
-WebSocketObserver().listener("docker/res", (data) => {
-  if (!permssion.isMaster(data.WsSession)) return;
-  response.wsSend(data.ws, "docker/res", MCSERVER.PAGE.DockerRes);
+WebSocketObserver().listener("docker/res", async (data) => {
+  if(!permssion.hasRights(data.WsSession.username,"docker"))return;
+  let result=[];
+  for(let item of WorkerCenter.getOnlineWorkers()){
+    var view=await item.send("docker/res");
+    var split=(view).split("\n\n");
+    var res=JSON.parse(split[0]);
+    if(res.ResponseKey!=="docker/res")return false;
+    res.ResponseValue.forEach(e=>result.push(e));
+  }
+  response.wsSend(data.ws, "server/view", result);
 });
 
 //获取配置
 WebSocketObserver().listener("docker/config", (data) => {
-  if (!permssion.isMaster(data.WsSession)) return;
+  if(!permssion.hasRights(data.WsSession.username,"docker"))return;
   let serverName = data.body || "";
   if (serverName) {
+    /*
     let mcserver = serverModel.ServerManager().getServer(serverName);
     response.wsSend(data.ws, "docker/config", mcserver.dataModel.dockerConfig);
     mcserver.dataModel.save();
+    */
+    const server = serverModel.ServerManager().getServer(serverName);
+    let serverLocation = server.dataModel.location;
+    if(!WorkerCenter.get(serverLocation)){
+      response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
+    }
+    WorkerCenter.get(serverLocation).send("docker/config",data.body).then((_)=>{data.ws.send(_)});
   }
 });
 
 //设置配置
 WebSocketObserver().listener("docker/setconfig", (data) => {
-  if (!permssion.isMaster(data.WsSession)) return;
+  if(!permssion.hasRights(data.WsSession.username,"docker"))return;
   // {
   //     serverName: "xxxx",
   //     dockerConfig: { ... }
@@ -95,9 +121,18 @@ WebSocketObserver().listener("docker/setconfig", (data) => {
   let jsonObj = JSON.parse(data.body);
   if (jsonObj.serverName) {
     let serverName = jsonObj.serverName;
+    /*
     let mcserver = serverModel.ServerManager().getServer(serverName);
     mcserver.dataModel.dockerConfig = jsonObj.dockerConfig;
     mcserver.dataModel.save();
     response.wsMsgWindow(data.ws, "操作成功，数据已保存");
+    */
+    const server = serverModel.ServerManager().getServer(serverName);
+    let serverLocation = server.dataModel.location;
+    if(!WorkerCenter.get(serverLocation)){
+      response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
+    }
+    serverModel.deleteServer(serverName);
+    WorkerCenter.get(serverLocation).send("docker/setconfig",data.body).then((_)=>{data.ws.send(_)});
   }
 });

@@ -1,0 +1,98 @@
+<div id="WorkerView" class="OneContainer">
+  <div class="Panel PanelBlack">
+    <div class="PanelTitle">Worker {{ workername }} 信息与配置</div>
+    <div class="PanelBody">
+      <div class="row">
+        <div class="col-sm-3">
+          <p>基础展示信息</p>
+          <div class="PanelItem">创建时间 {{ createDate }}</div>
+          <div class="PanelItem">最后上线 {{ lastDate }}</div>
+        </div>
+        <div class="col-sm-9">
+          <div class="row">
+            <div class="col-sm-5">
+              <p>Worker名 [字母 数字 下划线] (6~18位)</p>
+              <div class="input-group input-group-sm">
+                <span class="input-group-addon"> Worker名 </span>
+                <input type="text" class="form-control" v-model="workername" />
+              </div>
+            </div>
+            <div class="col-sm-7">
+              <p>主密钥</p>
+              <div class="input-group input-group-sm">
+                <span class="input-group-addon"> 主密钥 </span>
+                <input type="text" class="form-control" v-model="MasterKey"/>
+              </div>
+            </div>
+            <div class="col-sm-7">
+              <p>远程端点地址</p>
+              <div class="input-group input-group-sm">
+                <span class="input-group-addon"> 地址 </span>
+                <input type="text" class="form-control" v-model="HttpEndpoint" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-lg-12">
+          <br />
+          <br />
+          <br />
+          <p>您可以重新配置这个Worker</p>
+          <div class="Line"></div>
+          <div class="PanelItemMuem">
+            <button class="btn btn-success" v-on:click="toUpdate()">更新配置</button>
+            <button class="btn btn-danger" v-on:click="toDeleteWorker()">删除此Worker</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  MI.rListener("onload", function () {
+    VIEW_MODEL.newVue("WorkerView", {
+      el: "#WorkerView",
+      data: {
+        oldworkername: "",
+        HttpEndpoint:""
+      },
+      methods: {
+        toUpdate: function () {
+          if (!TOOLS.isStdText(this.workername)) {
+            TOOLS.pushMsgWindow("Worker名不合法！请重新输入！");
+            return;
+          }
+          var obj = {
+            newworkername: this.workername,
+            newMasterKey: this.MasterKey,
+            newRemoteDescription: {
+              endpoint:this.HttpEndpoint
+            },
+            workername: this.oldworkername
+          };
+          WS.sendMsg("workers/upinfo", JSON.stringify(obj));
+          //返回到上层
+          RES.redirectPage("./template/workers.html", "workers");
+        },
+        toDeleteWorker: function () {
+          var obj = {
+            workername: this.oldworkername
+          };
+          var result = confirm("您真的打算删除这个这个Worker吗?");
+          if (!result) return;
+          WS.sendMsg("workers/delete", JSON.stringify(obj), function () {
+            RES.redirectPage("./template/workers.html", "workers");
+          });
+        },
+      }
+    });
+    var viewModel = VIEW_MODEL["WorkerView"];
+    viewModel.oldworkername = viewModel.workername;
+    viewModel.HttpEndpoint = viewModel.RemoteDescription.endpoint;
+  });
+
+  MI.rListener("onend", function () {});
+</script>

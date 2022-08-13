@@ -1,26 +1,19 @@
 const response = require("../../../helper/Response");
 var serverModel = require("../../../model/ServerModel");
 const permssion = require("../../../helper/Permission");
+const workerModel=require("../../../model/WorkerModel");
 const { WebSocketObserver } = require("../../../model/WebSocketModel");
 
 //获取配置
 WebSocketObserver().listener("server/properties", (data) => {
   let serverName = data.body.trim();
   if (permssion.isCanServer(data.WsSession.username, serverName)) {
-    serverModel
-      .ServerManager()
-      .getServer(serverName)
-      .propertiesLoad((properties, err) => {
-        if (err) {
-          response.wsMsgWindow(data.ws, "properties 文件不存在或读取出错！请自行检查或确认是否存在以及格式正确.");
-          return;
-        }
-        response.wsSend(data.ws, "server/properties", {
-          run: serverModel.ServerManager().getServer(serverName).isRun(),
-          serverName: serverName,
-          properties: properties
-        });
-      });
+      const server = serverModel.ServerManager().getServer(serverName);
+      let serverLocation = server.dataModel.location;
+      if(!workerModel.get(serverLocation)){
+        response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
+      }
+      workerModel.get(serverLocation).send("server/properties",data.body).then((_)=>{data.ws.send(_)})
   }
 });
 
@@ -28,18 +21,14 @@ WebSocketObserver().listener("server/properties", (data) => {
 WebSocketObserver().listener("server/properties_update", (data) => {
   let config = JSON.parse(data.body);
   let properties = config.properties;
+  var serverName=config.serverName;
   if (permssion.isCanServer(data.WsSession.username, config.serverName)) {
-    try {
-      serverModel
-        .ServerManager()
-        .getServer(config.serverName)
-        .propertiesSave(properties, () => {
-          response.wsMsgWindow(data.ws, "properties 更新完毕");
-        });
-    } catch (err) {
-      MCSERVER.error("properties 重读出错", err);
-      response.wsMsgWindow(data.ws, "properties 重读出错:" + err);
+    const server = serverModel.ServerManager().getServer(serverName);
+    let serverLocation = server.dataModel.location;
+    if(!workerModel.get(serverLocation)){
+      response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
     }
+    workerModel.get(serverLocation).send("server/properties_update",data.body).then((_)=>{data.ws.send(_)})
   }
 });
 
@@ -47,29 +36,11 @@ WebSocketObserver().listener("server/properties_update", (data) => {
 WebSocketObserver().listener("server/properties_update_reload", (data) => {
   let serverName = data.body.trim();
   if (permssion.isCanServer(data.WsSession.username, serverName)) {
-    try {
-      serverModel
-        .ServerManager()
-        .getServer(serverName)
-        .propertiesLoad(() => {
-          //再读一次
-          let properties = serverModel.ServerManager().getServer(serverName).properties;
-          if (properties == undefined) {
-            response.wsMsgWindow(data.ws, "properties 文件不存在或读取出错，请先开启服务器以生成文件.");
-            return;
-          }
-          //将数据在来一次，前端路由会动态处理
-          response.wsSend(data.ws, "server/properties", {
-            run: serverModel.ServerManager().getServer(serverName).isRun(),
-            serverName: serverName,
-            properties: properties
-          });
-          //信息框
-          response.wsMsgWindow(data.ws, "properties 配置重读刷新完毕");
-        });
-    } catch (err) {
-      MCSERVER.error("properties 更新出错", err);
-      response.wsMsgWindow(data.ws, "properties 更新出错:" + err);
+    const server = serverModel.ServerManager().getServer(serverName);
+    let serverLocation = server.dataModel.location;
+    if(!workerModel.get(serverLocation)){
+      response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
     }
+    workerModel.get(serverLocation).send("server/properties_update_reload",data.body).then((_)=>{data.ws.send(_)})
   }
 });

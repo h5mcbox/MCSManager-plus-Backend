@@ -25,6 +25,20 @@
                 <input type="text" class="form-control" v-model="password" placeholder="[未更改 您可以直接从这里重设此用户的密码]" />
               </div>
             </div>
+            <div class="col-sm-7">
+              <p>登录公钥 (可用于数字签名登录)</p>
+              <div class="input-group input-group-sm">
+                <span class="input-group-addon"> 公钥 </span>
+                <input type="text" class="form-control" v-model="LoginPublicKey" />
+              </div>
+            </div>
+            <div class="col-sm-7">
+              <p>用户组</p>
+              <div class="input-group input-group-sm">
+                <span class="input-group-addon"> 用户组 </span>
+                <input type="text" class="form-control" v-model="userGroup" />
+              </div>
+            </div>
           </div>
 
           <p>准许的服务器，输入服务器名字，分别以空格分割</p>
@@ -68,7 +82,7 @@
             TOOLS.pushMsgWindow("用户名不合法！请重新输入！");
             return;
           }
-          if ((this.password.length < 6 || this.password.length > 18) && this.password.length != 0) {
+          if (((this.password.length < 6 || this.password.length > 100) && this.password.length != 0)&&!(this.password.length == 0 && this.LoginPublicKey.length == 66)) {
             TOOLS.pushMsgWindow("密码长度不正确！");
             return;
           }
@@ -76,8 +90,10 @@
           var obj = {
             newUsername: this.username,
             newPassword: this.password,
+            newLoginPublicKey: this.LoginPublicKey,
             allowedServer: allowedServers,
-            username: this.oldUsername
+            username: this.oldUsername,
+            newGroup: this.userGroup
           };
           WS.sendMsg("userset/upinfo", JSON.stringify(obj));
           //返回到上层
