@@ -84,11 +84,13 @@ moveFile("./helper/installer/",true); //移动安装程序
 moveFile("./core/User/simpleecc.js",true); //移动ECC库
 moveFile("./core/User/CryptoMine.js",true); //移动哈希库
 moveFile("./node_modules/js-sha256",true); //移动哈希库
-addFile("app.package.json",Buffer.from(JSON.stringify({
+var appPackage=Buffer.from(JSON.stringify({
   "PublicKey":toHEXString(new Uint8Array(ECC.getPublicKey(privateKey,true).exportKey())),
   "version":now,
   "packageFile":"./app.apkg"
-})),true); //更新配置文件;
+}));
+addFile("app.package.json",appPackage,true); //更新配置文件;
+fs.writeFileSync("app.package.json",appPackage);
 var databuf=Buffer.concat(bufs);
 var Header={
   version:now,
