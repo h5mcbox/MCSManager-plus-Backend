@@ -44,11 +44,7 @@
   MI.routeListener("window/msg", function (data) {
     TOOLS.pushMsgWindow(data.body);
   });
-
-  TOOLS.isMaster = function (username) {
-    return username.substr(0, 1) === "#";
-  };
-
+  
   // XSS 攻击防御函数
   TOOLS.encode = function (html) {
     var rstr = html.replace(/&/gim, "&amp;").replace(/</gim, "&lt;").replace(/>/gim, "&gt;").replace(/"/gim, "&quot;").replace(/'/gim, "&apos;").replace(/ /gim, "&nbsp;");
@@ -368,7 +364,7 @@
     if (MCSERVER.listenServername) {
       v3 = MCSERVER.listenServername;
     } else {
-      v3 = MCSERVER.listenServername = TOOLS.pageParameter("listen");
+      v3 = MCSERVER.listenServername = TOOLS.pageParameter("listen")||"null";
     }
     console.log("definePage:", "#page=" + v1 + "&api=" + v2 + "&listen=" + v3);
     window.location.hash = "#page=" + v1 + "&api=" + v2 + "&listen=" + v3;

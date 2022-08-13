@@ -2,20 +2,20 @@
   
 [![Status](https://img.shields.io/badge/npm-v6.9.0-blue.svg)](https://www.npmjs.com/)
 [![Status](https://img.shields.io/badge/node-v10.16.0-blue.svg)](https://nodejs.org/en/download/)
-[![Status](https://travis-ci.org/Suwings/MCSManager.svg?branch=master)](https://travis-ci.org/Suwings/MCSManager)
-[![Status](https://img.shields.io/badge/License-MIT-red.svg)](https://github.com/Suwings/MCSManager)
+[![Status](https://travis-ci.org/H5mcbox/MCSManager.svg?branch=master)](https://travis-ci.org/H5mcbox/MCSManager)
+[![Status](https://img.shields.io/badge/License-MIT-red.svg)](https://github.com/H5mcbox/MCSManager)
 
 
 简单，易用，多实例，轻量级的 Minecraft Server 控制面板 
 
 
 
-[中文简体](https://github.com/Suwings/MCSManager) | [中文繁體](README-traditional.md) |  [API 文档](https://github.com/Suwings/MCSManager/wiki/API-Documentation)  | [二次开发参考文档](https://github.com/Suwings/MCSManager/wiki/Development_Document)
+注意:这是控制面板项目,还需搭配Worker端方可运行
 
-<br />
 
-**本项目 [赞助者名单](https://docs.qq.com/sheet/DYWJNVXhib0dtamh2?c=B3A0A0)**
-<br />
+
+[中文简体](https://github.com/H5mcbox/MCSManager) | [中文繁體](README-traditional.md) |  [API 文档](https://github.com/Suwings/MCSManager/wiki/API-Documentation)  | [二次开发参考文档](https://github.com/Suwings/MCSManager/wiki/Development_Document)
+
 
 简介
 -----------
@@ -50,7 +50,7 @@
 无法正常安装面板？| [参考教程](https://github.com/Suwings/MCSManager/wiki/Linux-%E4%B8%8B%E5%AE%89%E8%A3%85%E4%B8%8E%E4%BD%BF%E7%94%A8%E8%AF%A6%E8%A7%A3)
 Linux 下面板如何后台运行？ | [参考方法](https://github.com/Suwings/MCSManager/wiki/Linux-%E4%B8%8B%E5%AE%89%E8%A3%85%E4%B8%8E%E4%BD%BF%E7%94%A8%E8%AF%A6%E8%A7%A3#%E4%BF%9D%E6%8C%81%E5%90%8E%E5%8F%B0%E8%BF%90%E8%A1%8C)
 使用面板开启 `Bedrock Server` 端 | [参考教程](https://github.com/Suwings/MCSManager/wiki/%E4%BD%BF%E7%94%A8%E9%9D%A2%E6%9D%BF%E5%BC%80%E5%90%AF-Bedrock_server-%E6%9C%8D%E5%8A%A1%E7%AB%AF)
-面板管理员的默认账号和密码是什么？ | 账号 `#master` 密码 `123456`
+面板管理员的默认账号和密码是什么？ | 账号 `#master` 密码会随机生成并显示在屏幕上(仅当`#master`密码不可用时)
 面板如何正确关闭？ | `Ctrl+C`
 配置文件是什么？ | `property.js` 文件
 如何修改面板默认端口？ | `property.js` 文件
@@ -61,40 +61,15 @@ Linux 下面板如何后台运行？ | [参考方法](https://github.com/Suwings
 其他常见问题 | [查看 Wiki](https://github.com/Suwings/MCSManager/wiki)
 关于HTTP跳转HTTPS的帮助 | [查看 Nginx 301永久重定向 范例](https://github.com/Suwings/MCSManager/wiki/Nginx%E5%85%A8%E5%B1%80301%E6%B0%B8%E4%B9%85%E9%87%8D%E5%AE%9A%E5%90%91)
 
-
 <br />
-
-
-
 
 在 Windows 运行 
 -----------
-对于 Windows 系统，**已整合成直接运行版本，下载即可运行**(建议使用管理员权限运行):
-
-http://mcsm.suwings.top/ (官方站点)
-
-- 前往官方网站下载 Windows 版本即可，双击 `运行.bat` 或 `Start.bat` 文件即可。
+对于 Windows 系统，你可以直接运行:`node app.js`来开启面板
 
 <br />
 
-
-在 Linux 运行
------------
-
-**一行命令快速安装（适用于 Ubuntu/Centos/Debian/Archlinux）**
-
-```bash
-wget -qO- https://gitee.com/Suwingser/MCSManager-installer/raw/master/install.sh | bash
-```
-
-- 执行完成后，使用 `systemctl start mcsm` 即可启动面板服务。
-- 面板代码与运行环境自动安装在 `/opt/` 目录下。
-
-<br />
-
-**其他 Linux 发行版安装**
-
-- 若一键安装不起作用，则可以尝试此步骤手动安装。
+**Linux 发行版安装**
 
 ```bash
 # 切换到安装目录，没有此目录请执行 mkdir /opt/
@@ -107,7 +82,7 @@ tar -zxvf node-v12.16.1-linux-x64.tar.gz
 ln -s /opt/node-v12.16.1-linux-x64/bin/node /usr/bin/node
 ln -s /opt/node-v12.16.1-linux-x64/bin/npm /usr/bin/npm
 # 克隆仓库(若没有 git，请安装它，如 apt install -y git)
-git clone https://github.com/suwings/mcsmanager.git
+git clone https://github.com/H5mcbox/MCSManager.git
 # 进入目录
 cd mcsmanager/
 # 安装依赖库
@@ -122,20 +97,6 @@ npm start
 
 
 > 关于更多的安装说明，请 [单击这里](https://github.com/Suwings/MCSManager/wiki/Linux-%E4%B8%8B%E5%AE%89%E8%A3%85%E4%B8%8E%E4%BD%BF%E7%94%A8%E8%AF%A6%E8%A7%A3)  
-
-<br />
-
-通过 Docker 启动 MC 服务端 
------------
-
-我们支持面板在 Linux 系统下，配合 Docker 以命令的形式，来创建 Minecraft 服务端所需 Java 环境镜像，并且在容器中启动和关闭你的 Minecraft 服务端。
-
-如果你不会使用，请点击`具体使用方法` 链接，如果你还未安装 Docker 请点击 `安装Docker` 的链接。
-
-**具体使用方法:** [单击跳转](https://github.com/Suwings/MCSManager/blob/gh-pages/Question_1.md)
-
-**安装 Docker:** [单击跳转](https://github.com/Suwings/MCSManager/blob/gh-pages/Question_2.md)
-
 
 <br />
 
@@ -159,8 +120,9 @@ npm start
 | **users/x.json**                |控制面板用户配置文件|
 | **route/**                      |控制器，HTTP 请求业务逻辑层（可二次扩展）|
 | **route/websocket/**            |控制器，Webscoket 请求业务逻辑层（可二次扩展）|
-| **core/Process/**                |Minecraft Server 类实现|
+| **core/ServerCenter**                |Minecraft Server 类实现|
 | **core/User/**                   |User 类实现|
+| **core/Workers/**                   |Worker 类实现|
 | **core/DataModel.js**            |数据持久化模型，几乎是所有的配置的 I/O 模型|
 | **model/**                      |模型层，用于提供控制器与服务端，用户操作，也提供设计模式模型|
 | **helper/**                     |业务逻辑辅助层，用于辅助和重复利用业务逻辑|
@@ -170,10 +132,8 @@ npm start
 
 浏览器兼容性
 -----------
-- `ECMAScript 5` 标准
-- `IE 11+` `Chrome` `Firefox` `Safari` `Opera` 等现代主流浏览器
-
-**例外:** 文件在线管理界面需要 `IE 11+` 
+- `ECMAScript 6` 标准
+- `Chrome` `Firefox` `Safari` `Opera` 等现代主流浏览器
 
 <br />
 
@@ -198,9 +158,7 @@ npm start
 
 **实现 HTTPS 与 WSS**
 
-打开前端 URL 定位文件 `public/common/URL.js`, 将 http 与 ws 改成 https 与 wss；
-
-可保证前端所有请求均为 https 和 wss，但是后端方面还需要配置 SSL 与 反向代理。
+请在`property.js`文件里找到`MCSERVER.localProperty.listen_type`，按照提示修改。
 
 **反向代理**
 
@@ -216,28 +174,27 @@ npm start
 
 权限系统
 -----------
-尤其注意的是，为了更加简化面板权限系统，我们只分为两种账号。
+尤其注意的是，为了更加简化面板权限系统，我们只分为三种账号。
 
-`管理账号` 凡是以 # 字符开头的用户，均为管理账号，列如 `#master` `#admin` `#test`
+`管理账号` 凡是以 # 字符开头或用户组为`master`的用户，为管理账号，列如 `#master` `#admin` `#test` ，可以管理所有服务器
 
-`普通账号` 不以 # 字符开头的用户，列如 `test` `usernameww` `xxx`
+`普通账号` 用户组为`user` 的是普通用户，可以管理管理员准许的服务器
+
+`禁用账号` 用户组为`banned`，无法使用所有功能
+
+>(注:账号以`#_`或`_`开头的为临时账号，重启面板即删除)
 
 普通账号能够管理的服务器只能由管理账号来进行设定，管理账号可以管理任何服务器，并且能管理所有用户。
 
 具体使用，我想你只需要运行就知道，设计的十分简单。
-
-<br />
-
-问题报告
------------
-欢迎发现任何 BUG 及时反馈，必当及时修复。
-
-若发现严重安全漏洞又不便公开发布，请发送邮件至: Suwings@outlook.com，安全问题修复后将在代码中附加漏洞发现者姓名。
-
-<br />
 
 开源协议
 -----------
 MIT License
 
 <br />
+
+Original Author: Suwings
+
+
+Original Repository: Suwings/MCSManager

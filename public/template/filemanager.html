@@ -4,13 +4,22 @@
     <div class="PanelBody">请选择一个项目来进行文件管理</div>
   </div>
   <div class="row">
-    <div class="col-sm-3" v-if="MCSERVER.username.substr(0, 1) == '#'">
-      <div class="Panel AppInlineBlockList" v-on:click="toServersDir()">
+    <div class="col-sm-3" v-if="MCSERVER.group === 'master'">
+      <div class="Panel AppInlineBlockList" v-on:click="toServersDir(0)">
         <div class="PanelBody">
           <div class="PanelItemInfo">
             <p class="PagePanelItemInfoTextCenter">
               <b>服务端文件默认存放目录</b>
             </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-3" v-for="name of workerNames">
+      <div class="Panel AppInlineBlockList" v-on:click="toServersDir(1,name)">
+        <div class="PanelBody">
+          <div class="PanelItemInfo">
+            <p class="PagePanelItemInfoTextCenter">Worker {{name}} 存放目录</p>
           </div>
         </div>
       </div>
@@ -63,12 +72,21 @@
       methods: {
         toOnlineFs: function (serverName) {
           // MCSERVER.listenServername = serverName;
-          var path = MCSERVER.URL("fs_auth/auth/" + encodeURIComponent(serverName));
-          window.open(path);
+          WS.sendMsg("onlinefs/getServerKey", serverName, function (data) {
+            window.open(data.ResponseValue.url);
+          });
+          //var path = MCSERVER.URL("fs_auth/auth/" + encodeURIComponent(serverName));
+          //window.open(path);
         },
-        toServersDir: function () {
-          var path = MCSERVER.URL("fs_auth/auth_master/pwd");
-          window.open(path);
+        toServersDir: function (type=0,workername) {
+          if(type==0){
+            var path = MCSERVER.URL("fs_auth/auth_master/pwd");
+            window.open(path);
+          }else if(type==1){
+            WS.sendMsg("onlinefs/getWorkerKey", workername, function (data) {
+              window.open(data.ResponseValue.url);
+            });
+          }
         }
       }
     });

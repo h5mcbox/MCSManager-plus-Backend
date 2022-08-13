@@ -1,5 +1,5 @@
 //通用登陆 API js
-MCSERVER.login = function (username, password, rand, loginSuccess, loginError, error) {
+MCSERVER.login = function (username, password, rand, loginSuccess, login2FA, loginError, error, send2FACode=false) {
   var POST_OBJECT = null;
   $.get({
     url: MCSERVER.URL("./user/login_key"),
@@ -20,13 +20,14 @@ MCSERVER.login = function (username, password, rand, loginSuccess, loginError, e
   });
 
   function logging() {
-    var md5Password = hex_md5(hex_md5(password) + POST_OBJECT.enkey1); //账号注册时保存的格式
-    var md5Passworded = hex_md5(md5Password + POST_OBJECT.enkey2); //登陆的格式
+    var HashPassword = sha256(sha256(password) + POST_OBJECT.enkey1); //账号注册时保存的格式
+    var HashPassworded = sha256(HashPassword + POST_OBJECT.enkey2); //登陆的格式
     $.post({
       url: MCSERVER.URL("./user/login"),
       data: {
         username: username,
-        password: md5Passworded
+        password: HashPassworded,
+        "2FACode":send2FACode?send2FACode:""
       },
       success: function (data) {
         var obj = JSON.parse(data);
@@ -41,6 +42,10 @@ MCSERVER.login = function (username, password, rand, loginSuccess, loginError, e
         }
         //后端警告操作
         if (typeof obj["ResponseValue"] == "string") {
+          if(obj["ResponseValue"]==="2fa-needed"){ //但是如果要两步验证那还是跳过
+            login2FA && login2FA();
+            return;
+          }
           alert(obj["ResponseValue"]);
           loginError && loginError();
           return;
@@ -72,7 +77,7 @@ $(function () {
     $btnLogin.html("正在验证...").attr("disabled", "disabled");
 
     MCSERVER.login(
-      $("#login-userid").val(),
+      (location.pathname.endsWith("/2fa.html"))?sessionStorage["username"]:$("#login-userid").val(),
       $("#login-passwd").val(),
       Math.random(),
       function () {
@@ -80,6 +85,11 @@ $(function () {
         $btnLogin.html("成功登陆 √").attr("disabled", "disabled");
         console.log("登陆成功√");
         window.location.href = "../";
+      },
+      function (){
+        $btnLogin.html("需要两步验证").attr("disabled", "disabled");
+        console.log("需要两步验证");
+        window.location.href = "./2fa.html";
       },
       function () {
         //错误
@@ -92,7 +102,9 @@ $(function () {
       function () {
         //服务器错误
         $btnLogin.html("服务器错误 :(").removeAttr("disabled");
-      }
+      },
+      location.pathname.endsWith("/2fa.html"),
+      $("#login-passwd").val()
     );
   };
 });

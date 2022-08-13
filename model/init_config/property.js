@@ -27,15 +27,7 @@ MCSERVER.localProperty.http_port = 23333;
 
 
 //HTTP 服务监听ip, 默认 0.0.0.0 | 可不填
-MCSERVER.localProperty.http_ip = "";
-
-
-// 注意：FTP 功能已于当前版本删除，因为原版的FTP功能及其不稳定。
-MCSERVER.localProperty.ftp_is_allow = false;
-MCSERVER.localProperty.ftp_port = 10022;
-MCSERVER.localProperty.ftp_ip = "";
-MCSERVER.localProperty.ftp_start_port = 20010;
-MCSERVER.localProperty.ftp_end_port = 20200;
+MCSERVER.localProperty.http_ip = "0.0.0.0";
 
 
 //控制台实时刷新频率 单位毫秒 默认 1000 毫秒
@@ -101,8 +93,50 @@ MCSERVER.localProperty.max_eac_task_limit = 1;
 //这不利于你二次开发，对接或使用，但是会更加的安全 
 MCSERVER.localProperty.allow_status_api = false;
 
+//选择监听方式
+//"strict":http自动跳转https,并附带HSTS头
+//"mixed":http和https皆可访问
+//"onlyhttp":只监听http服务
+MCSERVER.localProperty.listen_type = "onlyhttp";
 
+//证书位置
+MCSERVER.localProperty.cert_path = "cert.pem";
+MCSERVER.localProperty.key_path = "key.pem";
 
+//HSTS是否启用
+MCSERVER.localProperty.hsts = true;
+//HSTS持续时间，单位为秒
+MCSERVER.localProperty.hsts_long = 86400;
+
+//跳过登录验证
+//非常危险,建议不要改动
+MCSERVER.localProperty.skipLoginCheck=false;
+
+//Challenge-Response密钥
+//请在第一次启动后将此字符串修改为随机字符
+MCSERVER.localProperty.MasterSalt="";
+
+//Chellenge-Response有效期(单位s)
+//数字签名登录的签名有效期
+MCSERVER.localProperty.ChallengePeriod=30;
+
+//权限配置表
+MCSERVER.localProperty.rights={
+  banned:{rights:["banned"]},
+  user:{rights:["2FA","genuser"]},
+  master:{inherits:"user",rights:[
+    "workers",
+    "userset",
+    "server",
+    "soft",
+    "docker",
+    "restart",
+    "center",
+    "fileupload",
+    "update",
+    "onlinefs"
+  ]}
+}
 /**
  *【配置结束，重启面板生效】
  * 若重启面板报错，说明您修改格式有误，请备份并删除此文件，面板会重新生成新文件。

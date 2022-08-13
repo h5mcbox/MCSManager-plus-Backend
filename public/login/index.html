@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>验证界面 | MCSM</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link href="../common/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/public/common/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
     <link href="./static/main.css" rel="stylesheet" />
     <link href="./favicon.ico" rel="shortcut icon" />
   </head>
@@ -25,7 +25,8 @@
           <p>感谢支持，感谢使用。</p>
         </div>
         <p class="mlogin_context_footer">
-          <span>©2021 MCSManager. All rights reserved.</span>
+          <span>©2021 MCSManager. All rights reserved.</span><br>
+          <span>This version of Minecraft Server Manager is changed<br> by H503mc.</span>
         </p>
         <!-- 登录 -->
         <div id="mlogin_right">
@@ -42,23 +43,28 @@
               <a href="#" class="mlogin_forge" onclick="alert('暂无帮助提供')"> 需要帮助? </a>
             </div>
             <p class="mlogin_context_footer phone">
-              <span>©2021 MCSManager. All rights reserved.</span>
+              <span>©2021 MCSManager. All rights reserved.</span><br>
+              <span>This version of Minecraft Server Manager is changed<br> by H503mc.</span>
             </p>
           </div>
         </div>
       </div>
     </div>
   </body>
-  <script type="text/javascript" src="../common/jquery-3.2.1.min.js"></script>
-  <script type="text/javascript" src="../common/URL.js"></script>
-  <script type="text/javascript" src="../common/md5.js"></script>
-  <script type="text/javascript" src="../common/js/login.js"></script>
+  <script type="text/javascript" src="/public/common/jquery-3.2.1.min.js"></script>
+  <script type="text/javascript" src="/public/common/URL.js"></script>
+  <script type="text/javascript" src="/public/common/sha256.js"></script>
+  <script type="text/javascript" src="/public/common/js/login.js"></script>
   <script>
     function enKeyPress() {
       if (event.keyCode == 13) {
         //登录
         MCSERVER.btnLogin();
       }
+    }
+    sessionStorage["username"]="";
+    document.querySelector("#login-userid").oninput=function(){
+      sessionStorage["username"]=document.querySelector("#login-userid").value;
     }
   </script>
 </html>

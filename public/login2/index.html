@@ -73,15 +73,19 @@
     <div id="view-info" class="alert alert-info show-ui tools-info">默认信息框</div>
   </body>
   <script type="text/javascript" src="./static/template/jq/jq.min.js"></script>
-  <script type="text/javascript" src="../common/URL.js"></script>
-  <script type="text/javascript" src="../common/md5.js"></script>
-  <script type="text/javascript" src="../common/js/login.js"></script>
+  <script type="text/javascript" src="/public/common/URL.js"></script>
+  <script type="text/javascript" src="/public/common/sha256.js"></script>
+  <script type="text/javascript" src="/public/common/js/login.js"></script>
   <script type="text/javascript">
     function enKeyPress() {
       if (event.keyCode == 13) {
         //登录
         MCSERVER.btnLogin();
       }
+    }
+    sessionStorage["username"]="";
+    document.querySelector("#login-userid").oninput=function(){
+      sessionStorage["username"]=document.querySelector("#login-userid").value;
     }
   </script>
 </html>

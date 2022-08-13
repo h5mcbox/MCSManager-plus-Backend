@@ -10,7 +10,7 @@
 
     <title>Mcserver Manager | 身份验证</title>
 
-    <link href="../common/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/public/common/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
     <link href="./static/login/css/action.css" rel="stylesheet" />
     <link href="./static/login/css/style.css" rel="stylesheet" />
     <link href="./static/common/image/icon.ico" rel="shortcut icon" />
@@ -53,15 +53,19 @@
   </body>
 
   <script src="./static/template/jq/jq.min.js"></script>
-  <script type="text/javascript" src="../common/URL.js"></script>
-  <script type="text/javascript" src="../common/md5.js"></script>
-  <script src="../common/js/login.js"></script>
+  <script type="text/javascript" src="/public/common/URL.js"></script>
+  <script type="text/javascript" src="/public/common/sha256.js"></script>
+  <script src="/public/common/js/login.js"></script>
   <script type="text/javascript">
     function enKeyPress() {
       if (event.keyCode == 13) {
         //登录
         MCSERVER.btnLogin();
       }
+    }
+    sessionStorage["username"]="";
+    document.querySelector("#login-userid").oninput=function(){
+      sessionStorage["username"]=document.querySelector("#login-userid").value;
     }
   </script>
 </html>

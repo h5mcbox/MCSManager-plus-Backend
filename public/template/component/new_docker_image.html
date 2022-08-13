@@ -25,6 +25,16 @@
                 v-model="dockerImageName"
               />
             </div>
+            <div class="input-group input-group-sm">
+              <span class="input-group-addon">Worker名</span>
+              <input
+                type="text"
+                autocomplete="off"
+                class="form-control"
+                placeholder="必填，指定Docker镜像存放的Worker"
+                v-model="workerName"
+              />
+            </div>
             <p>
               <b>
                 <span style="color: red">这需要联网下载文件构建，构建时间根据网络与处理器决定，大小约 700 MB，可能需要一段时间，可以关闭网页控制台，任务完成后，可以在结果列表按钮处查看结果。</span>
@@ -52,13 +62,15 @@
       data: {
         dockerFileText: 'FROM java:latest\nRUN mkdir -p /mcsd\nRUN echo "Asia/Shanghai" > /etc/timezone;dpkg-reconfigure -f noninteractive tzdata\nWORKDIR /mcsd',
         dockerImageName: "",
-        createDockerDis: false
+        createDockerDis: false,
+        workerName:""
       },
       methods: {
         createDocker: function () {
           var obj = {
             dockerImageName: this.dockerImageName || "mcsd",
-            dockerfile: TOOLS.decode(this.dockerFileText)
+            dockerfile: TOOLS.decode(this.dockerFileText),
+            workerName:this.workerName
           };
           if (!confirm("DockerFile 文件：\n" + obj.dockerfile + "\n镜像名:" + obj.dockerImageName + "\n确认无误单击【确定】得以继续")) return;
           if (!TOOLS.isStdText(obj.dockerImageName)) {

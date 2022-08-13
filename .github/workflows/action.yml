@@ -1,0 +1,40 @@
+name: CI Build
+on: 
+  push:
+jobs:
+  runer:
+    runs-on: [ubuntu-latest]
+    steps:
+      - name: install nodejs and node-prune
+        run: |
+          cd /opt/
+          wget https://nodejs.org/dist/v16.16.0/node-v16.16.0-linux-x64.tar.xz
+          ls -l
+          tar -Jxvf node-v16.16.0-linux-x64.tar.xz
+          ls -l
+          sudo ln -s /opt/node-v16.16.0-linux-x64/bin/node /usr/bin/node
+          sudo ln -s /opt/node-v16.16.0-linux-x64/bin/npm /usr/bin/npm
+          wget https://github.com/tj/node-prune/releases/download/v1.0.1/node-prune_1.0.1_linux_amd64.tar.gz
+          tar -xvf node-prune_1.0.1_linux_amd64.tar.gz
+          sudo ln -s /opt/node-prune /usr/bin/node-prune
+          cd ~;
+          mkdir workdir
+          cd workdir
+      - name: checkout
+        uses: actions/checkout@v2.0.0
+      - name: body
+        env:
+          signKey: ${{ secrets.SIGNKEY }}
+        run: |
+          npm install
+          node-prune
+          node app
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            ./app.apkg
+          token: ${{ secrets.CUSTOM_GITHUB_TOKEN }}
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GITHUB_REPOSITORY: h5mcbox/MCSManager-plus-Backend

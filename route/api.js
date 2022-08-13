@@ -5,13 +5,15 @@ const mcPingProtocol = require("../helper/MCPingProtocol");
 const apiResponse = require("../helper/ApiResponse");
 const keyManager = require("../helper/KeyManager");
 const requestLimit = require("../helper/RequestLimit");
+const WorkerCenter = require("../model/WorkerModel");
 const tools = require("../core/tools");
 
 // 服务端实例状态获取 | 公共性 API 接口
 // 无需任何权限判定
-router.all("/status/:name", function (req, res) {
+router.get("/status/:name", async function (req, res) {
   if (MCSERVER.localProperty.allow_status_api) {
-    res.send("管理员禁止此项功能 | Access denied");
+    res.status(403).send("管理员禁止此项功能 | Access denied");
+    res.end();
     return;
   }
   let params = req.params || {};
@@ -21,56 +23,78 @@ router.all("/status/:name", function (req, res) {
     res.send("null");
     return;
   }
+  let serverLocation=mcserver.dataModel.location;
+  let worker;
+  if(!(worker=WorkerCenter.get(serverLocation))){
+    res.status(404).send("Worker不存在");
+    res.end();
+  }
   let sendStatus = null;
-
+  let view=await worker.send("server/get",serverName);
+  let split=view.split("\n\n");
+  var reso=JSON.parse(split[0]);
+  if(reso.ResponseKey!=="server/get")return false;
+  var serverData=reso.ResponseValue;
   // 取缓存资料
-  const mcpingResult = mcPingProtocol.QueryMCPingTask(serverName);
-
+  const mcpingResult = serverData.mcpingResult;
   // 判断服务器启动状态发送不同的数据
-  if (mcserver.isRun() && mcpingResult) {
+  if (serverData.run && mcpingResult) {
     sendStatus = {
       id: serverName,
-      serverName: mcserver.dataModel.mcpingConfig.mcpingName,
-      lastDate: mcserver.dataModel.mcpingConfig.lastDate,
-      status: mcserver.isRun(),
+      serverName: serverData.mcpingConfig.mcpingName,
+      lastDate: serverData.mcpingConfig.lastDate,
+      status: serverData.run(),
       current_players: mcpingResult.current_players,
       max_players: mcpingResult.max_players,
-      motd: mcserver.dataModel.mcpingConfig.mcpingMotd || mcpingResult.motd,
+      motd: serverData.mcpingConfig.mcpingMotd || mcpingResult.motd,
       version: mcpingResult.version
     };
   } else {
     sendStatus = {
       id: serverName,
-      lastDate: mcserver.dataModel.lastDate,
-      status: mcserver.isRun()
+      lastDate: serverData.lastDate,
+      status: serverData.run
     };
   }
-
-  res.send(JSON.stringify(sendStatus));
+  res.json(sendStatus);
   res.end();
 });
 
 // 获取所有实例 | API
-router.all("/server_list", function (req, res) {
+router.get("/server",async function (req, res) {
   // 仅仅准许管理员使用
-  if (!keyManager.isMaster(apiResponse.key(req))) {
+  if (!keyManager.hasRights(apiResponse.key(req),"server")) {
     apiResponse.forbidden(res);
     return;
   }
-  const list = serverModel.ServerManager().getServerList();
-  apiResponse.send(res, list);
+  var allServers=[];
+  for(let item of WorkerCenter.getOnlineWorkers()){
+    var view=await item.send("server/view");
+    var split=(view).split("\n\n")
+    var reso=JSON.parse(split[0]);
+    if(reso.ResponseKey!=="server/view")return false;
+    reso.ResponseValue.items.forEach(e=>allServers.push(e));
+  }
+  //const list = serverModel.ServerManager().getServerList();
+  apiResponse.send(res, allServers);
 });
 
 // 创建服务器实例 | API
-router.post("/create_server", function (req, res) {
+router.post("/server", async function (req, res) {
   // 仅仅准许管理员使用
-  if (!keyManager.isMaster(apiResponse.key(req))) {
+  if (!keyManager.hasRights(apiResponse.key(req),"server")) {
     apiResponse.forbidden(res);
     return;
   }
   // 解析请求参数
   try {
     const params = req.body;
+    const serverLocation=params.location;
+    let worker;
+    if(!(worker=WorkerCenter.get(serverLocation))){
+      res.status(404).send("Worker不存在");
+      res.end();
+    }
     // 创建名判定
     if (!tools.between(params.serverName, 6, 32)) {
       apiResponse.error(res, new Error("名字格式不正确"));
@@ -82,7 +106,8 @@ router.post("/create_server", function (req, res) {
     // 工作目录确定
     params.cwd = params.cwd || "";
     // 创建
-    const result = serverModel.createServer(params.serverName, params);
+    await worker.send("server/create",JSON.stringify(params));
+    const result=serverModel.createServer(params.serverName, params);
     // 返回状态码
     result ? apiResponse.ok(res) : apiResponse.error(res);
   } catch (err) {
@@ -91,15 +116,23 @@ router.post("/create_server", function (req, res) {
 });
 
 // 删除实例 API
-router.all("/delete_server/:name", function (req, res) {
+router.delete("/server/:name", async function (req, res) {
   // 仅仅准许管理员使用
-  if (!keyManager.isMaster(apiResponse.key(req))) {
+  if (!keyManager.hasRights(apiResponse.key(req),"server")) {
     apiResponse.forbidden(res);
     return;
   }
   // 解析请求参数
   const params = req.params.name;
   try {
+    let server=serverModel.ServerManager().getServer(params);
+    const serverLocation=server.dataModel.location;
+    let worker=WorkerCenter.get(serverLocation);
+    if(!worker){
+      res.status(404).send("Worker不存在");
+      res.end();
+    }
+    await worker.send("server/delete",params);
     serverModel.deleteServer(params);
     apiResponse.ok(res);
   } catch (err) {
@@ -109,9 +142,9 @@ router.all("/delete_server/:name", function (req, res) {
 });
 
 // 获取所有用户 | API
-router.all("/user_list", function (req, res) {
+router.get("/user", function (req, res) {
   // 仅仅准许管理员使用
-  if (!keyManager.isMaster(apiResponse.key(req))) {
+  if (!keyManager.hasRights(apiResponse.key(req),"userset")) {
     apiResponse.forbidden(res);
     return;
   }
@@ -123,9 +156,9 @@ router.all("/user_list", function (req, res) {
 // params.username
 // params.password
 // params.serverList
-router.post("/create_user", function (req, res) {
+router.post("/user", function (req, res) {
   // 仅仅准许管理员使用
-  if (!keyManager.isMaster(apiResponse.key(req))) {
+  if (!keyManager.hasRights(apiResponse.key(req),"userset")) {
     apiResponse.forbidden(res);
     return;
   }
@@ -157,9 +190,9 @@ router.post("/create_user", function (req, res) {
 });
 
 // 删除用户 API
-router.all("/delete_user/:name", function (req, res) {
+router.delete("/user/:name", function (req, res) {
   // 仅仅准许管理员使用
-  if (!keyManager.isMaster(apiResponse.key(req))) {
+  if (!keyManager.hasRights(apiResponse.key(req),"userset")) {
     apiResponse.forbidden(res);
     return;
   }
@@ -176,7 +209,7 @@ router.all("/delete_user/:name", function (req, res) {
 });
 
 // 启动服务器 | API
-router.all("/start_server/:name", function (req, res) {
+router.all("/start_server/:name", async function (req, res) {
   // 用户权限判定
   if (!keyManager.hasServer(apiResponse.key(req), req.params.name)) {
     apiResponse.forbidden(res);
@@ -190,17 +223,25 @@ router.all("/start_server/:name", function (req, res) {
   try {
     // 解析请求参数
     const name = req.params.name;
+    let server=serverModel.ServerManager().getServer(name);
+    const serverLocation=server.dataModel.location;
+    let worker=WorkerCenter.get(serverLocation);
+    if(!worker){
+      res.status(404).send("Worker不存在");
+      res.end();
+    }
     // 启动服务器
-    const result = serverModel.ServerManager().startMinecraftServer(name);
+    await worker.send("server/console/open",name);
     // 返回状态码
-    result ? apiResponse.ok(res) : apiResponse.error(res);
+    //result ? apiResponse.ok(res) : apiResponse.error(res);
+    apiResponse.ok(res)
   } catch (err) {
     apiResponse.error(res, err);
   }
 });
 
 // 重启服务器 | API
-router.all("/restart_server/:name", function (req, res) {
+router.all("/restart_server/:name", async function (req, res) {
   // 用户权限判定
   if (!keyManager.hasServer(apiResponse.key(req), req.params.name)) {
     apiResponse.forbidden(res);
@@ -214,34 +255,54 @@ router.all("/restart_server/:name", function (req, res) {
   try {
     // 解析请求参数
     const name = req.params.name;
-    // 启动服务器
-    const result = serverModel.ServerManager().restartServer(name);
+    let server=serverModel.ServerManager().getServer(name);
+    const serverLocation=server.dataModel.location;
+    let worker=WorkerCenter.get(serverLocation);
+    if(!worker){
+      res.status(404).send("Worker不存在");
+      res.end();
+    }
+    // 重启服务器
+    await worker.send("server/console/command",JSON.stringify({
+      command: "__restart__",
+      serverName: name
+    }));
     // 返回状态码
-    result ? apiResponse.ok(res) : apiResponse.error(res);
+    apiResponse.ok(res);
   } catch (err) {
     apiResponse.error(res, err);
   }
 });
 
 // 关闭服务器 | API
-router.all("/stop_server/:name", function (req, res) {
+router.all("/stop_server/:name", async function (req, res) {
   // 用户权限判定
   if (!keyManager.hasServer(apiResponse.key(req), req.params.name)) {
     apiResponse.forbidden(res);
     return;
   }
-  // 流量限制 | 1 秒间隔
-  if (!requestLimit.execute(apiResponse.key(req) + "stop_server", 1000 * 1)) {
+  // 流量限制 | 5 秒间隔
+  if (!requestLimit.execute(apiResponse.key(req) + "stop_server", 1000 * 5)) {
     apiResponse.unavailable(res);
     return;
   }
   try {
     // 解析请求参数
     const name = req.params.name;
-    // 启动服务器
-    const result = serverModel.ServerManager().stopMinecraftServer(name);
+    let server=serverModel.ServerManager().getServer(name);
+    const serverLocation=server.dataModel.location;
+    let worker=WorkerCenter.get(serverLocation);
+    if(!worker){
+      res.status(404).send("Worker不存在");
+      res.end();
+    }
+    // 关闭服务器
+    await worker.send("server/console/command",JSON.stringify({
+      command: "__stop__",
+      serverName: name
+    }));
     // 返回状态码
-    result ? apiResponse.ok(res) : apiResponse.error(res);
+    apiResponse.ok(res);
   } catch (err) {
     apiResponse.error(res, err);
   }
@@ -249,7 +310,7 @@ router.all("/stop_server/:name", function (req, res) {
 
 // 向某服务器执行命令 | API
 // params.name, params.command
-router.post("/execute/", function (req, res) {
+router.post("/execute/", async function (req, res) {
   // 用户权限判定
   if (!keyManager.hasServer(apiResponse.key(req), req.body.name)) {
     apiResponse.forbidden(res);
@@ -263,26 +324,40 @@ router.post("/execute/", function (req, res) {
   try {
     // 解析请求参数
     const params = req.body;
+    let server=serverModel.ServerManager().getServer(params.name);
+    const serverLocation=server.dataModel.location;
+    let worker=WorkerCenter.get(serverLocation);
+    if(!worker){
+      res.status(404).send("Worker不存在");
+      res.end();
+    }
+    let view=await worker.send("server/get",params.name);
+    let split=view.split("\n\n");
+    var reso=JSON.parse(split[0]);
+    if(reso.ResponseKey!=="server/get")return false;
+    var serverData=reso.ResponseValue;
     // 判定服务器是否运行
-    const server = serverModel.ServerManager().getServer(params.name);
-    if (!server) return;
-    if (!server.isRun()) {
+    if (!serverData) return;
+    if (!serverData.run) {
       apiResponse.error(res, new Error("服务器非运行状态,无法投递命令"));
       return;
     }
-    // 启动服务器
-    const result = serverModel.ServerManager().sendMinecraftServer(params.name, params.command);
+    // 发送指令
+    await worker.send("server/console/command",JSON.stringify({
+      command: "__stop__",
+      serverName: params.name
+    }));
     // 返回状态码
-    result ? apiResponse.ok(res) : apiResponse.error(res);
+    apiResponse.ok(res);
   } catch (err) {
     apiResponse.error(res, err);
   }
 });
 
 // 创建服务器实例（JSON） | API
-router.post("/advanced_create_server", function (req, res) {
+router.post("/advanced_create_server", async function (req, res) {
   // 仅仅准许管理员使用
-  if (!keyManager.isMaster(apiResponse.key(req))) {
+  if (!keyManager.hasRights(apiResponse.key(req),"server")) {
     apiResponse.forbidden(res);
     return;
   }
@@ -290,35 +365,49 @@ router.post("/advanced_create_server", function (req, res) {
   try {
     const params = req.body;
     const config = JSON.parse(params.config);
+    const serverLocation=config.location;
+    let worker=WorkerCenter.get(serverLocation);
+    if(!worker){
+      res.status(404).send("Worker不存在");
+      res.end();
+    }
     // 创建
-    const result = serverModel.createServer(params.serverName, config);
+    //const result = serverModel.createServer(params.serverName, config);
+    await worker.send("server/create",JSON.stringify(config));
     // 返回状态码
-    result ? apiResponse.ok(res) : apiResponse.error(res);
+    apiResponse.ok(res);
   } catch (err) {
     apiResponse.error(res, err);
   }
 });
 
 // 修改服务器实例（JSON） | API
-router.post("/advanced_configure_server", function (req, res) {
+router.post("/advanced_configure_server", async function (req, res) {
   // 仅仅准许管理员使用
-  if (!keyManager.isMaster(apiResponse.key(req))) {
+  if (!keyManager.hasRights(apiResponse.key(req),"server")) {
     apiResponse.forbidden(res);
     return;
   }
   // 解析请求参数
   try {
     const params = req.body;
+    let server=serverModel.ServerManager().getServer(params.serverName);
+    const serverLocation=server.dataModel.location;
+    let worker=WorkerCenter.get(serverLocation);
+    if(!worker){
+      res.status(404).send("Worker不存在");
+      res.end();
+    }
     const config = JSON.parse(params.config);
     // 使用松散配置模式
     config.modify = true;
-    const server = serverModel.ServerManager().getServer(params.serverName);
     if (!server) {
       apiResponse.error(res, "服务器并不存在");
       return;
     }
     // 不更名的情况重新构建服务器实例
-    server.builder(config);
+    //server.builder(config);
+    await worker.send("server/rebuilder",JSON.stringify(config));
     apiResponse.ok(res);
   } catch (err) {
     apiResponse.error(res, err);

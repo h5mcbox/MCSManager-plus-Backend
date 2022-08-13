@@ -1,10 +1,12 @@
 const { WebSocketObserver } = require("../../model/WebSocketModel");
-const { userCenter, beliveLogin } = require("../../model/UserModel");
+const { userCenter, believeLogin } = require("../../model/UserModel");
 const serverModel = require("../../model/ServerModel");
 const response = require("../../helper/Response");
+const workerCenter=require("../../model/WorkerModel");
 const permssion = require("../../helper/Permission");
 
-WebSocketObserver().listener("genuser/home", (data) => {
+WebSocketObserver().listener("genuser/home", async (data) => {
+  if(!permssion.hasRights(data.WsSession.username,"genuser"))return;
   try {
     let username = data.WsSession.username.trim();
     let user = userCenter().get(username);
@@ -16,11 +18,20 @@ WebSocketObserver().listener("genuser/home", (data) => {
     }
     let allowedServerList = user.allowedServer();
     // 判断是否为管理员，若是的话则返回所有服务端的数据
-    if (permssion.isMaster(data.WsSession)) {
+    var allServersNames=[],workerNames=[];
+    for(let item of workerCenter.getOnlineWorkers()){
+      var view=await item.send("server/view");
+      workerNames.push(item.dataModel.workername);
+      var split=(view).split("\n\n")
+      var res=JSON.parse(split[0]);
+      if(res.ResponseKey!=="server/view")return false;
+      res.ResponseValue.items.forEach(e=>allServersNames.push(e.serverName));
+    }
+    if (permssion.hasRights(data.WsSession.username,"server")) {
       allowedServerList = [];
-      const serverList = serverModel.ServerManager().getServerList();
-      for (const v of serverList) {
-        allowedServerList.push(v.serverName);
+      //const serverList = serverModel.ServerManager().getServerList();
+      for (const v of allServersNames) {
+        allowedServerList.push(v);
       }
     }
     //取当前用户在线的服务器
@@ -28,23 +39,31 @@ WebSocketObserver().listener("genuser/home", (data) => {
     let OnlineServerList = [];
     for (let k in allowedServerList) {
       let userHaveServer = serverModel.ServerManager().getServer(allowedServerList[k]);
+      let serverLoc = userHaveServer.dataModel.location;
+      if(!workerCenter.get(serverLoc)){
+        response.wsMsgWindow(data.ws, "创建出错:" + "Worker不存在");
+      }
+      var worker=workerCenter.get(serverLoc);
+      var view=await worker.send("server/get",allowedServerList[k]);
+      var split=(view).split("\n\n")
+      var res=JSON.parse(split[0]);
+      if(res.ResponseKey!=="server/get")continue;
       //有些用户就是喜欢取不存在的
       if (userHaveServer == undefined) continue;
       //有些数据不应该是用户可以收到的
       userServerList.push({
-        serverName: userHaveServer.dataModel.name,
-        lastDate: userHaveServer.dataModel.lastDate,
-        createDate: userHaveServer.dataModel.createDate,
-        run: userHaveServer.isRun(),
-        jarName: userHaveServer.dataModel.jarName,
-        timeLimitDate: userHaveServer.dataModel.timeLimitDate
+        serverName: res.ResponseValue.name,
+        lastDate: res.ResponseValue.lastDate,
+        createDate: res.ResponseValue.createDate,
+        run: res.ResponseValue.run,
+        jarName: res.ResponseValue.jarName,
+        timeLimitDate: res.ResponseValue.timeLimitDate
       });
-      if (userHaveServer.isRun()) {
-        OnlineServerList.push(userHaveServer.dataModel.name);
+      if (res.ResponseValue.run) {
+        OnlineServerList.push(res.ResponseValue.name);
       }
     }
-
-    response.wsSend(data.ws, "genuser/home", {
+    var resObj={
       username: username,
       lastDate: user.dataModel.lastDate,
       createDate: user.dataModel.createDate,
@@ -53,32 +72,78 @@ WebSocketObserver().listener("genuser/home", (data) => {
       OnlineLen: OnlineServerList.length,
       AllServerLen: userServerList.length,
       userServerList: userServerList,
-      OnlineServerList: OnlineServerList
-    });
+      OnlineServerList: OnlineServerList,
+    }
+    if(permssion.hasRights(data.WsSession.username,"server")){
+      resObj.workerNames=workerNames;
+    }else{
+      resObj.workerNames=[];
+    }
+    response.wsSend(data.ws, "genuser/home", resObj);
   } catch (err) {
     MCSERVER.error("普通用户访问异常", err);
   }
 });
 
+WebSocketObserver().listener("genuser/banned", (data) => {
+  if(!permssion.hasRights(data.WsSession.username,"banned"))return;
+  let user = userCenter().get(data.WsSession.username.trim());
+  response.wsSend(data.ws, "genuser/banned", {
+    bannedBy: user.dataModel.bannedBy,
+    username: user.dataModel.username,
+    lastDate: user.dataModel.lastDate,
+    createDate: user.dataModel.createDate
+  });
+});
+WebSocketObserver().listener("genuser/view", (data) => {
+  let user = userCenter().get(data.WsSession.username.trim());
+  response.wsSend(data.ws, "genuser/view", {
+    username: user.dataModel.username,
+    lastDate: user.dataModel.lastDate,
+    createDate: user.dataModel.createDate,
+    randomPassword: user.dataModel.randomPassword,
+    LoginPublicKey: user.dataModel.LoginPublicKey || "",
+    allowedServer: user.dataModel.allowedServer || []
+  });
+});
 WebSocketObserver().listener("genuser/re_password", (data) => {
   let username = data.WsSession.username.trim();
+  let user = userCenter().get(username);
   let config = JSON.parse(data.body);
-  if (config.newPassword && config.oldPassword) {
-    beliveLogin(
+  let view = {
+    randomPassword: user.dataModel.randomPassword,
+    LoginPublicKey: user.dataModel.LoginPublicKey || ""
+  };
+  if ((view.randomPassword && view.LoginPublicKey) && !(config.oldPassword.length == 0 &&config.loginParams.length != 0)) {
+    response.wsMsgWindow(data.ws, "很抱歉，只使用公钥登录的用户还需填写登录参数");
+    return false;
+  }
+  if(config.loginParams){
+    try{
+      let paramsReader=new URLSearchParams(config.loginParams);
+      config.oldPassword=paramsReader.get("password");
+      config.ChallengeID=paramsReader.get("ChallengeID");
+    }catch{
+    }
+  }
+  if (config.oldPassword) {
+    believeLogin(
       username,
       config.oldPassword,
       () => {
-        if (config.newPassword.length > 18 || config.newPassword.length < 6) {
-          response.wsMsgWindow(data.ws, "新的密码长度不正确，需要 6~18 位长度");
+        if ((config.newPassword.length > 100 || config.newPassword.length < 6)&&!(config.newPassword.length == 0&&userCenter().get(username).dataModel.LoginPublicKey)) {
+          response.wsMsgWindow(data.ws, "新的密码长度不正确，需要 6~100 位长度");
           return;
         }
         userCenter().rePassword(username, config.newPassword);
+        userCenter().reLoginPublicKey(username, config.newLoginPublicKey);
         userCenter().initUser();
-        response.wsMsgWindow(data.ws, "密码修改修改完成，请重新登陆!");
+        response.wsMsgWindow(data.ws, "密码修改完成!");
       },
       () => {
         response.wsMsgWindow(data.ws, "很抱歉，原密码错误，无法修改");
-      }
+      },
+      config.ChallengeID
     );
   }
 });

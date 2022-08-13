@@ -9,12 +9,12 @@ module.exports.registerUser = (username, password) => {
   return userCenters.register(username, password);
 };
 
-module.exports.loginUser = (username, password, truecb, falsecb, enkey) => {
-  return userCenters.loginCheck(username, password, truecb, falsecb, enkey, false);
+module.exports.loginUser = (username, password, truecb, falsecb, enkey, TwoFACode,ChallengeID) => {
+  return userCenters.loginCheck(username, password, truecb, falsecb, enkey, false, TwoFACode,ChallengeID);
 };
 
-module.exports.beliveLogin = (username, password, truecb, falsecb) => {
-  return userCenters.loginCheck(username, password, truecb, falsecb, null, true);
+module.exports.believeLogin = (username, password, truecb, falsecb,ChallengeID) => {
+  return userCenters.loginCheck(username, password, truecb, falsecb, null, true, null,ChallengeID);
 };
 
 module.exports.deleteUser = (username, truecb, falsecb) => {

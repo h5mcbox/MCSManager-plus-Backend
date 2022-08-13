@@ -1,6 +1,6 @@
 (function () {
   MCSERVER.findPropertiesShow = function (key) {
-    var SuwingsLoveYou = {
+    var Descriptions = {
       "generator-settings": "用于自定义超平坦世界的生成，不生成超平坦世界请留空",
       "allow-nether": "是否允许下界（包括地狱）",
       "level-name": "世界（地图）名称 不要使用中文",
@@ -50,8 +50,8 @@
       "spawn-protection": "通过将该值进行 2x+1 的运算来决定出生点的保护半径，设置为0将只保护出生点下方那一个方块。"
     };
 
-    if (SuwingsLoveYou.hasOwnProperty(key)) {
-      return SuwingsLoveYou[key];
+    if (Descriptions.hasOwnProperty(key)) {
+      return Descriptions[key];
     } else {
       //Not find, Return space
       return " ";

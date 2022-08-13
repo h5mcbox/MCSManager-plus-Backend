@@ -23,14 +23,13 @@ function getUser(key = "") {
   return null;
 }
 
-module.exports.isMaster = (key) => {
+module.exports.hasRights=function(key,r){
   const user = getUser(key);
   if (!user) return false;
 
   const userName = user.dataModel.username;
-  if (userName.substr(0, 1) === "#") return true;
-  else return false;
-};
+  return permission.hasRights(userName,r);
+}
 
 module.exports.hasServer = (key, serverName) => {
   const user = getUser(key);

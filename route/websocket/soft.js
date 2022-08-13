@@ -4,7 +4,7 @@ const response = require("../../helper/Response");
 
 //获取信息
 WebSocketObserver().listener("soft/view", (data) => {
-  if (!permssion.isMaster(data.WsSession)) return;
+  if (!permssion.hasRights(data.WsSession.username,"soft")) return;
   response.wsSend(data.ws, "soft/view", {
     softConfig: MCSERVER.softConfig
   });
@@ -12,7 +12,7 @@ WebSocketObserver().listener("soft/view", (data) => {
 
 //更新配置
 WebSocketObserver().listener("soft/update", (data) => {
-  if (!permssion.isMaster(data.WsSession)) return;
+  if (!permssion.hasRights(data.WsSession.username,"soft")) return;
   let newConfig = JSON.parse(data.body);
   if (newConfig) {
     for (let k in MCSERVER.softConfig) {

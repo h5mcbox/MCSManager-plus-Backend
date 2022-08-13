@@ -32,12 +32,12 @@
     <b>暂时没有任何数据，您构建的结果到时候会在这里显示。</b>
   </div>
   <br />
-  <button class="btn btn-danger" v-on:click="ok() ">关 闭</button>
+  <button class="btn btn-danger" v-on:click="ok()">关 闭</button>
 </div>
 <script>
   WS.sendMsg("docker/res", "", function (obj) {
     new Vue({
-      el: "#DialogDockerRes ",
+      el: "#DialogDockerRes",
       data: {
         DockerRes: obj.ResponseValue
       },

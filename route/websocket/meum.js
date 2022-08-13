@@ -1,5 +1,6 @@
 const { WebSocketObserver } = require("../../model/WebSocketModel");
 const response = require("../../helper/Response");
+const permission=require("../../helper/Permission");
 
 WebSocketObserver().listener("menu", (data) => {
   //Object {ws: WebSocket, req: IncomingMessage, user: undefined, header: Object, body: "[body 开始]
@@ -10,7 +11,8 @@ WebSocketObserver().listener("menu", (data) => {
     return;
   }
   response.wsSend(data.ws, "ws/muem", {
-    username: data.WsSession.username
+    username: data.WsSession.username,
+    group:permission.getUserGroup(data.WsSession.username)
   });
   // response.wsMsgWindow(data.ws, '欢迎上线 ' + data.WsSession.username);
 });

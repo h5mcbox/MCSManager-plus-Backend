@@ -55,11 +55,14 @@
     DEBUG && console.log("--- 系统菜单获取成功 ---");
 
     MCSERVER.username = data.obj.username;
+    MCSERVER.group = data.obj.group;
     //虚拟的数据接受，让前端数据得到，菜单在前端建筑
-    if (TOOLS.isMaster(MCSERVER.username)) {
+    if (MCSERVER.group==="master") {
       data.obj.items = MCSERVER.meumObject.masterMeum;
-    } else {
+    } else if(MCSERVER.group==="user"){
       data.obj.items = MCSERVER.meumObject.notMasterMeum;
+    }else{
+      data.obj.items = MCSERVER.meumObject.bannedMeum;
     }
     //copy
     MI.routeCopy("col-muem", data.obj);
@@ -102,6 +105,9 @@
   //UsersetList
   MI.routeListener("userset/update", function (data) {
     MI.routeCopy("UsersetList", data.obj);
+  });
+  MI.routeListener("userset/2fa/getAuthURL", function (data) {
+    MI.routeCopy("TwoFA", data.obj);
   });
 
   //单个服务器的资料显示
@@ -170,6 +176,23 @@
   // 普通用户主页
   MI.routeListener("genuser/home", function (data) {
     MI.routeCopy("GenHome", data.obj);
+  });
+  MI.routeListener("genuser/view", function (data) {
+    MI.routeCopy("GenRePassword", data.obj);
+  });
+  MI.routeListener("genuser/banned", function (data) {
+    MI.routeCopy("BannedPanel", data.obj);
+  });
+
+  //分布式服务路由
+  MI.routeListener("workers", function (data) {
+    MI.routeCopy("Workers", data.obj);
+  });
+  MI.routeListener("workers/view", function (data) {
+    MI.routeCopy("WorkerView", data.obj);
+  });
+  MI.routeListener("workers/center", function (data) {
+    MI.routeCopy("centerShow", data.obj);
   });
 
   // 配置项试图
