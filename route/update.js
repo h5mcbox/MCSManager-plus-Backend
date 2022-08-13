@@ -35,7 +35,7 @@ router.post("/", (req, res, next) => {
 });
 router.post("/worker/:name",async function(req,res){
   if (!permission.needLogin(req, res)) return;
-  if (!permission.IsSessionMaster(req, res)) {
+  if (!permission.hasSessionRights(req, res,"worker")) {
     return res.status(500).send("权限不足");
   }
   var bufs=[];
