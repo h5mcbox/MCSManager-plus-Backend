@@ -101,4 +101,5 @@ var headerbuf=(new TextEncoder).encode(JSON.stringify(Header));
 var packagebuf=Buffer.concat([databuf,Buffer.from("\n"),headerbuf]);
 fs.writeFileSync("./app.apkg",packagebuf);
 console.log("写入完成");
+if(!process.env.packerNoRestart)process.send({restart:"./_app.js"});
 process.exit();
