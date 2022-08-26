@@ -1,4 +1,9 @@
 /* eslint-disable no-unused-vars */
+//入口文件更新
+(function(){
+  var fs=require("fs");
+  fs.writeFileSync("./app.js",fs.readFileSync("./app.js"));
+})();
 //运行时环境检测
 try {
   let versionNum = parseInt(process.version.replace(/v/gim, "").split(".")[0]);
@@ -74,6 +79,10 @@ colors.setTheme({
   error: "red"
 });
 
+//logo输出
+let data = fs.readFileSync("./core/logo.txt", "utf-8");
+console.log(data);
+
 //装载log记录器
 require("./core/log");
 MCSERVER.info("控制面板正在启动中...");
@@ -110,11 +119,6 @@ const permission = require("./helper/Permission");
 const counter = require("./core/counter");
 const Schedule = require("./helper/Schedule");
 //const NewsCenter = require("./model/NewsCenter");
-
-//logo输出
-const LOGO_FILE_PATH = "./core/logo.txt";
-let data = fs.readFileSync(LOGO_FILE_PATH, "utf-8");
-console.log(data);
 
 //全局数据中心 记录 CPU 内存
 MCSERVER.dataCenter = {};
