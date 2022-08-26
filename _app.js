@@ -10,6 +10,10 @@
     console.log("新版本文件损坏,还原更新...");
     process.send({restart:"./app.js"});
     process.exit();
+  }else if(sharedObject.mode==="normal"){
+    if(fs.existsSync("./app.backup.apkg")){
+      fs.unlinkSync("./app.backup.apkg")
+    };
   }
 })();
 //运行时环境检测
