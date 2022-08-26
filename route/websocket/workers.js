@@ -152,7 +152,7 @@ WebSocketObserver().listener("workers/restart",async (data) => {
     split[0]=JSON.stringify(res);
     data.ws.send(split.join("\n\n"));
   } catch (e) {
-    response.wsSend(data.ws, "workers/center", null);
+    response.wsSend(data.ws, "workers/restart", null);
     response.wsMsgWindow(data.ws, "访问Worker失败" + e);
   }
 });
