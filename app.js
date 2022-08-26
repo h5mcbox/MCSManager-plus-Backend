@@ -1222,7 +1222,8 @@ function AppEntry(){
     sharedObject.mode="normal";
     sharedObject.PACKAGEFILE=PACKAGEFILE;
     moduleEntry(true)(VERSION,PACKAGEFILE,PUBLICKEY); //安装文件钩子
-  }catch{
+  }catch(error){
+    console.error(error);
     sharedObject.mode="recovery";
     sharedObject.PACKAGEFILE=BACKUPPACKAGEFILE;
     moduleEntry(true)(VERSION,BACKUPPACKAGEFILE,PUBLICKEY); //安装文件钩子
