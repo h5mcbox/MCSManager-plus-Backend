@@ -102,7 +102,7 @@ setInterval(async function () {
 WebSocketObserver().listener("center/restart", (data) => {
   if(!permssion.hasRights(data.WsSession.username,"restart"))return;
   MCSERVER.log("面板重启...");
-  process.send({restart:"./_app.js"});
+  process.send({restart:"./app.js"});
   process.emit("SIGINT");
 });
 

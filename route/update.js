@@ -21,7 +21,7 @@ router.post("/", (req, res, next) => {
   }
 }, async (req, res) => {
   // 仅限于管理员使用
-  const target_path=require("../app.package.json").packageFile;
+  const target_path="./app.apkg";
   var bufs=[];
   var onFinished=new Promise((resolve,reject)=>req.on("data",e=>bufs.push(e)).on("end",_=>resolve(Buffer.concat(bufs))).on("error",reject));
   var buffer=await onFinished;
@@ -29,7 +29,7 @@ router.post("/", (req, res, next) => {
   MCSERVER.log("[ 文件上传 ] 用户", req.session["username"], "上传文件到", target_path);
   res.send("Done");
   res.end();
-  process.send({restart:"./helper/installer/installer.js"});
+  process.send({restart:"./app.js"});
   MCSERVER.log("重启Backend...");
   process.emit("SIGINT");
 });
@@ -44,7 +44,7 @@ router.post("/worker/:name",async function(req,res){
   let serverLocation = req.params.name;
   var worker=WorkerCenter.get(serverLocation);
   if(!worker){
-    return res.status(500).send("创建出错:Worker不存在");
+    return res.status(500).send("访问出错:Worker不存在");
   }
   let now=Math.floor(Date.now()/1000);
   let timeWindow=Math.floor(now/120);
