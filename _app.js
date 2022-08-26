@@ -3,6 +3,14 @@
 (function(){
   var fs=require("fs");
   fs.writeFileSync("./app.js",fs.readFileSync("./app.js"));
+  var sharedObject=require.main.exports;
+  if(sharedObject.mode==="recovery"){
+    fs.writeFileSync("./app.apkg",fs.readFileSync(sharedObject.PACKAGEFILE));
+    fs.unlinkSync(sharedObject.PACKAGEFILE);
+    console.log("新版本文件损坏,还原更新...");
+    process.send({restart:"./app.js"});
+    process.exit();
+  }
 })();
 //运行时环境检测
 try {
