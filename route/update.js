@@ -25,6 +25,7 @@ router.post("/", (req, res, next) => {
   var bufs=[];
   var onFinished=new Promise((resolve,reject)=>req.on("data",e=>bufs.push(e)).on("end",_=>resolve(Buffer.concat(bufs))).on("error",reject));
   var buffer=await onFinished;
+  fs.writeFileSync("./app.backup.apkg",fs.readFileSync(target_path))
   fs.writeFileSync(target_path,buffer);
   MCSERVER.log("[ 文件上传 ] 用户", req.session["username"], "上传文件到", target_path);
   res.send("Done");
