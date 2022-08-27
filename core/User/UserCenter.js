@@ -21,16 +21,16 @@ class UserCenter {
   initUser() {
     let memoryUser={};
     if(this.userList){
-      for(let username of Object.keys(this.userList)){
-        let user=this.userList[username];
-        if(user.dataModel.OnlyMemoryUser){
-          memoryUser[username]=user;
+      for(let uName of Object.keys(this.userList)){
+        let user=this.userList[uName];
+        if(user.dataModel.OnlyMemory){
+          memoryUser[uName]=user;
         }
       }
     }
     this.userList = {};
-    for(let username of Object.keys(memoryUser)){
-      this.userList[username]=memoryUser[username];
+    for(let uName of Object.keys(memoryUser)){
+      this.userList[uName]=memoryUser[uName];
     }
     let users = fs.readdirSync(USER_DIR);
     let username = null;
@@ -41,8 +41,10 @@ class UserCenter {
       username = users[key].replace(".json", "");
       userTemp = new User(username);
       userTemp.load();
-      if (userTemp.dataModel.group === "master" || (username.substring(0,1) === "#")) masterUserCounter++;
       this.userList[username] = userTemp;
+    }
+    for(let userTemp of Object.values(this.userList)){
+      if (userTemp.dataModel.group === "master" || (userTemp.dataModel.username.substring(0,1) === "#")) masterUserCounter++;
     }
     //删除所有管理员账号后，自动创建一个新的初始化用户
     if (masterUserCounter == 0) {

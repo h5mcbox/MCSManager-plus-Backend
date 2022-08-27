@@ -81,14 +81,14 @@ tar -zxvf node-v12.16.1-linux-x64.tar.gz
 # 链接程序到环境变量中
 ln -s /opt/node-v12.16.1-linux-x64/bin/node /usr/bin/node
 ln -s /opt/node-v12.16.1-linux-x64/bin/npm /usr/bin/npm
-# 克隆仓库(若没有 git，请安装它，如 apt install -y git)
-git clone https://github.com/H5mcbox/MCSManager.git
-# 进入目录
-cd mcsmanager/
-# 安装依赖库
-npm install
+#创建目录
+mkdir mcsmanager
+cd mcsmanager
+# 下载程序(将[latest]换成最新的release tag)
+curl https://github.com/h5mcbox/MCSManager-plus-Backend/releases/download/[latest]/app.apkg >app.apkg
+curl https://github.com/h5mcbox/MCSManager-plus-Backend/releases/download/[latest]/app.js >app.js
 # 启动面板
-npm start 
+node app
 # 关闭面板使用 Ctrl+C 快捷键即可
 ```
 
