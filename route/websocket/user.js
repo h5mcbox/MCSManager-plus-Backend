@@ -195,6 +195,8 @@ WebSocketObserver().listener("userset/upinfo", (data) => {
     }
 
     //其数据模型保存
+    userCenter().get(username).dataModel.lastOperator=data.WsSession.username;
+    userCenter().get(username).dataModel.save();
     response.wsMsgWindow(data.ws, "更新用户数据完成√");
     return;
   } catch (e) {
