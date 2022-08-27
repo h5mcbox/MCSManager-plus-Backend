@@ -25,6 +25,7 @@ class User {
     this.dataModel.createDate = now;
     this.dataModel.lastDate = now;
     this.dataModel.allowedServer = [];
+    this.dataModel.lastOperator="";
 
     // API KEYthis.dataModel.apikey
     this.dataModel.apikey = "";

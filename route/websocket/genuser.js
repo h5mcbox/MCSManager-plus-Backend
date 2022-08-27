@@ -89,7 +89,7 @@ WebSocketObserver().listener("genuser/banned", (data) => {
   if(!permssion.hasRights(data.WsSession.username,"banned"))return;
   let user = userCenter().get(data.WsSession.username.trim());
   response.wsSend(data.ws, "genuser/banned", {
-    bannedBy: user.dataModel.bannedBy,
+    bannedBy: user.dataModel.lastOperator,
     username: user.dataModel.username,
     lastDate: user.dataModel.lastDate,
     createDate: user.dataModel.createDate
