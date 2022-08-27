@@ -19,7 +19,19 @@ class UserCenter {
   }
 
   initUser() {
+    let memoryUser={};
+    if(this.userList){
+      for(let username of Object.keys(this.userList)){
+        let user=this.userList[username];
+        if(user.dataModel.OnlyMemoryUser){
+          memoryUser[username]=user;
+        }
+      }
+    }
     this.userList = {};
+    for(let username of Object.keys(memoryUser)){
+      this.userList[username]=memoryUser[username];
+    }
     let users = fs.readdirSync(USER_DIR);
     let username = null;
     let userTemp = null;
@@ -168,10 +180,16 @@ class UserCenter {
   }
 
   deleteUser(username) {
+    let isMemoryUser;
+    if(this.userList[username]){
+      isMemoryUser=this.userList[username].dataModel.OnlyMemoryUser
+    }
     let filePath = "./" + USER_SAVE_PATH + username + ".json";
     if (fs.existsSync(filePath)) {
       delete this.userList[username];
       fs.unlinkSync(filePath);
+    }else if(isMemoryUser){
+      delete this.userList[username];
       return true;
     }
     return false;
