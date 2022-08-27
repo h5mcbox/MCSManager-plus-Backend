@@ -60,6 +60,7 @@ WebSocketObserver().listener("userset/create", (data) => {
     }
     userCenter().get(username).allowedServer(allowedServerList);
     //其数据模型保存
+    userCenter().get(username).dataModel.lastOperator=data.WsSession.username;
     userCenter().get(username).dataModel.save();
     MCSERVER.info("用户", data.WsSession.username, "建立", username, "用户");
     response.wsSend(data.ws, "userset/create", true);
