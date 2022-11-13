@@ -219,7 +219,7 @@
   }
   function GenerateHEX(len) {
     var result = [];
-    for (i = 0; i < len; i++) {
+    for (let i = 0; i < len; i++) {
       let temp = Math.floor(Math.random() * 256).toString(16);
       if (temp.length == 1) {
         result[i] = "0" + temp;
