@@ -1,10 +1,10 @@
-const VERSION=0;
-const PACKAGEFILE="./app.apkg";
-const BACKUPPACKAGEFILE="./app.backup.apkg";
-const PUBLICKEY="02f0251528c2917ad1bb93ccf455b6576435560b2c7571d3c3792accdb544b8781";
-function moduleEntry(returnMethod){
+const VERSION = 0;
+const PACKAGEFILE = "./app.apkg";
+const BACKUPPACKAGEFILE = "./app.backup.apkg";
+const PUBLICKEY = "02f0251528c2917ad1bb93ccf455b6576435560b2c7571d3c3792accdb544b8781";
+function moduleEntry(returnMethod) {
   //unpacker
-  var unpack=(function () {
+  var unpack = (function () {
     var CryptoMine = (function () {
       /**
        * [js-sha256]{@link https://github.com/emn178/js-sha256}
@@ -514,6 +514,7 @@ function moduleEntry(returnMethod){
       })();
 
       const ECC = function simpleECC(basePoint, a, b, p, n, l, hl, hashFunction) {
+        const self = globalThis;
         const curveSet = {
           "secp256k1": [
             {
@@ -635,10 +636,10 @@ function moduleEntry(returnMethod){
             return r;
           }
         }
-        var p1 = (p + 1n) / 4n; //Pre-compute (P+1)/4
+        let p1 = (p + 1n) / 4n; //Pre-compute (P+1)/4
         function uncompressPoint(x, canDevideBy2) {
-          var c = x ** 3n + a * x + b;
-          var y = modPow(c, p1, p);
+          let c = x ** 3n + a * x + b;
+          let y = modPow(c, p1, p);
           return new Point(x, (!(y % 2n) === canDevideBy2) ? y : p - y);
         }
         function get_inverse(b, p) {
@@ -649,7 +650,7 @@ function moduleEntry(returnMethod){
         }
         function addPad(l = 0, u) {
           if (u.length > l) throw new Error("PadingError");
-          var r = new Uint8Array(l);
+          let r = new Uint8Array(l);
           r.set(u, l - u.length);
           return r;
         }
@@ -660,63 +661,123 @@ function moduleEntry(returnMethod){
           }
           return new Uint8Array(0);
         }
-        function gcd(a, b) {
-          return b ? gcd(b, a % b) : a;
-        }
         function mod(a, b) {
           var t = a % b;
           return t >= 0 ? t : b + t;
         }
         class Point {
-          constructor(x, y) {
-            this.x = x || 0n;
-            this.y = y || 0n;
+          constructor(x = 0n, y = 0n) {
+            this.x = x;
+            this.y = y;
           }
         }
-        function pointAdd(pa, pb) {
-          if ((pa.x === 0n && pa.y === 0n) || (pb.x === 0n && pb.y === 0n)) {
-            return new Point(pa.x + pb.x, pa.y + pb.y);
-          } else if (pa.x === pb.x && ((pa.y + pb.y) == 0n)) {
-            return new Point(0n, 0n);
+
+        function pointAdd(p, q) {
+          return fromJacobian(jacobianAdd(toJacobian(p), toJacobian(q)));
+        };
+        function pointMul(n, p) {
+          return fromJacobian(jacobianMultiply(toJacobian(p), n));
+        };
+        /**
+         * @param {Point} pA 
+         * @returns {jacobianPoint}
+         */
+        function toJacobian(pA) {
+          return new jacobianPoint(pA.x, pA.y, 1n);
+        };
+        /**
+         * @param {jacobianPoint} pA 
+         * @returns {Point}
+         */
+        function fromJacobian(pA) {
+          var z = get_inverse(pA.z, p);
+          var point = new Point(
+            mod(pA.x * (z ** 2n), p),
+            mod(pA.y * (z ** 3n), p)
+          );
+          return point;
+        };
+        class jacobianPoint {
+          constructor(x = 0n, y = 0n, z = 0n) {
+            this.x = x;
+            this.y = y;
+            this.z = z;
           }
-          var b = 0n, c = 0n, d, f = true;
-          if ((pa.x === pb.x) && (pa.y === pb.y)) {
-            b = 3n * pa.x * pa.x + a;
-            c = 2n * pa.y;
-          } else {
-            b = pa.y - pb.y;
-            c = pa.x - pb.x;
-          }
-          if (b * c < 0n) {
-            f = false;
-            b = b >= 0 ? b : -b;
-            c = c >= 0 ? c : -c;
-          }
-          var _gcd = gcd(b, c);
-          b /= _gcd;
-          c /= _gcd;
-          if (c !== 1) { c = get_inverse(c, p) }
-          d = b * c;
-          if (!f) { d = -d; }
-          var x = mod(d * d - pa.x - pb.x, p);
-          var y = mod(d * (pa.x - x) - pa.y, p);
-          return new Point(x, y);
         }
-        function pointMul(n, g) {
-          n = BigInt(n)
-          let ans = new Point(0n, 0n);
-          while (n > 0n) {
-            if (n & 1n) {
-              ans = pointAdd(ans, g);
+        /**
+         * 
+         * @param {jacobianPoint} pA 
+         * @returns {jacobianPoint}
+         */
+        function jacobianDouble(pA) {
+          if (pA.y == 0) {
+            return new jacobianPoint(0n, 0n, 0n);
+          };
+          let r = mod(3n * pA.x ** 2n + a * pA.z ** 4n, p);
+          let y2 = mod(pA.y ** 2n, p);
+          let t = mod(4n * pA.x * y2, p);
+          let x = mod(r ** 2n - 2n * t, p);
+          let y = mod(r * (t - x) - 8n * y2 ** 2n, p);
+          let z = mod(2n * pA.y * pA.z, p);
+          return new jacobianPoint(x, y, z);
+        };
+
+        /**
+         * 
+         * @param {jacobianPoint} pA 
+         * @param {jacobianPoint} pB 
+         * @returns {jacobianPoint}
+         */
+        function jacobianAdd(pA, pB) {
+          if (pA.y == 0n) {
+            return pB;
+          };
+          if (pB.y == 0n) {
+            return pA;
+          };
+          let yBzA3 = mod(pB.y * (pA.z ** 3n), p);
+          let yAzB3 = mod(pA.y * (pB.z ** 3n), p);
+          let u = yBzA3 - yAzB3;
+          let xAzB2 = mod(pA.x * (pB.z ** 2n), p);
+          let xBzA2 = mod(pB.x * (pA.z ** 2n), p);
+          let v = xBzA2 - xAzB2;
+          if (xAzB2 === xBzA2) {
+            if (yAzB3 === yBzA3) {
+              return jacobianDouble(pA);
+            } else {
+              return new jacobianPoint(0n, 0n, 1n);
             }
-            g = pointAdd(g, g);
-            n >>= 1n;
           }
-          return ans;
-        }
+          let v2 = mod(v * v, p);
+          let v3 = mod(v2 * v, p);
+          let xAzB2v2 = mod(xAzB2 * v2, p);
+          let x = mod(u ** 2n - v3 - 2n * xAzB2v2, p);
+          let y = mod(u * (xAzB2v2 - x) - pA.y * (pB.z ** 3n) * (v3), p);
+          let z = mod(v * pA.z * pB.z, p);
+          return new jacobianPoint(x, y, z);
+        };
+        function jacobianMultiply(pA, k) {
+          if (pA.y === 0n || k === 0n) {
+            return new Point(0n, 0n, 1n);
+          };
+          if (k === 1n) {
+            return pA;
+          };
+          if (k < 0n || k >= n) {
+            return jacobianMultiply(pA, mod(k, n));
+          };
+          let nextLevel = jacobianDouble(jacobianMultiply(pA, k / 2n));
+          if (mod(k, 2n) === 0n) {
+            return nextLevel;
+          };
+          if (mod(k, 2n) === 1n) {
+            return jacobianAdd(nextLevel, pA);
+          };
+          throw new Error(`unexcept number or point.`);
+        };
         function GenerateHEX(len) {
           var result = [];
-          for (i = 0; i < len; i++) {
+          for (let i = 0; i < len; i++) {
             let temp = Math.floor(Math.random() * 256).toString(16);
             if (temp.length == 1) {
               result[i] = "0" + temp;
@@ -835,7 +896,7 @@ function moduleEntry(returnMethod){
     var fs = require("fs");
     const fromHEXString = hexString =>
       new Uint8Array(hexString.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-    function read(currentVersion=VERSION,packageFile=PACKAGEFILE,_PublicKey=PUBLICKEY) {
+    function read(currentVersion = VERSION, packageFile = PACKAGEFILE, _PublicKey = PUBLICKEY) {
       let err = new Error();
       let filesbuf, Header;
       if (fs.existsSync(packageFile)) {
@@ -907,15 +968,15 @@ function moduleEntry(returnMethod){
     read.CryptoMine = CryptoMine;
     return read;
   })();
-  let hooked=false;
+  let hooked = false;
   //Hook to modules
-  let installHook=function() {
-    if(hooked)return;
-    hooked=true;
-    const originalFsFuncs={};
-    const entries = unpack.apply(this,arguments);
+  let installHook = function () {
+    if (hooked) return;
+    hooked = true;
+    const originalFsFuncs = {};
+    const entries = unpack.apply(this, arguments);
     const path = require("path");
-    const ReadableStream=require("stream").Readable;
+    const ReadableStream = require("stream").Readable;
     const root = path.resolve(".");
     const mod = require("module");
     const originalJSFunc = mod._extensions[".js"];
@@ -924,80 +985,80 @@ function moduleEntry(returnMethod){
     const originalResolve = mod._findPath;
     const exts = Object.keys(mod._extensions);
     const slash = normalize("./node_modules").substring(1, 2);
-    const isDir=(filename)=>Object.keys(entries).filter(e => e.startsWith(normalize(filename) + slash)).length != 0;
+    const isDir = (filename) => Object.keys(entries).filter(e => e.startsWith(normalize(filename) + slash)).length != 0;
     function normalize(_path) {
-      let result=path.resolve(_path).substring(root.length);
-      if(!result){
+      let result = path.resolve(_path).substring(root.length);
+      if (!result) {
         return path.resolve(_path);
       }
-      return "."+result;
+      return "." + result;
     }
-    const fs=require("fs");
-    let backupFsFunc=fn=>originalFsFuncs[fn]=fs[fn];
+    const fs = require("fs");
+    let backupFsFunc = fn => originalFsFuncs[fn] = fs[fn];
     ["readdirSync",
-    "readFileSync",
-    "writeFileSync",
-    "createWriteStream",
-    "createReadStream",
-    "existsSync",
-    "statSync",
-    "lstatSync",
-    "fstatSync"].forEach(e=>backupFsFunc(e));
-    fs.readFileSync=function(p,o){
-      if(typeof p==="string"){
-        if(o==="utf8"||o==="utf-8"){
-          return (new TextDecoder).decode(entries[normalize(p)])||originalFsFuncs.readFileSync.apply(this,arguments);
+      "readFileSync",
+      "writeFileSync",
+      "createWriteStream",
+      "createReadStream",
+      "existsSync",
+      "statSync",
+      "lstatSync",
+      "fstatSync"].forEach(e => backupFsFunc(e));
+    fs.readFileSync = function (p, o) {
+      if (typeof p === "string") {
+        if (o === "utf8" || o === "utf-8") {
+          return (new TextDecoder).decode(entries[normalize(p)]) || originalFsFuncs.readFileSync.apply(this, arguments);
         }
-        return entries[normalize(p)]||originalFsFuncs.readFileSync.apply(this,arguments);
+        return entries[normalize(p)] || originalFsFuncs.readFileSync.apply(this, arguments);
       }
     }
-    function existsInPackage(p){
-      return (Object.keys(entries).filter(e => e.startsWith(normalize(p))).length >0);
+    function existsInPackage(p) {
+      return (Object.keys(entries).filter(e => e.startsWith(normalize(p))).length > 0);
     }
-    function writeMethod(originalFunction){
-      return function(){
-        let p=arguments[0];
-        if(typeof p==="string"){
-          if(existsInPackage(path.dirname(p))){
-            if(isDir(path.dirname(p))){
-              fs.mkdirSync(path.dirname(p),{recursive:true});
+    function writeMethod(originalFunction) {
+      return function () {
+        let p = arguments[0];
+        if (typeof p === "string") {
+          if (existsInPackage(path.dirname(p))) {
+            if (isDir(path.dirname(p))) {
+              fs.mkdirSync(path.dirname(p), { recursive: true });
             }
           }
-          return originalFunction.apply(this,arguments);
+          return originalFunction.apply(this, arguments);
         }
       }
     }
-    fs.writeFileSync=writeMethod(originalFsFuncs.writeFileSync);
-    fs.createReadStream=function(p,opts={}){
-      let stream=new ReadableStream();
-      let done=false;
+    fs.writeFileSync = writeMethod(originalFsFuncs.writeFileSync);
+    fs.createReadStream = function (p, opts = {}) {
+      let stream = new ReadableStream();
+      let done = false;
       let data;
-      try{
-        data=fs.readFileSync(p);
-      }catch{
-        return originalFsFuncs.createReadStream.apply(this,arguments);
+      try {
+        data = fs.readFileSync(p);
+      } catch {
+        return originalFsFuncs.createReadStream.apply(this, arguments);
       }
-      opts.start = opts.start||0;
-      opts.end = opts.end||0;
-      stream._read=function(){
-        if(done)return undefined;
-        done=true;
-        this.push(data.subarray(opts.start, opts.end+1));
+      opts.start = opts.start || 0;
+      opts.end = opts.end || 0;
+      stream._read = function () {
+        if (done) return undefined;
+        done = true;
+        this.push(data.subarray(opts.start, opts.end + 1));
         this.push(null);
       }
       return stream;
     }
-    fs.createWriteStream=writeMethod(originalFsFuncs.createWriteStream);
-    fs.existsSync=function(p){
-      return existsInPackage(p)||originalFsFuncs.existsSync.apply(this,arguments);
+    fs.createWriteStream = writeMethod(originalFsFuncs.createWriteStream);
+    fs.existsSync = function (p) {
+      return existsInPackage(p) || originalFsFuncs.existsSync.apply(this, arguments);
     }
-    function statGenerator(originalFunction){
-      return function(p){
-        const _true=()=>true;
-        const _false=()=>false;
-        const zerotimeMs=0;
-        const zerotime=new Date(zerotimeMs);
-        let result={
+    function statGenerator(originalFunction) {
+      return function (p) {
+        const _true = () => true;
+        const _false = () => false;
+        const zerotimeMs = 0;
+        const zerotime = new Date(zerotimeMs);
+        let result = {
           isFile: _true,
           isDirectory: _false,
           isBlockDevice: _false,
@@ -1005,51 +1066,51 @@ function moduleEntry(returnMethod){
           isSymbolicLink: _false,
           isFIFO: _false,
           isSocket: _false,
-          ino:0,
-          atimeMs:zerotimeMs,
-          mtimeMs:zerotimeMs,
-          ctimeMs:zerotimeMs,
-          birthtime:zerotimeMs,
-          atime:zerotime,
-          mtime:zerotime,
-          ctime:zerotime,
-          birthtime:zerotime
+          ino: 0,
+          atimeMs: zerotimeMs,
+          mtimeMs: zerotimeMs,
+          ctimeMs: zerotimeMs,
+          birthtime: zerotimeMs,
+          atime: zerotime,
+          mtime: zerotime,
+          ctime: zerotime,
+          birthtime: zerotime
         };
-        if(existsInPackage(p)){
-          if(isDir(p)){
-            result.size=0;
-            result.isFile=_false;
-            result.isDirectory=_true;
-          }else{
-            result.size=Uint8Array.from(fs.readFileSync(p)).length;
+        if (existsInPackage(p)) {
+          if (isDir(p)) {
+            result.size = 0;
+            result.isFile = _false;
+            result.isDirectory = _true;
+          } else {
+            result.size = Uint8Array.from(fs.readFileSync(p)).length;
           }
           return result;
-        }else{
-          return originalFunction.apply(this,arguments);
+        } else {
+          return originalFunction.apply(this, arguments);
         }
       }
     }
-    ["statSync","lstatSync","fstatSync"].forEach(e=>fs[e]=statGenerator(originalFsFuncs[e]));
-    fs.readdirSync=function(p,o){
-      p=normalize(p);
-      let level=p.split(slash).length;
-      let inPackageFiles=Object.keys(entries).filter(e => e.startsWith(normalize(p) + slash)).map(e=>path.resolve(e));
-      let inPkgFileSet=new Set();
-      inPackageFiles.forEach(function(a){
-        if(normalize(a).split(slash).length!=level+1)return false;
+    ["statSync", "lstatSync", "fstatSync"].forEach(e => fs[e] = statGenerator(originalFsFuncs[e]));
+    fs.readdirSync = function (p, o) {
+      p = normalize(p);
+      let level = p.split(slash).length;
+      let inPackageFiles = Object.keys(entries).filter(e => e.startsWith(normalize(p) + slash)).map(e => path.resolve(e));
+      let inPkgFileSet = new Set();
+      inPackageFiles.forEach(function (a) {
+        if (normalize(a).split(slash).length != level + 1) return false;
         inPkgFileSet.add(normalize(a).split(slash).pop());
       });
-      let inPackage=[...inPkgFileSet];
+      let inPackage = [...inPkgFileSet];
       let originalResult;
-      try{
-        originalResult=originalFsFuncs.readdirSync.apply(this,arguments);
-      }catch{
-        originalResult=[];
+      try {
+        originalResult = originalFsFuncs.readdirSync.apply(this, arguments);
+      } catch {
+        originalResult = [];
       }
-      var result=[...(new Set([...inPackage,...originalResult]))];
+      var result = [...(new Set([...inPackage, ...originalResult]))];
       return result;
     };
-    ["stat","lstat","fstat", "readdir", "exists"].forEach(function (fn) {
+    ["stat", "lstat", "fstat", "readdir", "exists"].forEach(function (fn) {
       fs[fn] = function (path, callback) {
         let result;
         try {
@@ -1065,30 +1126,30 @@ function moduleEntry(returnMethod){
         });
       };
     });
-    ["readFile"].forEach(function(fn) {
-      originalFsFuncs[fn]=fs[fn];
-      fs[fn] = function(path, optArg, callback) {
-        if(!callback) {
+    ["readFile"].forEach(function (fn) {
+      originalFsFuncs[fn] = fs[fn];
+      fs[fn] = function (path, optArg, callback) {
+        if (!callback) {
           callback = optArg;
           optArg = undefined;
         }
         let result;
         try {
           result = fs[fn + "Sync"](path, optArg);
-        } catch(e) {
-          setImmediate(function() {
+        } catch (e) {
+          setImmediate(function () {
             callback(e);
           });
           return;
         }
-        setImmediate(function() {
+        setImmediate(function () {
           callback(null, result);
         });
       };
     });
 
     mod._extensions[".js"] = function (_module, filename) {
-      if(module.id.includes("fs"))throw "asd";
+      if (module.id.includes("fs")) throw "asd";
       let targetBuffer = entries[normalize(filename)];
       if (!targetBuffer) {
         targetBuffer = fs.readFileSync(filename)
@@ -1111,9 +1172,9 @@ function moduleEntry(returnMethod){
         throw err;
       }
     };
-    const originalLookup=mod._resolveLookupPaths;
-    mod._resolveLookupPaths=function(){
-      var result=originalLookup.apply(this,arguments);
+    const originalLookup = mod._resolveLookupPaths;
+    mod._resolveLookupPaths = function () {
+      var result = originalLookup.apply(this, arguments);
       return result;
     }
     mod._findPath = function () {
@@ -1161,73 +1222,73 @@ function moduleEntry(returnMethod){
       }
       return result;
     }
-    function uninstall(){
-      if(!hooked)return;
-      hooked=false;
-      mod._extensions[".js"]=originalJSFunc;
-      mod._extensions[".json"]=originalJSONFunc;
-      mod._findPath=originalResolve;
-      Object.keys(originalFsFuncs).forEach(e=>fs[e]=originalFsFuncs[e]);
-      originalFsFuncs.length=0;
+    function uninstall() {
+      if (!hooked) return;
+      hooked = false;
+      mod._extensions[".js"] = originalJSFunc;
+      mod._extensions[".json"] = originalJSONFunc;
+      mod._findPath = originalResolve;
+      Object.keys(originalFsFuncs).forEach(e => fs[e] = originalFsFuncs[e]);
+      originalFsFuncs.length = 0;
       return true;
     }
     return uninstall;
   };
-  if(returnMethod){
+  if (returnMethod) {
     return installHook;
-  }else{
-    module.exports=installHook;
+  } else {
+    module.exports = installHook;
   }
 }
-function CLIEntry(){
-  return ((process.send)?AppEntry:DaemonEntry).apply(this,arguments);
+function CLIEntry() {
+  return ((process.send) ? AppEntry : DaemonEntry).apply(this, arguments);
 }
-function DaemonEntry(){
-  var cp=require("child_process");
-  var instance=cp.fork("./helper/packer/packer.js");
-  process.on("SIGINT",function(){});
-  function exithandler(code){
-    if(code ===null){
-      
-    }else if(code!==255){
+function DaemonEntry() {
+  var cp = require("child_process");
+  var instance = cp.fork("./helper/packer/packer.js");
+  process.on("SIGINT", function () { });
+  function exithandler(code) {
+    if (code === null) {
+
+    } else if (code !== 255) {
       process.exit(code);
     }
   }
-  var ProcessClosed=new WeakSet();
-  function handler(msg){
-    if(typeof msg!=="object"){return;}
-    if(msg.restart){
-      instance.on("close",function (){
+  var ProcessClosed = new WeakSet();
+  function handler(msg) {
+    if (typeof msg !== "object") { return; }
+    if (msg.restart) {
+      instance.on("close", function () {
         ProcessClosed.add(instance)
       })
-      instance.off("close",exithandler);
-      setTimeout(function _(){
-        if(!ProcessClosed.has(instance)){
-          setTimeout(_,100);
+      instance.off("close", exithandler);
+      setTimeout(function _() {
+        if (!ProcessClosed.has(instance)) {
+          setTimeout(_, 100);
           return;
         }
-        instance=cp.fork(msg.restart)
-        instance.on("message",handler);
-        instance.on("close",exithandler);
-      },0);
+        instance = cp.fork(msg.restart)
+        instance.on("message", handler);
+        instance.on("close", exithandler);
+      }, 0);
     }
   }
-  instance.on("message",handler);
-  instance.on("close",exithandler);
+  instance.on("message", handler);
+  instance.on("close", exithandler);
 }
-function AppEntry(){
-  let sharedObject={};
-  module.exports=sharedObject;
-  try{
-    sharedObject.mode="normal";
-    sharedObject.PACKAGEFILE=PACKAGEFILE;
-    moduleEntry(true)(VERSION,PACKAGEFILE,PUBLICKEY); //安装文件钩子
-  }catch(error){
+function AppEntry() {
+  let sharedObject = {};
+  module.exports = sharedObject;
+  try {
+    sharedObject.mode = "normal";
+    sharedObject.PACKAGEFILE = PACKAGEFILE;
+    moduleEntry(true)(VERSION, PACKAGEFILE, PUBLICKEY); //安装文件钩子
+  } catch (error) {
     console.error(error);
-    sharedObject.mode="recovery";
-    sharedObject.PACKAGEFILE=BACKUPPACKAGEFILE;
-    moduleEntry(true)(VERSION,BACKUPPACKAGEFILE,PUBLICKEY); //安装文件钩子
+    sharedObject.mode = "recovery";
+    sharedObject.PACKAGEFILE = BACKUPPACKAGEFILE;
+    moduleEntry(true)(VERSION, BACKUPPACKAGEFILE, PUBLICKEY); //安装文件钩子
   }
   return require("./_app");
 }
-return ((require.main!==module)?moduleEntry:CLIEntry)(); //Return on the top-level;
+return ((require.main !== module) ? moduleEntry : CLIEntry)(); //Return on the top-level;

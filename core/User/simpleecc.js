@@ -20,9 +20,9 @@
       256,
       32,
       (function () {
-        if (typeof sha256==="function") {
+        if (typeof sha256 === "function") {
           return globalThis.sha256;
-        }else if(typeof require==="function"){
+        } else if (typeof require === "function") {
           return require("./CryptoMine").hash;
         } else if (hashFunction.name === "sha256") {
           return hashFunction;
@@ -55,28 +55,28 @@
       throw new Error("Need an vaild parameter.");
     }
   }
-  function revocableProxy(p,h){
-    if(!(this instanceof revocableProxy)){
+  function revocableProxy(p, h) {
+    if (!(this instanceof revocableProxy)) {
       throw new TypeError(`Constructor ${revocableProxy.name} requires 'new'`);
     }
-    if(typeof p!=="object"||typeof h!=="object")throw new TypeError("Cannot create proxy with a non-object as target or handler");
-    var revoked=false;
-    var RevocableReflect=new Proxy(Reflect,{
-      get:function(o,k){
-        if(revoked)throw new TypeError(`Cannot perform '${k}' on a proxy that has been revoked`);
-        return h[k]||o[k];
+    if (typeof p !== "object" || typeof h !== "object") throw new TypeError("Cannot create proxy with a non-object as target or handler");
+    var revoked = false;
+    var RevocableReflect = new Proxy(Reflect, {
+      get: function (o, k) {
+        if (revoked) throw new TypeError(`Cannot perform '${k}' on a proxy that has been revoked`);
+        return h[k] || o[k];
       }
     })
-    var RevocableProxy=new Proxy(p,RevocableReflect);
-    function revoke(){
-      revoked=true;
+    var RevocableProxy = new Proxy(p, RevocableReflect);
+    function revoke() {
+      revoked = true;
     }
-    return {proxy:RevocableProxy,revoke};
+    return { proxy: RevocableProxy, revoke };
   }//Yes,I know proxy.revocable
   var cryptoKeyMap = new WeakMap();
   function importKey(exportable, Key) {
-    if(!((Key instanceof ArrayBuffer)||(Key instanceof Uint8Array)))throw new Error("You can't import key because Key is not a instance of ArrayBuffer or a Uint8Array");
-    if(Key instanceof ArrayBuffer)Key=new Uint8Array(Key);
+    if (!((Key instanceof ArrayBuffer) || (Key instanceof Uint8Array))) throw new Error("You can't import key because Key is not a instance of ArrayBuffer or a Uint8Array");
+    if (Key instanceof ArrayBuffer) Key = new Uint8Array(Key);
     var type;
     if (Key[0] == 5) {
       type = "private";
@@ -100,7 +100,7 @@
     exportKey(getPoint) {
       var entry = cryptoKeyMap.get(this);
       if (!entry.exportable) throw "You can't export this key.";
-      if(getPoint)return entry.key;
+      if (getPoint) return entry.key;
       if (entry.type === "public") {
         if (entry.key.y % 2n === 0n) {
           return concatBufs([Uint8Array.from([2]), BigIntToBuffer(entry.key.x)]).buffer;
@@ -114,9 +114,9 @@
     constructor(type, exportable, key) {
       this.type = type;
       this.exportable = exportable;
-      var KeyDescription={ type, key, exportable };
-      var KeyProxy=new revocableProxy(KeyDescription,{});
-      this.revokeKey=KeyProxy.revoke;
+      var KeyDescription = { type, key, exportable };
+      var KeyProxy = new revocableProxy(KeyDescription, {});
+      this.revokeKey = KeyProxy.revoke;
       Object.freeze(this);
       cryptoKeyMap.set(this, KeyProxy.proxy);
     }
@@ -138,11 +138,11 @@
       return r;
     }
   }
-  var p1=(p+1n)/4n; //Pre-compute (P+1)/4
+  let p1 = (p + 1n) / 4n; //Pre-compute (P+1)/4
   function uncompressPoint(x, canDevideBy2) {
-    var c = x**3n + a * x + b;
-    var y = modPow(c, p1, p);
-    return new Point(x, (!(y%2n)===canDevideBy2) ? y : p - y);
+    let c = x ** 3n + a * x + b;
+    let y = modPow(c, p1, p);
+    return new Point(x, (!(y % 2n) === canDevideBy2) ? y : p - y);
   }
   function get_inverse(b, p) {
     function get_inv(x, y, p) {
@@ -152,7 +152,7 @@
   }
   function addPad(l = 0, u) {
     if (u.length > l) throw new Error("PadingError");
-    var r = new Uint8Array(l);
+    let r = new Uint8Array(l);
     r.set(u, l - u.length);
     return r;
   }
@@ -163,60 +163,120 @@
     }
     return new Uint8Array(0);
   }
-  function gcd(a, b) {
-    return b ? gcd(b, a % b) : a;
-  }
   function mod(a, b) {
     var t = a % b;
     return t >= 0 ? t : b + t;
   }
   class Point {
-    constructor(x, y) {
-      this.x = x || 0n;
-      this.y = y || 0n;
+    constructor(x = 0n, y = 0n) {
+      this.x = x;
+      this.y = y;
     }
   }
-  function pointAdd(pa, pb) {
-    if ((pa.x === 0n && pa.y === 0n) || (pb.x === 0n && pb.y === 0n)) {
-      return new Point(pa.x + pb.x, pa.y + pb.y);
-    } else if (pa.x === pb.x && ((pa.y + pb.y) == 0n)) {
-      return new Point(0n, 0n);
+
+  function pointAdd(p, q) {
+    return fromJacobian(jacobianAdd(toJacobian(p), toJacobian(q)));
+  };
+  function pointMul(n, p) {
+    return fromJacobian(jacobianMultiply(toJacobian(p), n));
+  };
+  /**
+   * @param {Point} pA 
+   * @returns {jacobianPoint}
+   */
+  function toJacobian(pA) {
+    return new jacobianPoint(pA.x, pA.y, 1n);
+  };
+  /**
+   * @param {jacobianPoint} pA 
+   * @returns {Point}
+   */
+  function fromJacobian(pA) {
+    var z = get_inverse(pA.z, p);
+    var point = new Point(
+      mod(pA.x * (z ** 2n), p),
+      mod(pA.y * (z ** 3n), p)
+    );
+    return point;
+  };
+  class jacobianPoint {
+    constructor(x = 0n, y = 0n, z = 0n) {
+      this.x = x;
+      this.y = y;
+      this.z = z;
     }
-    var b = 0n, c = 0n, d, f = true;
-    if ((pa.x === pb.x) && (pa.y === pb.y)) {
-      b = 3n * pa.x * pa.x + a;
-      c = 2n * pa.y;
-    } else {
-      b = pa.y - pb.y;
-      c = pa.x - pb.x;
-    }
-    if (b * c < 0n) {
-      f = false;
-      b = b >= 0 ? b : -b;
-      c = c >= 0 ? c : -c;
-    }
-    var _gcd = gcd(b, c);
-    b /= _gcd;
-    c /= _gcd;
-    if (c !== 1) { c = get_inverse(c, p) }
-    d = b * c;
-    if (!f) { d = -d; }
-    var x = mod(d * d - pa.x - pb.x, p);
-    var y = mod(d * (pa.x - x) - pa.y, p);
-    return new Point(x, y);
   }
-  function pointMul(n, g) {
-    n = BigInt(n)
-    let ans = new Point(0n, 0n);
-    while (n > 0n) {
-      if (n & 1n) {
-        ans = pointAdd(ans, g);
+  /**
+   * 
+   * @param {jacobianPoint} pA 
+   * @returns {jacobianPoint}
+   */
+  function jacobianDouble(pA) {
+    if (pA.y == 0) {
+      return new jacobianPoint(0n, 0n, 0n);
+    };
+    let r = mod(3n * pA.x ** 2n + a * pA.z ** 4n, p);
+    let y2 = mod(pA.y ** 2n, p);
+    let t = mod(4n * pA.x * y2, p);
+    let x = mod(r ** 2n - 2n * t, p);
+    let y = mod(r * (t - x) - 8n * y2 ** 2n, p);
+    let z = mod(2n * pA.y * pA.z, p);
+    return new jacobianPoint(x, y, z);
+  };
+
+  /**
+   * 
+   * @param {jacobianPoint} pA 
+   * @param {jacobianPoint} pB 
+   * @returns {jacobianPoint}
+   */
+  function jacobianAdd(pA, pB) {
+    if (pA.y == 0n) {
+      return pB;
+    };
+    if (pB.y == 0n) {
+      return pA;
+    };
+    let yBzA3 = mod(pB.y * (pA.z ** 3n), p);
+    let yAzB3 = mod(pA.y * (pB.z ** 3n), p);
+    let u = yBzA3 - yAzB3;
+    let xAzB2 = mod(pA.x * (pB.z ** 2n), p);
+    let xBzA2 = mod(pB.x * (pA.z ** 2n), p);
+    let v = xBzA2 - xAzB2;
+    if (xAzB2 === xBzA2) {
+      if (yAzB3 === yBzA3) {
+        return jacobianDouble(pA);
+      } else {
+        return new jacobianPoint(0n, 0n, 1n);
       }
-      g = pointAdd(g, g);
-      n >>= 1n;
     }
-    return ans;
-  }
+    let v2 = mod(v * v, p);
+    let v3 = mod(v2 * v, p);
+    let xAzB2v2 = mod(xAzB2 * v2, p);
+    let x = mod(u ** 2n - v3 - 2n * xAzB2v2, p);
+    let y = mod(u * (xAzB2v2 - x) - pA.y * (pB.z ** 3n) * (v3), p);
+    let z = mod(v * pA.z * pB.z, p);
+    return new jacobianPoint(x, y, z);
+  };
+  function jacobianMultiply(pA, k) {
+    if (pA.y === 0n || k === 0n) {
+      return new Point(0n, 0n, 1n);
+    };
+    if (k === 1n) {
+      return pA;
+    };
+    if (k < 0n || k >= n) {
+      return jacobianMultiply(pA, mod(k, n));
+    };
+    let nextLevel=jacobianDouble(jacobianMultiply(pA, k / 2n));
+    if (mod(k, 2n) === 0n) {
+      return nextLevel;
+    };
+    if (mod(k, 2n) === 1n) {
+      return jacobianAdd(nextLevel, pA);
+    };
+    throw new Error(`unexcept number or point.`);
+  };
   function GenerateHEX(len) {
     var result = [];
     for (let i = 0; i < len; i++) {
@@ -269,9 +329,9 @@
   }
   function getPublicKey(PrivateKey, exportable = true) {
     var entry = cryptoKeyMap.get(PrivateKey);
-    if(typeof PrivateKey=="bigint"){
+    if (typeof PrivateKey == "bigint") {
       return new cryptoKey("public", exportable, pointMul(PrivateKey, BasePoint));
-    }else{
+    } else {
       return new cryptoKey("public", exportable, pointMul(entry.key, BasePoint));
     }
   }
@@ -280,7 +340,7 @@
     return [p, getPublicKey(p, exportable)];
   }
   function sign(data, PrivateKey) {
-    if(!cryptoKeyMap.has(PrivateKey))throw new Error("This cryptoKey cannot sign the data.");
+    if (!cryptoKeyMap.has(PrivateKey)) throw new Error("This cryptoKey cannot sign the data.");
     var entry = cryptoKeyMap.get(PrivateKey);
     var z = HEXtoNumber(hashFunction(data));
     var k = HEXtoNumber(GenerateHEX(256));
@@ -292,7 +352,7 @@
     return concatBufs([rB, sB]).buffer;
   }
   function verifysign(data, sign, PublicKey) {
-    if(!cryptoKeyMap.has(PublicKey))throw new Error("This cryptoKey cannot verify the data.");
+    if (!cryptoKeyMap.has(PublicKey)) throw new Error("This cryptoKey cannot verify the data.");
     var z = HEXtoNumber(hashFunction(data));
     var entry = cryptoKeyMap.get(PublicKey);
     sign = new Uint8Array(sign);
