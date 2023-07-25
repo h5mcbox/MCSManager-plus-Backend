@@ -5,7 +5,7 @@ const response = require("../../helper/Response");
 const permssion = require("../../helper/Permission");
 
 WebSocketObserver().listener("server/view", async (data) => {
-  if (!permssion.hasRights(data.WsSession.username,"server")) return;
+  if (!permssion.hasRights(data.WsSession.username,"server:overview")) return;
   //let value = serverModel.ServerManager().getServerList();
   var allServers=[];
   for(let item of workerModel.getOnlineWorkers()){
@@ -22,7 +22,7 @@ WebSocketObserver().listener("server/view", async (data) => {
 
 WebSocketObserver().listener("server/get",async (data) => {
   //服务器名在 data.body 里面
-  if (!permssion.hasRights(data.WsSession.username,"server")) return;
+  if (!permssion.hasRights(data.WsSession.username,"server:getServer")) return;
 
   let serverName = data.body.trim();
   let mcserver = serverModel.ServerManager().getServer(serverName);
@@ -46,7 +46,7 @@ WebSocketObserver().listener("server/get",async (data) => {
 });
 
 WebSocketObserver().listener("server/create", (data) => {
-  if (!permssion.hasRights(data.WsSession.username,"server")) return;
+  if (!permssion.hasRights(data.WsSession.username,"server:createServer")) return;
 
   let ServerConfig = JSON.parse(data.body);
   let serverName = ServerConfig.serverName.trim();
@@ -69,7 +69,7 @@ WebSocketObserver().listener("server/create", (data) => {
 });
 
 WebSocketObserver().listener("server/create_dir", (data) => {
-  if (!permssion.hasRights(data.WsSession.username,"server")) return;
+  if (!permssion.hasRights(data.WsSession.username,"server:create_dir")) return;
 
   let ServerConfig = JSON.parse(data.body);
   const server = serverModel.ServerManager().getServer(ServerConfig.serverName);
@@ -85,7 +85,7 @@ WebSocketObserver().listener("server/create_dir", (data) => {
 });
 
 WebSocketObserver().listener("server/rebuilder", (data) => {
-  if (!permssion.hasRights(data.WsSession.username,"server")) return;
+  if (!permssion.hasRights(data.WsSession.username,"server:rebuilder")) return;
   let ServerConfig = JSON.parse(data.body);
   let oldServerName = ServerConfig.oldServerName.trim();
   const server = serverModel.ServerManager().getServer(oldServerName);
@@ -97,7 +97,7 @@ WebSocketObserver().listener("server/rebuilder", (data) => {
 });
 
 WebSocketObserver().listener("server/delete", (data) => {
-  if (!permssion.hasRights(data.WsSession.username,"server")) return;
+  if (!permssion.hasRights(data.WsSession.username,"server:deleteServer")) return;
 
   let serverName = data.body.trim();
   try {
@@ -116,7 +116,7 @@ WebSocketObserver().listener("server/delete", (data) => {
 
 //服务器批量启动与关闭
 WebSocketObserver().listener("server/opt_all", async (data) => {
-  if (!permssion.hasRights(data.WsSession.username,"server")) return;
+  if (!permssion.hasRights(data.WsSession.username,"server:operateAllServer")) return;
 
   try {
     for(let item of workerModel.getOnlineWorkers()){

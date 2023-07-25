@@ -6,15 +6,34 @@ let groupRights={
 };
 /**
  * @param {String} username
+*/
+function getUser(username){
+  return userCenter.get(username);
+}
+/**
+ * @param {String} username
  * @returns {String}
 */
 function getUserGroup(username){
-  let user=userCenter.get(username);
+  let user=getUser(username);
   if(username.substring(0,1)==="#")return "master";
   if(user){
     return user.dataModel.group;
   }else{
     return "";
+  }
+}
+/**
+ * @param {String} username
+ * @returns {Set<String>}
+*/
+function getUserRights(username){
+  let user=getUser(username);
+  if(username.substring(0,1)==="#")return "master";
+  if(user){
+    return new Set(user.dataModel.userRights);
+  }else{
+    return new Set;
   }
 }
 function loadRights(){
@@ -30,18 +49,33 @@ function loadRights(){
   return groupRights.loaded=true;
 };
 /**
- * @returns {Set}
+ * @returns {Set<String>}
  * @param {String} group 
  */
 function getRights(group){
   return groupRights[group];
 }
+/**
+ * @returns {Boolean}
+ * @param {String} username 
+ * @param {String} rname
+ */
 function hasRights(username,rname){
   if(!groupRights.loaded)loadRights();
   if(username.substring(0,1)==="#")return true;
+  if((!rname.startsWith("permission"))&&hasRights(username,"permission:skipPermissionCheck"))return true;
   let group=getUserGroup(username);
+  let userRights=getUserRights(username);
   let rights=getRights(group);
-  return rights.has(rname);
+  let hasRight=rights.has(rname)||userRights.has(rname);
+  if(!hasRight){
+    let rnameSplit=rname.split(":");
+    if(rnameSplit.length===1)return false;
+    rnameSplit.pop();
+    let parentRight=rnameSplit.join(":");
+    return hasRights(username,parentRight);
+  }
+  return hasRight;
 }
 
 function randomString(len) {

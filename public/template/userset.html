@@ -106,6 +106,12 @@
                 </div>
               </div>
             </div>
+            <div class="input-group input-group-sm">
+              <span class="input-group-addon"> 权限配置ID </span>
+              <input type="text" class="form-control" v-model="PID" placeholder="[未配置 您可以点击配置权限直接从这里设置此用户的权限]" disabled />
+              <span class="input-group-btn"><button class="btn btn-primary" v-on:click="toPermissionConfig()">配置权限</button></span>
+              <p class="input-group-addon">注：配置权限后会自动产生配置ID</p>
+            </div>
             <p>准许的服务器，输入服务器名字，分别以空格分割</p>
             <div class="input-group input-group-sm">
               <span class="input-group-addon"> 准许的服务器 </span>
@@ -132,6 +138,7 @@
     // 定义页面地址
     TOOLS.definePage("template/userset", "userset/update", null);
 
+    PAGE.nowPage="userset";
     VIEW_MODEL.newVue("UsersetList", {
       el: "#UsersetList",
       data: {
@@ -140,7 +147,8 @@
         password: "",
         LoginPublicKey:"",
         userGroup:"user",
-        allowedServer: ""
+        allowedServer: "",
+        PID:""
       },
       methods: {
         toRegisterUser: function () {
@@ -149,7 +157,7 @@
             TOOLS.pushMsgWindow("用户名不合法！请重新输入！");
             return;
           }
-          if ((this.password.length < 6 || this.password.length > 18)&&!(this.password.length == 0 && this.LoginPublicKey.length == 66)) {
+          if ((this.password.length < 6 || this.password.length > 100)&&!(this.password.length == 0 && this.LoginPublicKey.length == 66)) {
             TOOLS.pushMsgWindow("密码长度不正确！");
             return;
           }
@@ -162,7 +170,8 @@
             password: this.password,
             newLoginPublicKey: this.LoginPublicKey,
             newGroup:this.userGroup,
-            allowedServer: allwoedServers
+            allowedServer: allwoedServers,
+            PID:this.PID
           };
           WS.sendMsg("userset/create", JSON.stringify(obj), function () {
             PAGE.refresh();
@@ -177,6 +186,18 @@
           if (!result) return;
           WS.sendMsg("userset/delete", JSON.stringify(obj), function () {
             PAGE.refresh();
+          });
+        },
+        toPermissionConfig:function(){
+          let that=this;
+          TOOLS.popWind({
+            style: {
+              maxWidth: "400px",
+              top: "0px"
+            },
+            title: "权限配置页面",
+            template: "template/dialog/PermissionConfig.html",
+            callback: function (PID) {that.PID=PID;}
           });
         },
         refresh: function () {

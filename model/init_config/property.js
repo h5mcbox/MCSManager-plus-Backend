@@ -125,16 +125,18 @@ MCSERVER.localProperty.rights={
   banned:{rights:["banned"]},
   user:{rights:["2FA","genuser"]},
   master:{inherits:"user",rights:[
-    "workers",
-    "userset",
-    "server",
-    "soft",
-    "docker",
-    "restart",
-    "center",
-    "fileupload",
-    "update",
-    "onlinefs"
+    //"workers",
+    //"userset",
+    //"server",
+    //"soft",
+    //"docker",
+    //"restart",
+    //"center",
+    //"fileupload",
+    //"update",
+    //"onlinefs",
+    //"customApikey",
+    "permission"
   ]}
 }
 /**

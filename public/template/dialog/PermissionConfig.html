@@ -1,0 +1,79 @@
+<!-- docker/res -->
+
+<div id="PermissionConfig" style="text-align: center">
+  <p>权限列表</p>
+  <small>这里您可以配置用户权限。</small>
+  <br />
+  <div style="margin-top: 4px; display: inline-block; text-align: center">
+    <div
+      v-for="item of PermissionConfig.permissions"
+      class="input-group input-group-sm"
+      style="
+        margin: 2px;
+        display: inline-block;
+        padding: 4px 8px;
+        color: rgb(58, 56, 56);
+        text-align: center;
+        box-shadow: 0px 0px 2px #a7a7a7;
+        font-weight: bold;
+        font-size: 13px;
+        cursor: pointer;
+        border-radius: 2px;
+        background-color: #cac9c9;
+        margin-left: 8px;
+        margin-bottom: 8px;
+        margin-top: 0px;
+      "
+    >
+      <!--<span v-text=" item "></span> | <span v-text="val.name "></span> |-->
+      <span v-text="item" class="input-group-addon"></span><button v-on:click="deletePermission(item)" class="btn btn-danger form-control">删除</button>
+    </div>
+  </div>
+  <div v-if="PermissionConfig.permissions.length==0">
+    <b>暂时没有任何数据。</b>
+  </div>
+  <br>
+  <div class="input-group input-group-sm">
+    <span class="input-group-addon"> 权限名 </span>
+    <input type="text" class="form-control" v-model="inputPermissionName" list="PermissionList"/>
+    <span class="input-group-btn"><button class="btn btn-primary" v-on:click="addPermission()">添加权限</button></span>
+    <datalist id="PermissionList">
+      <option v-bind:value="permission[0]" v-for="permission of PermissionConfig.probablyPermissions">{{permission[0]}} - {{permission[1]}}</option>
+    </datalist>
+  </div>
+  <br>
+  <button class="btn btn-danger" v-on:click="ok()">关 闭</button>
+</div>
+<script>
+  if(PAGE.nowPage==="userset"){
+    PAGE.data=`PID:${VIEW_MODEL.UsersetList.PID}`;
+  }else if(PAGE.nowPage==="OneUserView"){
+    PAGE.data=`username:${VIEW_MODEL.OneUserView.username}`;
+  }else{
+    PAGE.data=`PID:`;
+  }
+  WS.sendMsg("permission/getPermissionID", PAGE.data , function (obj) {
+    new Vue({
+      el: "#PermissionConfig",
+      data: {
+        PermissionConfig: obj.ResponseValue,
+        inputPermissionName:""
+      },
+      methods: {
+        addPermission:function(){
+          this.PermissionConfig.permissions.push(this.inputPermissionName);
+          this.inputPermissionName="";
+        },
+        deletePermission:function(f){
+          this.PermissionConfig.permissions=this.PermissionConfig.permissions.filter(e=>(e!==f));
+        },
+        ok: function () {
+          let that=this;
+          WS.sendMsg("permission/savePID", JSON.stringify(this.PermissionConfig),function(){
+            TOOLS.popWindClose(that.PermissionConfig.PID);
+          });
+        }
+      }
+    });
+  });
+</script>

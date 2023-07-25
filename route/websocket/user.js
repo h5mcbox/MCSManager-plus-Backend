@@ -6,7 +6,7 @@ const tools = require("../../core/tools");
 const totp = require("../../helper/totp");
 
 WebSocketObserver().listener("userset/update", (data) => {
-  if (!permssion.hasRights(data.WsSession.username,"userset")) return;
+  if (!permssion.hasRights(data.WsSession.username,"userset:overview")) return;
 
   //添加是否在线
   let userNameList = userCenter().getUserList();
@@ -23,7 +23,7 @@ WebSocketObserver().listener("userset/update", (data) => {
 });
 
 WebSocketObserver().listener("userset/create", (data) => {
-  if (!permssion.hasRights(data.WsSession.username,"userset")) return;
+  if (!permssion.hasRights(data.WsSession.username,"userset:createUser")) return;
 
   try {
     let newUserConfig = JSON.parse(data.body);
@@ -34,6 +34,18 @@ WebSocketObserver().listener("userset/create", (data) => {
     let username = newUserConfig.username.trim();
     let password = newUserConfig.password.trim();
     let newGroup = newUserConfig.newGroup.trim();
+    let PID = newUserConfig.PID.trim();
+    let permissionTableBucket=data.WsSession.PIDs,permissionTable={};
+    if(permissionTableBucket&&permissionTableBucket[PID]){
+      permissionTable=permissionTableBucket[PID];
+      if(permissionTable){
+        delete permissionTableBucket[PID];
+        if(!permissionTable.RestrictedUsername){
+          response.wsMsgWindow(data.ws, "用户名与权限表限定用户名不一致");
+          return;
+        }
+      }
+    }
     let LoginPublicKey = newUserConfig.newLoginPublicKey.trim();
 
     // 用户名范围限制
@@ -50,7 +62,7 @@ WebSocketObserver().listener("userset/create", (data) => {
       }
     }
 
-    userCenter().register(username, password, LoginPublicKey,newGroup);
+    userCenter().register(username, password, LoginPublicKey,newGroup,permissionTable.permissions);
     //去除掉空白的
     let allowedServerList = [];
     for (let k in newUserConfig.allowedServer) {
@@ -74,7 +86,7 @@ WebSocketObserver().listener("userset/create", (data) => {
 });
 
 WebSocketObserver().listener("userset/delete", (data) => {
-  if (!permssion.hasRights(data.WsSession.username,"userset")) return;
+  if (!permssion.hasRights(data.WsSession.username,"userset:deleteUser")) return;
 
   try {
     let deleteObj = JSON.parse(data.body);
@@ -100,7 +112,7 @@ WebSocketObserver().listener("userset/delete", (data) => {
 });
 
 WebSocketObserver().listener("userset/reload", (data) => {
-  if (!permssion.hasRights(data.WsSession.username,"userset")) return;
+  if (!permssion.hasRights(data.WsSession.username,"userset:reloadFromFile")) return;
 
   try {
     userCenter().initUser();
@@ -116,7 +128,7 @@ WebSocketObserver().listener("userset/reload", (data) => {
 
 //查看某个用戶信息
 WebSocketObserver().listener("userset/view", (data) => {
-  if (!permssion.hasRights(data.WsSession.username,"userset")) return;
+  if (!permssion.hasRights(data.WsSession.username,"userset:view")) return;
 
   let user = userCenter().get(data.body.trim());
   response.wsSend(data.ws, "userset/view", {
@@ -132,7 +144,7 @@ WebSocketObserver().listener("userset/view", (data) => {
 
 //更新用户配置
 WebSocketObserver().listener("userset/upinfo", (data) => {
-  if (!permssion.hasRights(data.WsSession.username,"userset")) return;
+  if (!permssion.hasRights(data.WsSession.username,"userset:uploadInfomation")) return;
 
   try {
     let newUserConfig = JSON.parse(data.body);
@@ -150,6 +162,23 @@ WebSocketObserver().listener("userset/upinfo", (data) => {
     let username = newUserConfig.username.trim();
     let newPW = newUserConfig.newPassword.trim();
     let newUS = newUserConfig.newUsername.trim();
+    let PID = newUserConfig.PID.trim();
+    let permissionTableBucket=data.WsSession.PIDs,permissionTable={};
+    if(permissionTableBucket&&permissionTableBucket[PID]){
+      permissionTable=permissionTableBucket[PID];
+      if(permissionTable){
+        delete permissionTableBucket[PID];
+        if(permissionTable.RestrictedUsername!==username){
+          response.wsMsgWindow(data.ws, "用户名与权限表限定用户名不一致");
+          return;
+        }
+      }
+    }
+    if(permissionTable.permissions){
+      let userDataModel=userCenter().get(username).dataModel;
+      userDataModel.userRights=permissionTable.permissions;
+      userDataModel.save();
+    }
     let newGroup = newUserConfig.newGroup.trim();
     let newLoginPublicKey = newUserConfig.newLoginPublicKey.trim()
 

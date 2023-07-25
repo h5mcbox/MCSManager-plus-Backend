@@ -5,7 +5,7 @@ const response = require("../../helper/Response");
 
 // 获取指定用户的 API KEY
 WebSocketObserver().listener("apikey/get", (data) => {
-  if(!permssion.hasRights(data.WsSession.username,"genuser"))return;
+  if(!permssion.hasRights(data.WsSession.username,"genuser:getAPIKEY"))return;
   const username = permssion.hasRights(data.WsSession.username,"customApikey") ? data.body : data.WsSession.username;
 
   const user = userCenter().get(username);
@@ -16,7 +16,7 @@ WebSocketObserver().listener("apikey/get", (data) => {
 // 更新用户的 API KEY
 // 其中，API KEY 不可自定义，有且只能根据后端算法生成
 WebSocketObserver().listener("apikey/update", (data) => {
-  if(!permssion.hasRights(data.WsSession.username,"genuser"))return;
+  if(!permssion.hasRights(data.WsSession.username,"genuser:updateAPIKEY"))return;
   const username = permssion.hasRights(data.WsSession.username,"customApikey") ? data.body : data.WsSession.username;
 
   const user = userCenter().get(username);
@@ -31,7 +31,7 @@ WebSocketObserver().listener("apikey/update", (data) => {
 
 // 删除 API KEY
 WebSocketObserver().listener("apikey/delete", (data) => {
-  if(!permssion.hasRights(data.WsSession.username,"genuser"))return;
+  if(!permssion.hasRights(data.WsSession.username,"genuser:deleteAPIKEY"))return;
   const username = permssion.hasRights(data.WsSession.username,"customApikey") ? data.body : data.WsSession.username;
 
   const user = userCenter().get(username);

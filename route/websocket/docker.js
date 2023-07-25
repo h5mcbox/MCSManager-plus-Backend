@@ -14,7 +14,7 @@ const WorkerCenter = require("../../model/WorkerModel");
 
 //Docker 容器创建路由
 WebSocketObserver().listener("docker/new", (data) => {
-  if(!permssion.hasRights(data.WsSession.username,"docker"))return;
+  if(!permssion.hasRights(data.WsSession.username,"docker:new"))return;
   let dockerConfig = JSON.parse(data.body);
   //{dockerImageName: "",
   //dockerfile: "FROM java:latest↵RUN mkdir -p /mcsd↵RUN echo "Asia…teractive tzdata↵WORKDIR / mcsd↵RUN apt - get update"}
@@ -80,7 +80,7 @@ WebSocketObserver().listener("docker/new", (data) => {
 //结果列表获取
 //路由
 WebSocketObserver().listener("docker/res", async (data) => {
-  if(!permssion.hasRights(data.WsSession.username,"docker"))return;
+  if(!permssion.hasRights(data.WsSession.username,"docker:res"))return;
   let result=[];
   for(let item of WorkerCenter.getOnlineWorkers()){
     var view=await item.send("docker/res");
@@ -94,7 +94,7 @@ WebSocketObserver().listener("docker/res", async (data) => {
 
 //获取配置
 WebSocketObserver().listener("docker/config", (data) => {
-  if(!permssion.hasRights(data.WsSession.username,"docker"))return;
+  if(!permssion.hasRights(data.WsSession.username,"docker:config"))return;
   let serverName = data.body || "";
   if (serverName) {
     /*
@@ -113,7 +113,7 @@ WebSocketObserver().listener("docker/config", (data) => {
 
 //设置配置
 WebSocketObserver().listener("docker/setconfig", (data) => {
-  if(!permssion.hasRights(data.WsSession.username,"docker"))return;
+  if(!permssion.hasRights(data.WsSession.username,"docker:setConfig"))return;
   // {
   //     serverName: "xxxx",
   //     dockerConfig: { ... }

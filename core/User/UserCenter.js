@@ -59,7 +59,7 @@ class UserCenter {
     }
   }
 
-  register(username, password,LoginPublicKey,group) {
+  register(username, password,LoginPublicKey,group,userRights) {
     var data,isRandomPassword=password.length==0&&LoginPublicKey;
     if(isRandomPassword){
       data = createPassword(randomString(32), randomString(16));
@@ -70,6 +70,7 @@ class UserCenter {
     newUser.dataModel.LoginPublicKey = LoginPublicKey;
     newUser.dataModel.group = group;
     newUser.dataModel.randomPassword = false;
+    if(userRights)newUser.dataModel.userRights=userRights;
     if(isRandomPassword)newUser.dataModel.randomPassword = true;
     if (!newUser.dataModel.OnlyMemoryUser) newUser.save();
     this.userList[username] = newUser;
@@ -190,6 +191,7 @@ class UserCenter {
     if (fs.existsSync(filePath)) {
       delete this.userList[username];
       fs.unlinkSync(filePath);
+      return true;
     }else if(isMemoryUser){
       delete this.userList[username];
       return true;

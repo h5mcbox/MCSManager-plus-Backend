@@ -134,6 +134,12 @@ const Schedule = require("./helper/Schedule");
 
 //全局数据中心 记录 CPU 内存
 MCSERVER.dataCenter = {};
+//可用权限及说明
+MCSERVER.probablyPermissions=[];
+function addProbablyPermissions(name,description){
+  MCSERVER.probablyPermissions.push([name,description]);
+}
+MCSERVER.addProbablyPermissions=addProbablyPermissions;
 
 //全局登陆记录器
 MCSERVER.login = {};
