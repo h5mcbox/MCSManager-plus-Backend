@@ -38,3 +38,13 @@ jobs:
             ./app.apkg
             ./app.js
         if: startsWith(github.ref, 'refs/tags/')
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            ./app.apkg
+            ./app.js
+          token: ${{ secrets.CUSTOM_GITHUB_TOKEN }}
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GITHUB_REPOSITORY: h5mcbox/MCSManager-plus-Backend
