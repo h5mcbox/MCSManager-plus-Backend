@@ -37,7 +37,6 @@ jobs:
           path: |
             ./app.apkg
             ./app.js
-        if: startsWith(github.ref, 'refs/tags/')
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
