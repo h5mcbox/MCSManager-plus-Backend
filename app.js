@@ -514,7 +514,6 @@ function moduleEntry(returnMethod) {
       })();
 
       const ECC = function simpleECC(basePoint, a, b, p, n, l, hl, hashFunction) {
-        const self = globalThis;
         const curveSet = {
           "secp256k1": [
             {
@@ -527,7 +526,17 @@ function moduleEntry(returnMethod) {
             2n ** 256n - 432420386565659656852420866394968145599n,
             256,
             32,
-            hash
+            (function () {
+              if (typeof sha256 === "function") {
+                return globalThis.sha256;
+              } else if (typeof require === "function") {
+                return require("js-sha256");
+              } else if (hashFunction.name === "sha256") {
+                return hashFunction;
+              } else {
+                throw "There has not sha256 function to use";
+              }
+            })()
           ]
         }
         if (typeof basePoint === "string") {
@@ -553,29 +562,11 @@ function moduleEntry(returnMethod) {
             throw new Error("Need an vaild parameter.");
           }
         }
-        function revocableProxy(p, h) {
-          if (!(this instanceof revocableProxy)) {
-            throw new TypeError(`Constructor ${revocableProxy.name} requires 'new'`);
-          }
-          if (typeof p !== "object" || typeof h !== "object") throw new TypeError("Cannot create proxy with a non-object as target or handler");
-          var revoked = false;
-          var RevocableReflect = new Proxy(Reflect, {
-            get: function (o, k) {
-              if (revoked) throw new TypeError(`Cannot perform '${k}' on a proxy that has been revoked`);
-              return h[k] || o[k];
-            }
-          })
-          var RevocableProxy = new Proxy(p, RevocableReflect);
-          function revoke() {
-            revoked = true;
-          }
-          return { proxy: RevocableProxy, revoke };
-        }//Yes,I know proxy.revocable
-        var cryptoKeyMap = new WeakMap();
+        let cryptoKeyMap = new WeakMap();
         function importKey(exportable, Key) {
           if (!((Key instanceof ArrayBuffer) || (Key instanceof Uint8Array))) throw new Error("You can't import key because Key is not a instance of ArrayBuffer or a Uint8Array");
           if (Key instanceof ArrayBuffer) Key = new Uint8Array(Key);
-          var type;
+          let type;
           if (Key[0] == 5) {
             type = "private";
           } else if (Key[0] == 2 || Key[0] == 3) {
@@ -584,10 +575,10 @@ function moduleEntry(returnMethod) {
             throw new Error("Unknown key type.");
           }
           if (type === "private") {
-            var pk = BufferToBigInt(Key.slice(1));
+            let pk = BufferToBigInt(Key.slice(1));
             return new cryptoKey(type, exportable, pk);
           } else if (type === "public") {
-            var keyx = BufferToBigInt(Key.slice(1));
+            let keyx = BufferToBigInt(Key.slice(1));
             return new cryptoKey(type, exportable, uncompressPoint(keyx, !(Key[0] % 2)));
           }
         }
@@ -596,7 +587,7 @@ function moduleEntry(returnMethod) {
           exportable;
           revokeKey;
           exportKey(getPoint) {
-            var entry = cryptoKeyMap.get(this);
+            let entry = cryptoKeyMap.get(this);
             if (!entry.exportable) throw "You can't export this key.";
             if (getPoint) return entry.key;
             if (entry.type === "public") {
@@ -612,8 +603,8 @@ function moduleEntry(returnMethod) {
           constructor(type, exportable, key) {
             this.type = type;
             this.exportable = exportable;
-            var KeyDescription = { type, key, exportable };
-            var KeyProxy = new revocableProxy(KeyDescription, {});
+            let KeyDescription = { type, key, exportable };
+            let KeyProxy = new Proxy.revocable(KeyDescription, {});
             this.revokeKey = KeyProxy.revoke;
             Object.freeze(this);
             cryptoKeyMap.set(this, KeyProxy.proxy);
@@ -624,7 +615,7 @@ function moduleEntry(returnMethod) {
           if (m == 1n) {
             return 0;
           } else {
-            var r = 1n;
+            let r = 1n;
             b = b % m;
             while (e > 0n) {
               if (e % 2n == 1n) {
@@ -662,7 +653,7 @@ function moduleEntry(returnMethod) {
           return new Uint8Array(0);
         }
         function mod(a, b) {
-          var t = a % b;
+          let t = a % b;
           return t >= 0 ? t : b + t;
         }
         class Point {
@@ -671,7 +662,7 @@ function moduleEntry(returnMethod) {
             this.y = y;
           }
         }
-
+      
         function pointAdd(p, q) {
           return fromJacobian(jacobianAdd(toJacobian(p), toJacobian(q)));
         };
@@ -690,8 +681,8 @@ function moduleEntry(returnMethod) {
          * @returns {Point}
          */
         function fromJacobian(pA) {
-          var z = get_inverse(pA.z, p);
-          var point = new Point(
+          let z = get_inverse(pA.z, p);
+          let point = new Point(
             mod(pA.x * (z ** 2n), p),
             mod(pA.y * (z ** 3n), p)
           );
@@ -721,7 +712,7 @@ function moduleEntry(returnMethod) {
           let z = mod(2n * pA.y * pA.z, p);
           return new jacobianPoint(x, y, z);
         };
-
+      
         /**
          * 
          * @param {jacobianPoint} pA 
@@ -776,7 +767,7 @@ function moduleEntry(returnMethod) {
           throw new Error(`unexcept number or point.`);
         };
         function GenerateHEX(len) {
-          var result = [];
+          let result = [];
           for (let i = 0; i < len; i++) {
             let temp = Math.floor(Math.random() * 256).toString(16);
             if (temp.length == 1) {
@@ -787,13 +778,13 @@ function moduleEntry(returnMethod) {
           }
           return result.join("");
         }
-        var BasePoint = new Point(basePoint.x, basePoint.y);
+        let BasePoint = new Point(basePoint.x, basePoint.y);
         function HEXtoNumber(HEX) {
           return BigInt("0x" + HEX);
         }
         function BigIntToBuffer(n = 0n) {
-          var l = Math.ceil(n.toString(16).length / 2);
-          var result = new Uint8Array(l);
+          let l = Math.ceil(n.toString(16).length / 2);
+          let result = new Uint8Array(l);
           for (let i = l - 1; i >= 0; i--) {
             result[i] = Number(n % 256n);
             n = n / 256n;
@@ -801,7 +792,7 @@ function moduleEntry(returnMethod) {
           return result;
         }
         function BufferToBigInt(b) {
-          var r = 0n;
+          let r = 0n;
           b.forEach((e, i) => {
             r += BigInt(e);
             if (i == b.length - 1) return true;
@@ -810,12 +801,12 @@ function moduleEntry(returnMethod) {
           return r;
         }
         function concatBufs(bufs = []) {
-          var totalLength = 0, result;
+          let totalLength = 0, result;
           for (const e of bufs) {
             totalLength += e.length;
           }
           result = new Uint8Array(totalLength);
-          var position = 0;
+          let position = 0;
           for (const e of bufs) {
             result.set(e, position);
             position += e.length;
@@ -826,7 +817,7 @@ function moduleEntry(returnMethod) {
           return new cryptoKey("private", exportable, HEXtoNumber(GenerateHEX(l)));
         }
         function getPublicKey(PrivateKey, exportable = true) {
-          var entry = cryptoKeyMap.get(PrivateKey);
+          let entry = cryptoKeyMap.get(PrivateKey);
           if (typeof PrivateKey == "bigint") {
             return new cryptoKey("public", exportable, pointMul(PrivateKey, BasePoint));
           } else {
@@ -834,35 +825,35 @@ function moduleEntry(returnMethod) {
           }
         }
         function genKeyPair(exportable = true) {
-          var p = generatePrivateKey(exportable);
+          let p = generatePrivateKey(exportable);
           return [p, getPublicKey(p, exportable)];
         }
         function sign(data, PrivateKey) {
           if (!cryptoKeyMap.has(PrivateKey)) throw new Error("This cryptoKey cannot sign the data.");
-          var entry = cryptoKeyMap.get(PrivateKey);
-          var z = HEXtoNumber(hashFunction(data));
-          var k = HEXtoNumber(GenerateHEX(256));
-          var k_inverse = get_inverse(k, n);
-          var kG = pointMul(k, BasePoint);
-          var r = kG.x;
-          var s = (k_inverse * (z + entry.key * r)) % n;
-          var rB = addPad(hl, BigIntToBuffer(r)), sB = addPad(hl, BigIntToBuffer(s));
+          let entry = cryptoKeyMap.get(PrivateKey);
+          let z = HEXtoNumber(hashFunction(data));
+          let k = HEXtoNumber(GenerateHEX(256));
+          let k_inverse = get_inverse(k, n);
+          let kG = pointMul(k, BasePoint);
+          let r = kG.x;
+          let s = (k_inverse * (z + entry.key * r)) % n;
+          let rB = addPad(hl, BigIntToBuffer(r)), sB = addPad(hl, BigIntToBuffer(s));
           return concatBufs([rB, sB]).buffer;
         }
         function verifysign(data, sign, PublicKey) {
           if (!cryptoKeyMap.has(PublicKey)) throw new Error("This cryptoKey cannot verify the data.");
-          var z = HEXtoNumber(hashFunction(data));
-          var entry = cryptoKeyMap.get(PublicKey);
-          sign = new Uint8Array(sign);
-          var rB = sign.slice(0, hl), sB = sign.slice(hl, 2 * hl);
-          var rrB = removePad(rB), rsB = removePad(sB);
-          var r = BufferToBigInt(rrB), s = BufferToBigInt(rsB);
-          var s_inverse = get_inverse(s, n);
-          var u1 = (s_inverse * z) % n;
-          var u2 = (s_inverse * r) % n;
-          var p1 = pointMul(u1, BasePoint);
-          var p2 = pointMul(u2, entry.key);
-          var p3 = pointAdd(p1, p2);
+          let z = HEXtoNumber(hashFunction(data));
+          let entry = cryptoKeyMap.get(PublicKey);
+          if (Buffer && sign instanceof Buffer) sign = new Uint8Array(sign);
+          let rB = sign.slice(0, hl), sB = sign.slice(hl, 2 * hl);
+          let rrB = removePad(rB), rsB = removePad(sB);
+          let r = BufferToBigInt(rrB), s = BufferToBigInt(rsB);
+          let s_inverse = get_inverse(s, n);
+          let u1 = (s_inverse * z) % n;
+          let u2 = (s_inverse * r) % n;
+          let p1 = pointMul(u1, BasePoint);
+          let p2 = pointMul(u2, entry.key);
+          let p3 = pointAdd(p1, p2);
           return p3.x === r;
         }
         return {
