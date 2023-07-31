@@ -22,7 +22,7 @@
         if (typeof sha256 === "function") {
           return globalThis.sha256;
         } else if (typeof require === "function") {
-          return require("js-sha256");
+          return require("./CryptoMine").hash;
         } else if (hashFunction.name === "sha256") {
           return hashFunction;
         } else {
