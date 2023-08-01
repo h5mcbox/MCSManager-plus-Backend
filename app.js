@@ -604,7 +604,7 @@ function moduleEntry(returnMethod) {
             this.type = type;
             this.exportable = exportable;
             let KeyDescription = { type, key, exportable };
-            let KeyProxy = new Proxy.revocable(KeyDescription, {});
+            let KeyProxy = Proxy.revocable(KeyDescription, {});
             this.revokeKey = KeyProxy.revoke;
             Object.freeze(this);
             cryptoKeyMap.set(this, KeyProxy.proxy);
