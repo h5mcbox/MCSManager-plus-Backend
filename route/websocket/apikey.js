@@ -10,7 +10,7 @@ WebSocketObserver().listener("apikey/get", (data) => {
 
   const user = userCenter().get(username);
   if (!user) return;
-  response.wsSend(data.ws, "apikey/get", user.dataModel.apikey); s
+  response.wsSend(data.ws, "apikey/get", user.dataModel.apikey);
 });
 
 // 更新用户的 API KEY
