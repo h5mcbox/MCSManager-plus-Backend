@@ -98,15 +98,14 @@ MCSERVER.localProperty.allow_status_api = false;
 //"mixed":http和https皆可访问
 //"onlyhttp":只监听http服务
 MCSERVER.localProperty.listen_type = "onlyhttp";
+//HSTS是否启用
+MCSERVER.localProperty.hsts = false;
+//HSTS持续时间，单位为秒
+MCSERVER.localProperty.hsts_long = 86400;
 
 //证书位置
 MCSERVER.localProperty.cert_path = "cert.pem";
 MCSERVER.localProperty.key_path = "key.pem";
-
-//HSTS是否启用
-MCSERVER.localProperty.hsts = true;
-//HSTS持续时间，单位为秒
-MCSERVER.localProperty.hsts_long = 86400;
 
 //跳过登录验证
 //非常危险,建议不要改动

@@ -7,7 +7,7 @@ const permssion = require("../../helper/Permission");
 const userModel = require("../../model/UserModel");
 const os = require("os");
 const mversion = require("../../helper/version");
-const workerModel=require("../../model/WorkerModel");
+const workerModel = require("../../model/WorkerModel");
 
 const MB_SIZE = 1024 * 1024;
 let serverM = serverModel.ServerManager();
@@ -55,13 +55,11 @@ setInterval(async function () {
   //统计封号ip数量
   for (let k in MCSERVER.login) MCSERVER.login[k] > 10 ? banipc++ : banipc;
   //获取正在运行服务器的数量
-  let allOnlineServers=0;
-  for(let item of workerModel.getOnlineWorkers()){
-    var view=await item.send("server/view");
-    var split=(view).split("\n\n")
-    var res=JSON.parse(split[0]);
-    if(res.ResponseKey!=="server/view")return false;
-    res.ResponseValue.items.forEach(e=>{if(e.data.run)allOnlineServers++});
+  let allOnlineServers = 0;
+  for (let item of workerModel.getOnlineWorkers()) {
+    let [header,body] = await item.send("server/view");
+    if (header.ResponseKey !== "server/view") return false;
+    header.ResponseValue.items.forEach(e => { if (e.data.run) allOnlineServers++ });
   }
   //缓存值
   cacheSystemInfo = {
@@ -87,27 +85,30 @@ setInterval(async function () {
     verisonA: mversion.verisonA,
     verisonB: mversion.verisonB,
     system: mversion.system,
-    isPanel:true
+    isPanel: true
   };
 
-  let useMemBai = ((os.freemem() / os.totalmem()) * 100).toFixed(0);
+  let useMemPrecent = 100 - ((os.freemem() / os.totalmem()) * 100).toFixed(0);
   //压入记录器
   MCSERVER.logCenter.pushLogData("CPU", tools.getMineTime(), parseInt(cacheCPU));
-  MCSERVER.logCenter.pushLogData("RAM", tools.getMineTime(), 100 - useMemBai);
+  MCSERVER.logCenter.pushLogData("RAM", tools.getMineTime(), useMemPrecent);
 
-  setTimeout(() => counter.save(), 0); //让其异步地去保存
+  setTimeout(() => counter.save(), 0); //异步保存计数器
 }, MCSERVER.localProperty.data_center_times);
 
 //重启逻辑
 WebSocketObserver().listener("center/restart", (data) => {
-  if(!permssion.hasRights(data.WsSession.username,"restart"))return;
+  if (!permssion.hasRights(data.WsSession.username, "restart")) return;
   MCSERVER.log("面板重启...");
-  process.send({restart:"./app.js"});
+  process.send({ restart: "./app.js" });
   process.emit("SIGINT");
 });
 
 //数据中心
 WebSocketObserver().listener("center/show", (data) => {
-  if(!permssion.hasRights(data.WsSession.username,"center"))return;
+  if (!permssion.hasRights(data.WsSession.username, "center")) return;
   response.wsSend(data.ws, "center/show", cacheSystemInfo);
 });
+
+MCSERVER.addProbablyPermissions("center","查看面板中心数据");
+MCSERVER.addProbablyPermissions("restart","重启面板");

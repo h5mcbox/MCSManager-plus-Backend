@@ -1,4 +1,5 @@
-const router = require("express")();
+const { Router } = require("express");
+const router = Router();
 const { loginUser, userCenter } = require("../model/UserModel");
 const response = require("../helper/Response");
 const loginedContainer = require("../helper/LoginedContainer");
@@ -69,7 +70,6 @@ router.get("/login", function (req, res) {
   res.json({ ChallengeID, Challenge });
 })
 router.post("/login", function (req, res) {
-  if (!req.xhr) return;
   let ip = req.socket.remoteAddress;
   let username = req.body.username || "";
   let password = req.body.password || "";
@@ -109,8 +109,8 @@ router.post("/login", function (req, res) {
       req.session["status"] = "logined";
       req.session.save();
       delete MCSERVER.login[ip];
-      var userDataModel = loginUser.dataModel;
-      if (userDataModel.TwoFAEnabled && (!TwoFAPassed) && (!MCSERVER.localProperty.skipLoginCheck)) {
+      let {TwoFAEnabled} = loginUser.dataModel;
+      if (TwoFAEnabled && (!TwoFAPassed) && (!MCSERVER.localProperty.skipLoginCheck)) {
         req.session["login"] = false;
         req.session["status"] = "2fa";
         response.returnMsg(res, "login/2fa-needed", "2fa-needed");
@@ -146,7 +146,6 @@ router.post("/login", function (req, res) {
 
 //用户请求登录键路由
 router.get("/login_key", function (req, res) {
-  if (!req.xhr) return;
   let username = req.query.username || null;
   let hashKey = req.session["login_Hashkey"] || tools.randomString(32);
   let okflag = true;
@@ -162,38 +161,26 @@ router.get("/login_key", function (req, res) {
     res.send(
       JSON.stringify({
         //salt
-        enkey1: loggingUser.dataModel.salt,
+        salt1: loggingUser.dataModel.salt,
         //md5Key
-        enkey2: hashKey
+        salt2: hashKey
       })
     );
     return;
   } else {
     //这里是 随机的 salt 与 md5key 因为用户根本不存在，则返回一个随机的类似于正常的信息，让前端判断错误
-    //(del)防止轻而易举的遍历用户名，但这仍然可以通过两次或三次尝试判断用户名是否存在(del)
-    //好了,也没法判断是否存在了，因为我们把假的salt也保存下来了
-    var enkey1 = fakeLoginKeys[username] || tools.randomString(6);
-    fakeLoginKeys[username] = enkey1;
+    //没法判断是否存在了，因为我们把假的salt也保存下来了
+    let salt1 = fakeLoginKeys[username] || tools.randomString(6);
+    fakeLoginKeys[username] = salt1;
     res.send(
       JSON.stringify({
         //salt
-        enkey1,
-        //md5Key
-        enkey2: hashKey
+        salt1,
+        salt2: hashKey
       })
     );
     return;
   }
-  /*
-  //这里是 随机的 salt 与 md5key 因为用户根本不存在，则返回一个随机的类似于正常的信息，让前端判断错误
-  //(del)防止轻而易举的遍历用户名，但这仍然可以通过两次或三次尝试判断用户名是否存在(del)
-  res.send(
-    JSON.stringify({
-      enkey1: tools.randomString(6),
-      enkey2: tools.randomString(32)
-    })
-  );
-  */
 });
 
 //模块导出

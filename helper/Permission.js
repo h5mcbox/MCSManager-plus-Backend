@@ -1,25 +1,25 @@
 const loginedContainer = require("./LoginedContainer");
-const userCenter=require("../model/UserModel").userCenter();
+const userCenter = require("../model/UserModel").userCenter();
 
-let groupRights={
-  loaded:false
+let groupRights = {
+  loaded: false
 };
 /**
  * @param {String} username
 */
-function getUser(username){
+function getUser(username) {
   return userCenter.get(username);
 }
 /**
  * @param {String} username
  * @returns {String}
 */
-function getUserGroup(username){
-  let user=getUser(username);
-  if(username.substring(0,1)==="#")return "master";
-  if(user){
+function getUserGroup(username) {
+  let user = getUser(username);
+  if (username.substring(0, 1) === "#") return "master";
+  if (user) {
     return user.dataModel.group;
-  }else{
+  } else {
     return "";
   }
 }
@@ -27,32 +27,32 @@ function getUserGroup(username){
  * @param {String} username
  * @returns {Set<String>}
 */
-function getUserRights(username){
-  let user=getUser(username);
-  if(username.substring(0,1)==="#")return "master";
-  if(user){
+function getUserRights(username) {
+  let user = getUser(username);
+  if (username.substring(0, 1) === "#") return "master";
+  if (user) {
     return new Set(user.dataModel.userRights);
-  }else{
+  } else {
     return new Set;
   }
 }
-function loadRights(){
-  var props=MCSERVER.localProperty;
-  for(let i of Object.keys(props.rights)){
-    let t=props.rights[i],a=new Set();
-    do{
-      for(let f of t.rights)a.add(f);
-      t=props.rights[t.inherits];
-    }while(t);
-    groupRights[i]=a;
+function loadRights() {
+  var props = MCSERVER.localProperty;
+  for (let i of Object.keys(props.rights)) {
+    let t = props.rights[i], a = new Set();
+    do {
+      for (let f of t.rights) a.add(f);
+      t = props.rights[t.inherits];
+    } while (t);
+    groupRights[i] = a;
   };
-  return groupRights.loaded=true;
+  return groupRights.loaded = true;
 };
 /**
  * @returns {Set<String>}
  * @param {String} group 
  */
-function getRights(group){
+function getRights(group) {
   return groupRights[group];
 }
 /**
@@ -60,20 +60,20 @@ function getRights(group){
  * @param {String} username 
  * @param {String} rname
  */
-function hasRights(username,rname){
-  if(!groupRights.loaded)loadRights();
-  if(username.substring(0,1)==="#")return true;
-  if((!rname.startsWith("permission"))&&hasRights(username,"permission:skipPermissionCheck"))return true;
-  let group=getUserGroup(username);
-  let userRights=getUserRights(username);
-  let rights=getRights(group);
-  let hasRight=rights.has(rname)||userRights.has(rname);
-  if(!hasRight){
-    let rnameSplit=rname.split(":");
-    if(rnameSplit.length===1)return false;
+function hasRights(username, rname) {
+  if (!groupRights.loaded) loadRights();
+  if (username.substring(0, 1) === "#") return true;
+  if ((!rname.startsWith("permission")) && hasRights(username, "permission:skipPermissionCheck")) return true;
+  let group = getUserGroup(username);
+  let userRights = getUserRights(username);
+  let rights = getRights(group);
+  let hasRight = rights.has(rname) || userRights.has(rname);
+  if (!hasRight) {
+    let rnameSplit = rname.split(":");
+    if (rnameSplit.length === 1) return false;
     rnameSplit.pop();
-    let parentRight=rnameSplit.join(":");
-    return hasRights(username,parentRight);
+    let parentRight = rnameSplit.join(":");
+    return hasRights(username, parentRight);
   }
   return hasRight;
 }
@@ -102,7 +102,7 @@ function defaultFalseCallBack(req, res, ResponseKey, ResponseValue, notAjaxRedir
 }
 
 module.exports.randomString = randomString;
-module.exports.groups = ()=>Object.keys(groupRights).filter(e=>e!=="loaded");
+module.exports.groups = () => Object.keys(groupRights).filter(e => e !== "loaded");
 module.exports.needLogin = (req, res, trueCallBack, falseCallBack) => {
   let username = req.session["username"];
   if (req.session["login"] && loginedContainer.isLogined(req.sessionID, username)) {
@@ -115,14 +115,14 @@ module.exports.needLogin = (req, res, trueCallBack, falseCallBack) => {
   return false;
 };
 
-module.exports.hasRights=(u,r)=>hasRights(u,r);
-module.exports.getUserGroup=u=>getUserGroup(u);
+module.exports.hasRights = (u, r) => hasRights(u, r);
+module.exports.getUserGroup = u => getUserGroup(u);
 
 // 基于 SESSION 的权限判断
-module.exports.hasSessionRights = (req, res,r) => {
+module.exports.hasSessionRights = (req, res, r) => {
   if (this.needLogin(req, res)) {
     const username = req.session["username"];
-    return hasRights(username,r);
+    return hasRights(username, r);
   }
   return false;
 };
@@ -150,7 +150,7 @@ module.exports.isCanServer = (userName, serverName) => {
   userName = userName.trim();
   serverName = serverName.trim();
   if (userName == "" || serverName == "") return false;
-  if (getUserGroup(userName)==="master") return true;
+  if (getUserGroup(userName) === "master") return true;
 
   if (userModel.userCenter().isExist(userName)) {
     let user = userModel.userCenter().get(userName);

@@ -1,3 +1,4 @@
+const msgpack = require("./msgpack");
 function send(res, info, value) {
   let str = JSON.stringify({
     ResponseKey: info,
@@ -14,13 +15,13 @@ function send(res, info, value) {
 }
 
 function wsSend(ws, info, value, body = "") {
-  let str = JSON.stringify({
+  let header = {
     ResponseKey: info,
     ResponseValue: value
-  });
+  };
   try {
     if (ws.readyState == ws.OPEN) {
-      ws.send(str + "\n\n" + body || "");
+      ws.send(msgpack.encode([header, body ?? ""]));
     }
   } catch (e) {
     MCSERVER.log("一个Websocket数据包发送失败:");

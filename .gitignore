@@ -19,6 +19,9 @@ core/*.json
 property.js
 !model/init_config/property.js
 
+# builds
+app.apkg
+
 tmp_upload/
 
 #vscode

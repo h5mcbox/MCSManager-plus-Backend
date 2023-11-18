@@ -2,6 +2,7 @@ const { WebSocketObserver } = require("../../model/WebSocketModel");
 const response = require("../../helper/Response");
 const permssion = require("../../helper/Permission");
 const WorkerCenter = require("../../model/WorkerModel");
+const msgpack = require("../../helper/msgpack");
 
 WebSocketObserver().listener("workers", (data) => {
   //Object {ws: WebSocket, req: IncomingMessage, user: undefined, header: Object, body: "[body 开始]
@@ -123,13 +124,10 @@ WebSocketObserver().listener("workers/center",async (data) => {
       response.wsMsgWindow(data.ws, "访问出错:" + "Worker不存在");
     }
     var worker=WorkerCenter.get(workerName);
-    var view=await worker.send("center/show",data.body);
-    var split=(view).split("\n\n");
-    var res=JSON.parse(split[0]);
-    if(res.ResponseKey!=="center/show")return false;
-    res.ResponseKey="workers/center";
-    split[0]=JSON.stringify(res);
-    data.ws.send(split.join("\n\n"));
+    var [header,body]=await worker.send("center/show",data.body);
+    if(header.ResponseKey!=="center/show")return false;
+    header.ResponseKey="workers/center";
+    data.ws.send(msgpack.encode([header,body]));
   } catch (e) {
     response.wsSend(data.ws, "workers/center", null);
     response.wsMsgWindow(data.ws, "访问Worker失败" + e);
@@ -144,18 +142,16 @@ WebSocketObserver().listener("workers/restart",async (data) => {
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
     }
     var worker=WorkerCenter.get(workerName);
-    var view=await worker.send("center/restart",data.body);
-    var split=(view).split("\n\n");
-    var res=JSON.parse(split[0]);
-    if(res.ResponseKey!=="center/restart")return false;
-    res.ResponseKey="workers/restart";
-    split[0]=JSON.stringify(res);
-    data.ws.send(split.join("\n\n"));
+    var [header,body]=await worker.send("center/restart",data.body);
+    if(header.ResponseKey!=="center/restart")return false;
+    header.ResponseKey="workers/restart";
+    data.ws.send(msgpack.encode([header,body]));
   } catch (e) {
     response.wsSend(data.ws, "workers/restart", null);
     response.wsMsgWindow(data.ws, "访问Worker失败" + e);
   }
 });
+MCSERVER.addProbablyPermissions("workers","管理分布式服务");
 MCSERVER.addProbablyPermissions("workers:overview","访问分布式服务中心");
 MCSERVER.addProbablyPermissions("workers:view","访问详细信息");
 MCSERVER.addProbablyPermissions("workers:uploadInfomation","保存Worker配置");

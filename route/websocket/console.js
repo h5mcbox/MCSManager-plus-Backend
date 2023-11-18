@@ -13,7 +13,7 @@ WebSocketObserver().listener("server/console/ws", (data) => {
   let serverName = data.body.trim();
 
   if (permssion.isCanServer(userName, serverName)) {
-    MCSERVER.log("[" + serverName + "] >>> 准许用户 " + userName + " 控制台监听");
+    MCSERVER.log(`[${serverName}] >>> 准许用户 ${userName} 控制台监听`);
     /*
     // 重置用户历史指针
     const instanceLogHistory = serverModel.ServerManager().getServer(serverName).logHistory;
@@ -31,7 +31,7 @@ WebSocketObserver().listener("server/console/ws", (data) => {
     return;
   }
 
-  MCSERVER.log("[" + serverName + "] 拒绝用户 " + userName + " 控制台监听");
+  MCSERVER.log(`[${serverName}] >>> 拒绝用户 ${userName} 控制台监听`);
   data.WsSession["console"] = undefined;
 });
 

@@ -10,33 +10,28 @@
     }, 1000 * 10);
   }
 
-  var ify = "\n\n";
   window.WS = new Object();
 
   window.WS.init = function (openCallback) {
     var wsURL = "websocket/ws?" + RES.TOKEN_NAME + "=" + RES.TOKEN;
     window.WS = new WebSocket(MCSERVER.URL(wsURL, MCSERVER.WS_PROTOCOL));
+    window.WS.binaryType = "arraybuffer";
     var tmp_callback = null;
     wsHeartBeatPackage(WS); //心跳包定时器开启
 
     WS.onmessage = function (e) {
-      var data = e.data;
-      var loc = data.indexOf("\n\n");
-      var header = data.substr(0, loc);
-      var body = data.substr(loc + 2);
-      var obj;
+      let [header, body] = msgpack.decode(new Uint8Array(e.data));
       try {
-        obj = JSON.parse(header);
         if (DEBUG) {
           console.log("=== Websocket 收到触发 ===");
-          console.log(obj);
+          console.log(header);
           console.log("Body:" + body);
           console.log("=== Websocket 收到结束 ===");
         }
-        obj.body = body;
-        MI.on("ws/response", obj, body);
+        header.body = body;
+        MI.on("ws/response", header, body);
         //产生当时数据接受事件
-        tmp_callback && tmp_callback(obj);
+        tmp_callback && tmp_callback(header);
         tmp_callback = null;
       } catch (e) {
         console.log("Websocket 数据到达时逻辑异常:");
@@ -55,21 +50,20 @@
       MI.on("ws/open", this);
     };
     WS.sendMsg = function (value, body, callback) {
-      var obj = {
+      let header = {
         RequestKey: "req",
         RequestValue: value
       };
       if (DEBUG) {
         console.log("=== Websocket 发送触发 ===");
-        console.log(obj);
+        console.log(header);
         console.log(body);
         console.log("=== Websocket 发送结束 ===");
       }
-      var headerStr = JSON.stringify(obj);
-      body = body || "";
+      body = body ?? "";
       if (callback) tmp_callback = callback;
       if (WS.readyState == WS.OPEN) {
-        WS.send(headerStr + ify + body);
+        WS.send(msgpack.encode([header, body]));
       } else {
         TOOLS.pushMsgWindow("与服务器链接中断，数据发送失败，请刷新或登陆重试");
       }

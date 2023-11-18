@@ -1,32 +1,33 @@
-const router = require("express")();
+const {Router} = require("express");
 
 const TokenManager = require("../helper/TokenManager");
 const { WebSocketObserver } = require("../model/WebSocketModel");
 
+const msgpack = require("../helper/msgpack");
 const permssion = require("../helper/Permission");
 const response = require("../helper/Response");
 const loginedContainer = require("../helper/LoginedContainer");
 const counter = require("../core/counter");
 
-require("express-ws")(router);
+const router=Router();
 
 //WebSocket 会话类
 class WebsocketSession {
   constructor(config = {}) {
-    this.login = config.login || false;
-    this.uid = config.uid || null;
-    this.ws = config.ws || null;
-    this.username = config.username || null;
-    this.token = config.token || null;
-    this.console = config.console || null;
-    this.sessionID = config.sessionID || null;
+    this.login = config.login ?? false;
+    this.uid = config.uid ?? null;
+    this.ws = config.ws ?? null;
+    this.username = config.username ?? null;
+    this.token = config.token ?? null;
+    this.console = config.console ?? null;
+    this.sessionID = config.sessionID ?? null;
   }
   send(data) {
     if (data) response.wsSend(data.ws, data.resK, data.resV, data.body);
   }
 
   getWebsocket() {
-    return this.ws || null;
+    return this.ws ?? null;
   }
 }
 
@@ -47,7 +48,7 @@ const MAX_ALIVE_COUNT = 60;
 //WebSocket 创建
 router.ws("/ws", function (ws, req) {
   // 令牌
-  let token = req.query[permssion.tokenName] || null;
+  let token = req.query[permssion.tokenName] ?? null;
 
   //无令牌 或 未登录
   if (!token || !req.session["login"]) {
@@ -149,18 +150,14 @@ router.ws("/ws", function (ws, req) {
       }
 
       //检查完毕 | 开始解析数据
-      //自定义协议数据解析
-      let loc = data.indexOf("\n\n");
-      let reqHeader = data.substr(0, loc);
-      let reqBody = data.substr(loc + 2);
+      //解码Message Pack数据包
+      let [header,body]=msgpack.decode(data);
 
-      //Websocket 自定义协议解析
-      const reqHeaderObj = JSON.parse(reqHeader);
-      if (!reqHeaderObj) return;
+      if (!header) return;
 
       //Websocket 心跳包 | 前端 10 秒递增链接健康指数
       //当网络延迟特别高时，也能很好的降低指数. 将来指数够低时，将自动优化数据的发送
-      if (reqHeaderObj["RequestValue"] == "HBPackage") {
+      if (header["RequestValue"] == "HBPackage") {
         status = true;
         // 最高心跳包健康数
         wsAliveHBCount < MAX_ALIVE_COUNT && wsAliveHBCount++;
@@ -171,19 +168,17 @@ router.ws("/ws", function (ws, req) {
         ws: ws,
         req: req,
         user: username,
-        header: reqHeaderObj,
-        body: reqBody,
-        RequestValue: reqHeaderObj["RequestValue"],
+        header: header,
+        body: body,
+        RequestValue: header["RequestValue"],
         token: token,
         WsSession: WsSession
       });
     } catch (err) {
       MCSERVER.error("WebSocket 请求处理时异常:", err);
     }
-  });
-
-  //关闭事件
-  ws.on("close", function () {
+  }).on("close", function () {
+    //关闭事件
     WebSocketClose();
   });
 

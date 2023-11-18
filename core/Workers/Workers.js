@@ -1,12 +1,14 @@
 //用户模型
 
+const msgpack = require("../../helper/msgpack");
 const DataModel = require("../DataModel");
-const {hash} = require("../User/CryptoMine");
+const { hash } = require("../User/CryptoMine");
 const fetch = require("node-fetch");
 const fs = require("fs");
 
 const WORKER_SAVE_PATH = "workers/";
 class Worker {
+  #reqMap=new Map;
   constructor(name, MasterKey, RemoteDescription) {
     let now = new Date().toLocaleString();
     if (name.startsWith("_")) {
@@ -32,24 +34,22 @@ class Worker {
   }
 
   /**
-   * @returns {Boolean}
+   * @returns {Promise<Boolean>}
    */
   async connect() {
-    if(this.connected){
+    if (this.connected) {
       this.broadcastMessage(`[${this.dataModel.workername}]已连接,无法重复断开`);
       return false;
     }
     let nowStr = new Date().toLocaleString();
-    let now=Math.floor(Date.now()/1000);
+    let now = Math.floor(Date.now() / 1000);
     try {
       var u = new URL(this.dataModel.RemoteDescription.endpoint);
-      let timeWindow=Math.floor(now/10);
-      let timeKey=hash.hmac(this.dataModel.MasterKey,timeWindow.toString());
+      let timeWindow = Math.floor(now / 10);
+      let timeKey = hash.hmac(this.dataModel.MasterKey, timeWindow.toString());
       u.pathname = "/token";
       u.searchParams.set("apikey", timeKey);
-      var res = await fetch(u.href, {
-        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-      });
+      var res = await fetch(u);
       var reso = await res.json();
       if (reso.ResponseValue) {
         this.token = reso.ResponseValue.token;
@@ -66,18 +66,17 @@ class Worker {
       return false;
     }
   }
-  broadcastMessage(msg){
-    let all = MCSERVER.allSockets;
-    let split=[JSON.stringify({
-      ResponseKey:"window/msg",
-      ResponseValue:""
-    }),msg];
-    for (let k in all) {
-      all[k].ws.send(split.join("\n\n"))
+  broadcastMessage(msg) {
+    let payload = msgpack.encode([{
+      ResponseKey: "window/msg",
+      ResponseValue: ""
+    }, msg]);
+    for (let client of Object.values(MCSERVER.allSockets)) {
+      client.ws.send(payload)
     }
   }
   disconnect() {
-    if(!this.connected){
+    if (!this.connected) {
       return false;
     }
     this.broadcastMessage(`[${this.dataModel.workername}]断开连接`);
@@ -94,23 +93,19 @@ class Worker {
     var wsC = new wsClient(u.href);
     wsC.on("close", () => this.disconnect());
     var that = this;
-    wsC.on("message", (data) => {
-      var split = (data.toString()).split("\n\n");
-      var res = JSON.parse(split[0]);
-      if (res.ResponseKey === "window/msg") {
-        this.broadcastMessage(`[${that.dataModel.workername}]` + split[1]);
+    wsC.on("message", data => {
+      const [header, body] = msgpack.decode(data);
+      if (header.ResponseKey === "window/msg") {
+        this.broadcastMessage(`[${that.dataModel.workername}]` + body);
         return true;
       }
-      if (res.ResponseKey === "server/console/ws") {
-        let all = MCSERVER.allSockets;
-        for (let k in all) {
-          if (all[k]["console"]) {
-            all[k].ws.send(split.join("\n\n"))
-          }
+      if (header.ResponseKey === "server/console/ws") {
+        for (let client of Object.values(MCSERVER.allSockets)) {
+          if (client["console"]) client.ws.send(data)
         }
         return true;
       }
-      this.tmp_cb && this.tmp_cb(data.toString());
+      this.tmp_cb && this.tmp_cb([header,body]);
       this.tmp_cb = null;
     });
     var onOpen = new Promise((resolve, reject) => { wsC.on("open", resolve); wsC.on("error", reject) });
@@ -132,13 +127,11 @@ class Worker {
       //return false;
       await this.connect();
     };
-    var obj = {
+    var header = {
       RequestKey: "req",
       RequestValue: path
     };
-    var header = JSON.stringify(obj) + "\n\n";
-    var payload = header + data;
-    this.wsClient.send(payload);
+    this.wsClient.send(msgpack.encode([header,data]));
     var that = this;
     var onReply = new Promise((resolve, reject) => that.tmp_cb = resolve);
     return await onReply;

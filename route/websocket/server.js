@@ -3,17 +3,16 @@ const serverModel = require("../../model/ServerModel");
 const workerModel = require("../../model/WorkerModel");
 const response = require("../../helper/Response");
 const permssion = require("../../helper/Permission");
+const msgpack = require("../../helper/msgpack");
 
 WebSocketObserver().listener("server/view", async (data) => {
   if (!permssion.hasRights(data.WsSession.username,"server:overview")) return;
   //let value = serverModel.ServerManager().getServerList();
   var allServers=[];
   for(let item of workerModel.getOnlineWorkers()){
-    var view=await item.send("server/view");
-    var split=(view).split("\n\n")
-    var res=JSON.parse(split[0]);
-    if(res.ResponseKey!=="server/view")return false;
-    res.ResponseValue.items.forEach(e=>allServers.push(e));
+    let [header]=await item.send("server/view");
+    if(header.ResponseKey!=="server/view")return false;
+    header.ResponseValue.items.forEach(e=>allServers.push(e));
   }
   response.wsSend(data.ws, "server/view", {
     items: allServers
@@ -36,13 +35,10 @@ WebSocketObserver().listener("server/get",async (data) => {
     response.wsMsgWindow(data.ws, "获取出错:" + "Worker不存在");
   }
   var worker=workerModel.get(serverLoc);
-  var view=await worker.send("server/get",data.body);
-  var split=(view).split("\n\n")
-  var res=JSON.parse(split[0]);
-  if(res.ResponseKey!=="server/get")return false;
-  res.ResponseValue.location=serverLoc;
-  split[0]=JSON.stringify(res);
-  data.ws.send(split.join("\n\n"));
+  var [header,body]=await worker.send("server/get",data.body);
+  if(header.ResponseKey!=="server/get")return false;
+  header.ResponseValue.location=serverLoc;
+  data.ws.send(msgpack.encode([header,body]));
 });
 
 WebSocketObserver().listener("server/create", (data) => {
@@ -68,7 +64,7 @@ WebSocketObserver().listener("server/create", (data) => {
   }
 });
 
-WebSocketObserver().listener("server/create_dir", (data) => {
+WebSocketObserver().listener("server/create_dir", async (data) => {
   if (!permssion.hasRights(data.WsSession.username,"server:create_dir")) return;
 
   let ServerConfig = JSON.parse(data.body);
@@ -78,7 +74,7 @@ WebSocketObserver().listener("server/create_dir", (data) => {
     response.wsMsgWindow(data.ws, "创建出错:" + "Worker不存在");
   }
   try {
-    workerModel.get(serverLocation).send("server/create_dir",data.body).then((_)=>{data.ws.send(_)})
+    await workerModel.get(serverLocation).send("server/create_dir",data.body).then(_=>data.ws.send(_));
   } catch (e) {
     response.wsMsgWindow(data.ws, "创建目录" + ServerConfig.cwd + "出错");
   }
@@ -126,3 +122,10 @@ WebSocketObserver().listener("server/opt_all", async (data) => {
     response.wsMsgWindow(data.ws, "执行失败:" + err);
   }
 });
+MCSERVER.addProbablyPermissions("server:overview","获取服务器列表");
+MCSERVER.addProbablyPermissions("server:getServer","返回单个服务器详细数据");
+MCSERVER.addProbablyPermissions("server:createServer","新建服务器");
+MCSERVER.addProbablyPermissions("server:create_dir","新建服务器目录");
+MCSERVER.addProbablyPermissions("server:rebuilder","修改服务器配置");
+MCSERVER.addProbablyPermissions("server:deleteServer","删除服务器");
+MCSERVER.addProbablyPermissions("server:operateAllServer","服务器批量启动与关闭");

@@ -48,7 +48,7 @@
                         <p>确认无误后，您可以进行以下操作:</p>
                         <div class="Line"></div>
                         <div class="PanelItemMuem">
-                          <button class="btn btn-info" v-on:click="toReCode()">启用两步验证</button>
+                          <button class="btn btn-info" v-on:click="toEnableTwoFA()">启用两步验证</button>
                           <button class="btn btn-info" v-on:click="toDisableTwoFA()">禁用两步验证</button>
                           <button class="btn btn-info" v-on:click="toUpdate()">更新两步验证密钥</button>
                         </div>
@@ -77,9 +77,10 @@
       },
       methods: {
         toUpdate: function () {
-          WS.sendMsg("userset/2fa/updateKey","{}")
+          WS.sendMsg("userset/2fa/updateKey","{}");
+          PAGE.refresh();
         },
-        toReCode: function () {
+        toEnableTwoFA: function () {
           var obj = {
             TwoFACode: Number(this.TwoFACode)
           };

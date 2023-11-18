@@ -241,7 +241,7 @@
   };
   function jacobianMultiply(pA, k) {
     if (pA.y === 0n || k === 0n) {
-      return new Point(0n, 0n, 1n);
+      return new jacobianPoint(0n, 0n, 1n);
     };
     if (k === 1n) {
       return pA;
@@ -337,6 +337,7 @@
     let z = HEXtoNumber(hashFunction(data));
     let entry = cryptoKeyMap.get(PublicKey);
     if (Buffer && sign instanceof Buffer) sign = new Uint8Array(sign);
+    else if (sign instanceof ArrayBuffer) sign = new Uint8Array(sign);
     let rB = sign.slice(0, hl), sB = sign.slice(hl, 2 * hl);
     let rrB = removePad(rB), rsB = removePad(sB);
     let r = BufferToBigInt(rrB), s = BufferToBigInt(rsB);

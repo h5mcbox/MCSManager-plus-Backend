@@ -20,12 +20,10 @@ WebSocketObserver().listener("genuser/home", async (data) => {
     // 判断是否为管理员，若是的话则返回所有服务端的数据
     var allServersNames=[],workerNames=[];
     for(let item of workerCenter.getOnlineWorkers()){
-      var view=await item.send("server/view");
+      var [header]=await item.send("server/view");
       workerNames.push(item.dataModel.workername);
-      var split=(view).split("\n\n")
-      var res=JSON.parse(split[0]);
-      if(res.ResponseKey!=="server/view")return false;
-      res.ResponseValue.items.forEach(e=>allServersNames.push(e.serverName));
+      if(header.ResponseKey!=="server/view")return false;
+      header.ResponseValue.items.forEach(e=>allServersNames.push(e.serverName));
     }
     if (permssion.hasRights(data.WsSession.username,"server")) {
       allowedServerList = [];
@@ -44,23 +42,21 @@ WebSocketObserver().listener("genuser/home", async (data) => {
         response.wsMsgWindow(data.ws, "创建出错:" + "Worker不存在");
       }
       var worker=workerCenter.get(serverLoc);
-      var view=await worker.send("server/get",allowedServerList[k]);
-      var split=(view).split("\n\n")
-      var res=JSON.parse(split[0]);
-      if(res.ResponseKey!=="server/get")continue;
+      var [header]=await worker.send("server/get",allowedServerList[k]);
+      if(header.ResponseKey!=="server/get")continue;
       //有些用户就是喜欢取不存在的
       if (userHaveServer == undefined) continue;
       //有些数据不应该是用户可以收到的
       userServerList.push({
-        serverName: res.ResponseValue.name,
-        lastDate: res.ResponseValue.lastDate,
-        createDate: res.ResponseValue.createDate,
-        run: res.ResponseValue.run,
-        jarName: res.ResponseValue.jarName,
-        timeLimitDate: res.ResponseValue.timeLimitDate
+        serverName: header.ResponseValue.name,
+        lastDate: header.ResponseValue.lastDate,
+        createDate: header.ResponseValue.createDate,
+        run: header.ResponseValue.run,
+        jarName: header.ResponseValue.jarName,
+        timeLimitDate: header.ResponseValue.timeLimitDate
       });
-      if (res.ResponseValue.run) {
-        OnlineServerList.push(res.ResponseValue.name);
+      if (header.ResponseValue.run) {
+        OnlineServerList.push(header.ResponseValue.name);
       }
     }
     var resObj={
@@ -147,3 +143,6 @@ WebSocketObserver().listener("genuser/re_password", (data) => {
     );
   }
 });
+MCSERVER.addProbablyPermissions("genuser","查看普通用户面板数据");
+MCSERVER.addProbablyPermissions("server","返回所有服务器数据");
+MCSERVER.addProbablyPermissions("banned","允许访问被封禁页面");

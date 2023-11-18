@@ -235,7 +235,7 @@ WebSocketObserver().listener("userset/upinfo", (data) => {
 
 //更新用户配置
 WebSocketObserver().listener("userset/2fa/set", (data) => {
-  if (!permssion.hasRights(data.WsSession.username,"2FA")) return;
+  if (!permssion.hasRights(data.WsSession.username,"2FA:enable")) return;
   var totp = require("../../helper/totp");
   //try {
   let form = JSON.parse(data.body);
@@ -261,7 +261,7 @@ WebSocketObserver().listener("userset/2fa/set", (data) => {
   //}
 });
 WebSocketObserver().listener("userset/2fa/disable", (data) => {
-  if (!permssion.hasRights(data.WsSession.username,"2FA")) return;
+  if (!permssion.hasRights(data.WsSession.username,"2FA:disable")) return;
   var totp = require("../../helper/totp");
   try {
     let form = JSON.parse(data.body);
@@ -287,7 +287,7 @@ WebSocketObserver().listener("userset/2fa/disable", (data) => {
   }
 });
 WebSocketObserver().listener("userset/2fa/updateKey", (data) => {
-  if (!permssion.hasRights(data.WsSession.username,"2FA")) return;
+  if (!permssion.hasRights(data.WsSession.username,"2FA:update")) return;
   var cryptoMine = require("../../core/User/CryptoMine");
   try {
     var tempuser = userCenter().get(data.req.session["username"]);
@@ -306,7 +306,7 @@ WebSocketObserver().listener("userset/2fa/updateKey", (data) => {
   }
 });
 WebSocketObserver().listener("userset/2fa/getAuthURL", (data) => {
-  if (!permssion.hasRights(data.WsSession.username,"2FA")) return;
+  if (!permssion.hasRights(data.WsSession.username,"2FA:getAuthURL")) return;
   var tempuser = userCenter().get(data.req.session["username"]);
   var auth= {
     randomPassword: tempuser.dataModel.randomPassword
@@ -314,3 +314,13 @@ WebSocketObserver().listener("userset/2fa/getAuthURL", (data) => {
   if(!auth.randomPassword){auth.authURL=totp.createURL((tempuser.dataModel.TwoFAKey || ""), "MCSManager", data.req.session["username"])}
   response.wsSend(data.ws, "userset/2fa/getAuthURL",auth);
 });
+MCSERVER.addProbablyPermissions("userset:overview","返回用户中心数据");
+MCSERVER.addProbablyPermissions("userset:createUser","新建用户");
+MCSERVER.addProbablyPermissions("userset:deleteUser","删除用户");
+MCSERVER.addProbablyPermissions("userset:reloadFromFile","从文件加载用户列表");
+MCSERVER.addProbablyPermissions("userset:view","查看某个用戶信息");
+MCSERVER.addProbablyPermissions("userset:uploadInfomation","更新用户信息");
+MCSERVER.addProbablyPermissions("2FA:enable","启用双因素验证");
+MCSERVER.addProbablyPermissions("2FA:disable","启用双因素验证");
+MCSERVER.addProbablyPermissions("2FA:update","更新双因素验证密钥");
+MCSERVER.addProbablyPermissions("2FA:getAuthURL","获取双因素验证密钥添加地址");

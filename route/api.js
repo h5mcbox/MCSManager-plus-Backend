@@ -1,4 +1,4 @@
-const router = require("express")();
+const {Router} = require("express");
 const serverModel = require("../model/ServerModel");
 const userModel = require("../model/UserModel");
 const mcPingProtocol = require("../helper/MCPingProtocol");
@@ -7,6 +7,8 @@ const keyManager = require("../helper/KeyManager");
 const requestLimit = require("../helper/RequestLimit");
 const WorkerCenter = require("../model/WorkerModel");
 const tools = require("../core/tools");
+
+const router=Router();
 
 // 服务端实例状态获取 | 公共性 API 接口
 // 无需任何权限判定

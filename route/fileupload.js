@@ -1,11 +1,5 @@
-/*
- * @Author: Copyright(c) 2020 Suwings
- * @Date: 2020-10-08 13:28:28
- * @LastEditTime: 2020-12-05 23:34:08
- * @Description: 文件上传
- */
-const express = require("express");
-const router = express.Router();
+const {Router} = require("express");
+const router = Router();
 const permission = require("../helper/Permission");
 const WorkerCenter=require("../model/WorkerModel");
 const {hash}=require("../core/User/CryptoMine");
@@ -38,7 +32,7 @@ router.post("/", upload.single("upload_file"), async (req, res) => {
   let timeWindow=Math.floor(now/600);
   let timeKey=hash.hmac(worker.dataModel.MasterKey,timeWindow.toString());
   u.searchParams.set("apikey",timeKey);
-  var response=await fetch(u.href,{
+  var response=await fetch(u,{
     method:"post",
     body:form
   });

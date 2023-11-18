@@ -1,11 +1,5 @@
-/*
- * @Author: Copyright(c) 2020 Suwings
- * @Date: 2020-10-08 13:28:28
- * @LastEditTime: 2020-12-05 23:34:08
- * @Description: 文件上传
- */
-const express = require("express");
-const router = express.Router();
+const {Router} = require("express");
+const router = Router();
 const fs = require("fs");
 const fetch=require("node-fetch");
 const WorkerCenter=require("../model/WorkerModel");

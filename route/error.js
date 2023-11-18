@@ -1,5 +1,6 @@
 //基础的路由定义
-const router = require("express")();
+const {Router} = require("express");
+const router=Router();
 
 //路由定义
 router.get("/404", function (req, res) {
@@ -15,7 +16,9 @@ router.get("/403", function (req, res) {
 });
 
 router.get("/599", function (req, res) {
-  res.send("599 不可思议的操作");
+  //res.send("599 不可思议的操作");
+  console.log(new Error);
+  res.send("500 服务器错误");
 });
 
 router.get("/499", function (req, res) {

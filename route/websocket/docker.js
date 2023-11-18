@@ -83,11 +83,9 @@ WebSocketObserver().listener("docker/res", async (data) => {
   if(!permssion.hasRights(data.WsSession.username,"docker:res"))return;
   let result=[];
   for(let item of WorkerCenter.getOnlineWorkers()){
-    var view=await item.send("docker/res");
-    var split=(view).split("\n\n");
-    var res=JSON.parse(split[0]);
-    if(res.ResponseKey!=="docker/res")return false;
-    res.ResponseValue.forEach(e=>result.push(e));
+    var [header]=await item.send("docker/res");
+    if(header.ResponseKey!=="docker/res")return false;
+    header.ResponseValue.forEach(e=>result.push(e));
   }
   response.wsSend(data.ws, "server/view", result);
 });
@@ -136,3 +134,8 @@ WebSocketObserver().listener("docker/setconfig", (data) => {
     WorkerCenter.get(serverLocation).send("docker/setconfig",data.body).then((_)=>{data.ws.send(_)});
   }
 });
+MCSERVER.addProbablyPermissions("docker","使用Docker");
+MCSERVER.addProbablyPermissions("docker:new","新建容器");
+MCSERVER.addProbablyPermissions("docker:res","结果列表获取");
+MCSERVER.addProbablyPermissions("docker:config","获取配置");
+MCSERVER.addProbablyPermissions("docker:setConfig","设置配置");

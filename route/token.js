@@ -1,5 +1,6 @@
 //基础的路由定义
-const router = require("express")();
+const {Router} = require("express");
+const router = Router();
 const response = require("../helper/Response");
 const permssion = require("../helper/Permission");
 const TokenManager = require("../helper/TokenManager");

@@ -23,3 +23,4 @@ WebSocketObserver().listener("soft/update", (data) => {
   MCSERVER.softConfig.save();
   response.wsMsgWindow(data.ws, "修改完成，部分内容重启控制面板生效 √");
 });
+MCSERVER.addProbablyPermissions("soft","更新配置");

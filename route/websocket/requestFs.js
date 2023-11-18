@@ -38,3 +38,4 @@ WebSocketObserver().listener("onlinefs/getServerKey", (data) => {
     url: u.href
   });
 });
+MCSERVER.addProbablyPermissions("workers:onlinefs","允许访问Worker程序所在的目录");

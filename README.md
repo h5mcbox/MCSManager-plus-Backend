@@ -6,7 +6,7 @@
 [![Status](https://img.shields.io/badge/License-MIT-red.svg)](https://github.com/H5mcbox/MCSManager)
 
 
-简单，易用，多实例，轻量级的 Minecraft Server 控制面板 
+一套简单，易用，多实例，轻量级，分布式的 Minecraft Server 控制面板 ，基于MCSManager 8 修改而来
 
 
 

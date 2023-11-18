@@ -526,17 +526,7 @@ function moduleEntry(returnMethod) {
             2n ** 256n - 432420386565659656852420866394968145599n,
             256,
             32,
-            (function () {
-              if (typeof sha256 === "function") {
-                return globalThis.sha256;
-              } else if (typeof require === "function") {
-                return require("js-sha256");
-              } else if (hashFunction.name === "sha256") {
-                return hashFunction;
-              } else {
-                throw "There has not sha256 function to use";
-              }
-            })()
+            CryptoMine.hash
           ]
         }
         if (typeof basePoint === "string") {
@@ -749,7 +739,7 @@ function moduleEntry(returnMethod) {
         };
         function jacobianMultiply(pA, k) {
           if (pA.y === 0n || k === 0n) {
-            return new Point(0n, 0n, 1n);
+            return new jacobianPoint(0n, 0n, 1n);
           };
           if (k === 1n) {
             return pA;
@@ -845,6 +835,7 @@ function moduleEntry(returnMethod) {
           let z = HEXtoNumber(hashFunction(data));
           let entry = cryptoKeyMap.get(PublicKey);
           if (Buffer && sign instanceof Buffer) sign = new Uint8Array(sign);
+          else if (sign instanceof ArrayBuffer) sign = new Uint8Array(sign);
           let rB = sign.slice(0, hl), sB = sign.slice(hl, 2 * hl);
           let rrB = removePad(rB), rsB = removePad(sB);
           let r = BufferToBigInt(rrB), s = BufferToBigInt(rsB);
@@ -908,7 +899,7 @@ function moduleEntry(returnMethod) {
       function isSigned() {
         var signed = false;
         var PublicKey = ECC.importKey(true, fromHEXString(_PublicKey).buffer);
-        if (ECC.ECDSA.verify(`${Header.version}:${JSON.stringify(Header.entries)}`, fromHEXString(Header.sign).buffer, PublicKey)) {
+        if (ECC.ECDSA.verify(`${Header.version}:${JSON.stringify(Header.entries)}`, fromHEXString(Header.sign), PublicKey)) {
           signed = true;
         }
         return signed;

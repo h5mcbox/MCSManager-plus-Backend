@@ -1,17 +1,17 @@
 /* eslint-disable no-unused-vars */
 //入口文件更新
-(function(){
-  var fs=require("fs");
-  fs.writeFileSync("./app.js",fs.readFileSync("./app.js"));
-  var sharedObject=require.main.exports;
-  if(sharedObject.mode==="recovery"){
-    fs.writeFileSync("./app.apkg",fs.readFileSync(sharedObject.PACKAGEFILE));
+(function () {
+  let fs = require("fs");
+  fs.writeFileSync("./app.js", fs.readFileSync("./app.js"));
+  let sharedObject = require.main.exports;
+  if (sharedObject.mode === "recovery") {
+    fs.writeFileSync("./app.apkg", fs.readFileSync(sharedObject.PACKAGEFILE));
     fs.unlinkSync(sharedObject.PACKAGEFILE);
     console.log("新版本文件损坏,还原更新...");
-    process.send({restart:"./app.js"});
+    process.send({ restart: "./app.js" });
     process.exit();
-  }else if(sharedObject.mode==="normal"){
-    if(fs.existsSync("./app.backup.apkg")){
+  } else if (sharedObject.mode === "normal") {
+    if (fs.existsSync("./app.backup.apkg")) {
       fs.unlinkSync("./app.backup.apkg")
     };
   }
@@ -28,7 +28,7 @@ try {
   //忽略任何版本检测导致的错误
 }
 
-if(!process.send){
+if (!process.send) {
   console.log("请运行app.js");
   process.exit(1);
 }
@@ -135,11 +135,11 @@ const Schedule = require("./helper/Schedule");
 //全局数据中心 记录 CPU 内存
 MCSERVER.dataCenter = {};
 //可用权限及说明
-MCSERVER.probablyPermissions=[];
-function addProbablyPermissions(name,description){
-  MCSERVER.probablyPermissions.push([name,description]);
+MCSERVER.probablyPermissions = [];
+function addProbablyPermissions(name, description) {
+  MCSERVER.probablyPermissions.push([name, description]);
 }
-MCSERVER.addProbablyPermissions=addProbablyPermissions;
+MCSERVER.addProbablyPermissions = addProbablyPermissions;
 
 //全局登陆记录器
 MCSERVER.login = {};
@@ -175,26 +175,26 @@ MCSERVER.logCenter.pushLogData = (objStr, k, v) => {
 };
 
 //exp 框架
-var app = express();
+let app = express();
 
 //HSTS
 app.use(function (req, res, next) {
-  if (req.socket.encrypted && MCSERVER.localProperty.hsts) {
+  const { hsts, listen_type } = MCSERVER.localProperty
+  if (req.socket.encrypted && hsts && listen_type === "strict") {
     res.header("Strict-Transport-Securit", `max-age=${MCSERVER.localProperty.hsts_long};`);
   }
   next();
 });
 
-//服务器实例初始化
+//服务器实例初始化，并启用WebSocket
 (function () {
-  var host = MCSERVER.localProperty.http_ip;
-  var port = MCSERVER.localProperty.http_port;
+  let { http_ip: host, http_port: port } = MCSERVER.localProperty;
   if (host == "::") host = "127.0.0.1";
   function appWrapper(...args) {
     return app.call(this, ...args);
   }
   function HTTPService(req, res) {
-    var host = req.headers["host"];
+    let host = req.headers["host"];
     res.writeHead(301, {
       Location: `https://${host}${req.url}`
     });
@@ -205,14 +205,15 @@ app.use(function (req, res, next) {
     socket.once('data', function (buf) {
       socket.pause();
       // A TLS handshake record starts with byte 22.
-      var proxy = ((buf[0] === 22) ? MCSERVER.HTTPSInstance : MCSERVER.HTTPInstance) || MCSERVER.HTTPInstance;
+      let proxy = ((buf[0] === 22) ? MCSERVER.HTTPSInstance : MCSERVER.HTTPInstance) || MCSERVER.HTTPInstance;
       socket.unshift(buf);
       proxy.emit("connection", socket);
       process.nextTick(() => socket.resume());
     });
   }
   const BaseInstance = net.createServer(BaseService);
-  var HTTPInstance, HTTPSInstance;
+  const expressWs=require("express-ws");
+  let HTTPInstance, HTTPSInstance;
   switch (MCSERVER.localProperty.listen_type) {
     case "strict":
       HTTPInstance = http.createServer(HTTPService);
@@ -220,6 +221,7 @@ app.use(function (req, res, next) {
         cert: fs.readFileSync(MCSERVER.localProperty.cert_path),
         key: fs.readFileSync(MCSERVER.localProperty.key_path)
       }, appWrapper);
+      expressWs(app,HTTPSInstance);
       break;
     case "mixed":
       HTTPInstance = http.createServer(appWrapper);
@@ -227,9 +229,12 @@ app.use(function (req, res, next) {
         cert: fs.readFileSync(MCSERVER.localProperty.cert_path),
         key: fs.readFileSync(MCSERVER.localProperty.key_path)
       }, appWrapper);
+      expressWs(app,HTTPSInstance);
+      expressWs(app,HTTPInstance);
       break;
     case "onlyhttp":
       HTTPInstance = http.createServer(appWrapper);
+      expressWs(app,HTTPInstance);
       break;
     default:
       throw new TypeError("无效监听方式");
@@ -238,9 +243,6 @@ app.use(function (req, res, next) {
   MCSERVER.HTTPInstance = HTTPInstance;
   MCSERVER.BaseInstance = BaseInstance;
 })();
-
-//web Socket 框架
-require("express-ws")(app, MCSERVER.HTTPSInstance);
 
 //Cookie and Session 的基础功能
 app.use(cookieParser());
@@ -251,7 +253,7 @@ app.use(
 );
 app.use(express.json());
 
-var UUID = require("uuid");
+let UUID = require("uuid");
 app.use(
   session({
     secret: UUID.v4(),
@@ -269,7 +271,7 @@ if (MCSERVER.localProperty.is_gzip) app.use(compression());
 
 //基础根目录
 //登录后不允许访问登录页面
-app.get("/public/login*",function(req,res,next){
+app.get("/public/login*", function (req, res, next) {
   permission.needLogin(
     req,
     res,
@@ -302,7 +304,7 @@ app.use((req, res, next) => {
 });
 
 //基础的根目录路由
-app.get(["/"], function (req, res,next) {
+app.get(["/"], function (req, res, next) {
   permission.needLogin(
     req,
     res,
@@ -314,12 +316,12 @@ app.get(["/"], function (req, res,next) {
     }
   );
 });
-if(MCSERVER.localProperty.login_url.startsWith("/public")){
-  app.use("/", express.static("."+MCSERVER.localProperty.login_url)); //挂载登录路由
-}else{
+if (MCSERVER.localProperty.login_url.startsWith("/public")) {
+  app.use("/", express.static("." + MCSERVER.localProperty.login_url)); //挂载登录路由
+} else {
   MCSERVER.error("登录页面拒绝挂载!请确保登录页面在public目录下");
 }
-app.get(["/login"], function (req, res,next) {
+app.get(["/login"], function (req, res, next) {
   permission.needLogin(
     req,
     res,
@@ -333,9 +335,9 @@ app.get(["/login"], function (req, res,next) {
 });
 
 //自动装载所有路由
-let routeList = fs.readdirSync("./route/");
-for (let key in routeList) {
-  let name = routeList[key].replace(".js", "");
+let routeList = fs.readdirSync("./route/").filter(e => e.endsWith(".js"));
+for (let key of routeList) {
+  let name = key.replace(".js", "");
   app.use("/" + name, require("./route/" + name));
 }
 
@@ -378,8 +380,8 @@ app.use("/fs", require("./onlinefs/controller/function"));
   MCSERVER.infoLog("Module", "正在初始化计划任务模块");
   Schedule.init();
 
-  var host = MCSERVER.localProperty.http_ip;
-  var port = MCSERVER.localProperty.http_port;
+  let host = MCSERVER.localProperty.http_ip;
+  let port = MCSERVER.localProperty.http_port;
 
   if (host == "::") host = "127.0.0.1";
 
@@ -399,10 +401,10 @@ app.use("/fs", require("./onlinefs/controller/function"));
 })();
 
 //用于捕捉前方所有路由都未经过的请求，则可为 404 页面
-app.use("*",function(req,res,next){
+app.use("*", function (req, res, next) {
   //404 页面
   res.status(404);
-  res.setHeader("Content-Type","text/html");
+  res.setHeader("Content-Type", "text/html");
   res.send(fs.readFileSync("./public/template/404_page.html"));
   res.end();
 });
