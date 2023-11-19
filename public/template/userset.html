@@ -68,6 +68,7 @@
           <p>普通用户无法创建，删除服务器和编辑服务器启动时参数配置。</p>
           <p>普通用户无法查看具体内存值与CPU具体信息，保证主机的信息。</p>
           <p>用户组设置为"master"为管理账号，"user"为普通账号，"banned"则禁用账号</p>
+          <p>以_或#_开头的账号为内存用户，重启面板即删除用户</p>
         </div>
       </div>
     </div>
@@ -173,7 +174,7 @@
             allowedServer: allwoedServers,
             PID:this.PID
           };
-          WS.sendMsg("userset/create", JSON.stringify(obj), function () {
+          WS.sendMsg("userset/create", obj, function () {
             PAGE.refresh();
           });
         },
@@ -184,7 +185,7 @@
           };
           var result = confirm("您真的打算删除这个这个用户吗?");
           if (!result) return;
-          WS.sendMsg("userset/delete", JSON.stringify(obj), function () {
+          WS.sendMsg("userset/delete", obj, function () {
             PAGE.refresh();
           });
         },

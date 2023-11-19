@@ -263,7 +263,7 @@
             highCommande: this.highCommande,
             location:this.location,
           };
-          WS.sendMsg("server/create", JSON.stringify(obj));
+          WS.sendMsg("server/create", obj);
           RES.redirectPage("./template/server.html", "server/view");
         },
         toCreaterDir: function () {
@@ -272,7 +272,7 @@
             cwd: this.cwd,
             location:this.location
           };
-          WS.sendMsg("server/create_dir", JSON.stringify(obj));
+          WS.sendMsg("server/create_dir", obj);
         },
         nextStep: function () {
           this.pagecode += 1;

@@ -18,7 +18,6 @@ WebSocketObserver().listener("server/console/open",async (data) => {
     }
     let [{ ResponseKey, ResponseValue }, body] = await workerModel.get(serverLocation).send("server/console/open", data.body);
     response.wsSend(data.ws, ResponseKey, ResponseValue, body);
-    workerModel.get(serverLocation).send("server/console/open",data.body).then((_)=>{data.ws.send(_)})
   }
   response.wsSend(data.ws, "server/console/open", null);
 });

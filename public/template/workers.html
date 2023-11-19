@@ -136,7 +136,7 @@
               endpoint:this.endpoint
             }
           };
-          WS.sendMsg("workers/add", JSON.stringify(obj), function () {
+          WS.sendMsg("workers/add", obj, function () {
             PAGE.refresh();
           });
         },

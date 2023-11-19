@@ -42,7 +42,7 @@ WebSocketObserver().listener("server/get", async (data) => {
 WebSocketObserver().listener("server/create", (data) => {
   if (!permssion.hasRights(data.WsSession.username, "server:createServer")) return;
 
-  let ServerConfig = JSON.parse(data.body);
+  let ServerConfig = data.body;
   let serverName = ServerConfig.serverName.trim();
   let serverLocation = ServerConfig.location.trim();
   if (serverName.indexOf(".") != -1) {
@@ -65,7 +65,7 @@ WebSocketObserver().listener("server/create", (data) => {
 WebSocketObserver().listener("server/create_dir", async (data) => {
   if (!permssion.hasRights(data.WsSession.username, "server:create_dir")) return;
 
-  let ServerConfig = JSON.parse(data.body);
+  let ServerConfig = data.body;
   const server = serverModel.ServerManager().getServer(ServerConfig.serverName);
   let serverLocation = server.dataModel.location;
   if (!workerModel.get(serverLocation)) {
@@ -81,7 +81,7 @@ WebSocketObserver().listener("server/create_dir", async (data) => {
 
 WebSocketObserver().listener("server/rebuilder", async (data) => {
   if (!permssion.hasRights(data.WsSession.username, "server:rebuilder")) return;
-  let ServerConfig = JSON.parse(data.body);
+  let ServerConfig = data.body;
   let oldServerName = ServerConfig.oldServerName.trim();
   const server = serverModel.ServerManager().getServer(oldServerName);
   let serverLocation = server.dataModel.location;

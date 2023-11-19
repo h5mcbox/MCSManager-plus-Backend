@@ -73,10 +73,10 @@
           if (!confirm("您确定要删除这个计划任务吗？")) return;
           WS.sendMsg(
             "schedule/delete",
-            JSON.stringify({
+            {
               id: obj.id,
               servername: this.servername
-            }),
+            },
             function () {
               PAGE.refresh();
             }

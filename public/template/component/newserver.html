@@ -132,7 +132,7 @@
             java: this.Java,
             location:this.location
           };
-          WS.sendMsg("server/create", JSON.stringify(obj));
+          WS.sendMsg("server/create", obj);
           RES.redirectPage("./template/server.html", "server/view");
         },
         toCreaterDir: function () {
@@ -141,7 +141,7 @@
             location:this.location,
             cwd: this.cwd
           };
-          WS.sendMsg("server/create_dir", JSON.stringify(obj));
+          WS.sendMsg("server/create_dir", obj);
         },
         readServerConfig: function (serverName) {
           if (serverName.trim() == "") return;

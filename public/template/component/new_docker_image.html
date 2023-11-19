@@ -78,7 +78,7 @@
             return;
           }
           this.createDockerDis = true;
-          WS.sendMsg("docker/new", JSON.stringify(obj));
+          WS.sendMsg("docker/new", obj);
         },
         toCreateRes: function () {
           TOOLS.popWind({

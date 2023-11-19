@@ -84,7 +84,7 @@
           var obj = {
             TwoFACode: Number(this.TwoFACode)
           };
-          WS.sendMsg("userset/2fa/set", JSON.stringify(obj));
+          WS.sendMsg("userset/2fa/set", obj);
         },
         toRePassword: function () {
           let username=MCSERVER.username;
@@ -98,7 +98,7 @@
           var obj = {
             TwoFACode: Number(this.TwoFACode)
           };
-          WS.sendMsg("userset/2fa/disable", JSON.stringify(obj));
+          WS.sendMsg("userset/2fa/disable", obj);
         }
       }
     });

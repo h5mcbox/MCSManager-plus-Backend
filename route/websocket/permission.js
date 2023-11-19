@@ -41,7 +41,7 @@ WebSocketObserver().listener("permission/getPermissionID", (data) => {
 });
 WebSocketObserver().listener("permission/savePID", (data) => {
   if (!permission.hasRights(data.WsSession.username, "permission:setPermissionID")) return;
-  let PermissionTable = JSON.parse(data.body);
+  let PermissionTable = data.body;
   let permissionTableBucket = data.WsSession.PIDs;
   let oldPermissionTable = permissionTableBucket[PermissionTable.PID];
   if (!permissionTableBucket) data.WsSession.PIDs = permissionTableBucket = {};

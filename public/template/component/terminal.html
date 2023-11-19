@@ -76,9 +76,9 @@
     // 默认请求一段历史
     WS.sendMsg(
       "server/console/history",
-      JSON.stringify({
+      {
         serverName: PAGE.serverName
-      })
+      }
     );
 
     VIEW_MODEL.newVue("Terminal", {
@@ -91,9 +91,9 @@
         loadHistory: function () {
           WS.sendMsg(
             "server/console/history",
-            JSON.stringify({
+            {
               serverName: PAGE.serverName
-            })
+            }
           );
         },
         toOpenServer: function () {
@@ -108,7 +108,7 @@
           if (this.command.length >= 1 || typeof parCommand == "string") {
             //压入命令栈 并 发送
             this.commandList.unshift(this.command);
-            WS.sendMsg("server/console/command", JSON.stringify(data));
+            WS.sendMsg("server/console/command", data);
           }
           this.command = "";
           this.commandListPrint = 0;

@@ -52,7 +52,7 @@
         ok: function () {
           WS.sendMsg(
             "mcping/config_save",
-            JSON.stringify({
+            {
               mcpingServerName: PAGE.listenServername,
               mcpingConfig: {
                 mcpingName: this.mcpingName.trim() || "Minecraft Server",
@@ -60,7 +60,7 @@
                 mcpingPort: this.mcpingPort.trim() || "",
                 mcpingMotd: this.mcpingMotd.trim() || ""
               }
-            })
+            }
           );
           TOOLS.popWindClose();
         },

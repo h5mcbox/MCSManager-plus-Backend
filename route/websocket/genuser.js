@@ -105,7 +105,7 @@ WebSocketObserver().listener("genuser/view", (data) => {
 WebSocketObserver().listener("genuser/re_password", (data) => {
   let username = data.WsSession.username.trim();
   let user = userCenter().get(username);
-  let config = JSON.parse(data.body);
+  let config = data.body;
   let view = {
     randomPassword: user.dataModel.randomPassword,
     LoginPublicKey: user.dataModel.LoginPublicKey || ""

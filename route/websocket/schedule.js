@@ -44,7 +44,7 @@ WebSocketObserver().listener("schedule/list", (data) => {
 //创建计划任务
 WebSocketObserver().listener("schedule/create", (data) => {
   let username = data.WsSession.username;
-  let obj = JSON.parse(data.body) || {};
+  let obj = data.body ?? {};
 
   if (permission.isCanServer(username, obj.servername || "")) {
     try {
@@ -64,7 +64,7 @@ WebSocketObserver().listener("schedule/create", (data) => {
 //删除计划任务
 WebSocketObserver().listener("schedule/delete", (data) => {
   let username = data.WsSession.username;
-  let obj = JSON.parse(data.body) || {};
+  let obj = data.body || {};
 
   if (permission.isCanServer(username, obj.servername || "")) {
     try {

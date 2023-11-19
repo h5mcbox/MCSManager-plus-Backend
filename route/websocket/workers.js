@@ -27,7 +27,7 @@ WebSocketObserver().listener("workers/upinfo", (data) => {
   if (!permssion.hasRights(data.WsSession.username, "workers:uploadInfomation")) return;
 
   try {
-    let newWorkerConfig = JSON.parse(data.body);
+    let newWorkerConfig = data.body;
     let workername = newWorkerConfig.workername.trim();
     let newworkername = newWorkerConfig.newworkername.trim();
     let newMasterKey = newWorkerConfig.newMasterKey.trim();
@@ -72,7 +72,7 @@ WebSocketObserver().listener("workers/upinfo", (data) => {
 });
 WebSocketObserver().listener("workers/up", (data) => {
   if (!permssion.hasRights(data.WsSession.username, "workers:connect")) return;
-  var ro = JSON.parse(data.body) //RequestObject
+  var ro = data.body //RequestObject
   let worker = WorkerCenter.get(ro.workername.trim());
   worker.connect(data.ws).then(function (success) {
     if (success) {
@@ -85,7 +85,7 @@ WebSocketObserver().listener("workers/up", (data) => {
 });
 WebSocketObserver().listener("workers/down", (data) => {
   if (!permssion.hasRights(data.WsSession.username, "workers:disconnect")) return;
-  var ro = JSON.parse(data.body) //RequestObject
+  var ro = data.body //RequestObject
   let worker = WorkerCenter.get(ro.workername.trim());
   worker.disconnect()
   response.wsSend(data.ws, "workers/down", {});
@@ -94,7 +94,7 @@ WebSocketObserver().listener("workers/add", (data) => {
   //Object {ws: WebSocket, req: IncomingMessage, user: undefined, header: Object, body: "[body 开始]
   //Object {RequestKey: "req", RequestValue: "some"}
   if (!permssion.hasRights(data.WsSession.username, "workers:addWorker")) return;
-  var ro = JSON.parse(data.body) //RequestObject
+  var ro = data.body //RequestObject
   var newEndpoint = ro.RemoteDescription.endpoint.trim()
   var vaildURL = false;
   try { new URL(newEndpoint); vaildURL = true; } catch { }
@@ -109,7 +109,7 @@ WebSocketObserver().listener("workers/delete", (data) => {
   //Object {ws: WebSocket, req: IncomingMessage, user: undefined, header: Object, body: "[body 开始]
   //Object {RequestKey: "req", RequestValue: "some"}
   if (!permssion.hasRights(data.WsSession.username, "workers:deleteWorker")) return;
-  var ro = JSON.parse(data.body) //RequestObject
+  var ro = data.body //RequestObject
   let worker = WorkerCenter.get(ro.workername);
   if (worker.connected) worker.disconnect();
   WorkerCenter.deleteWorker(ro.workername.trim());

@@ -73,7 +73,7 @@
             },
             workername: this.oldworkername
           };
-          WS.sendMsg("workers/upinfo", JSON.stringify(obj));
+          WS.sendMsg("workers/upinfo", obj);
           //返回到上层
           RES.redirectPage("./template/workers.html", "workers");
         },
@@ -83,7 +83,7 @@
           };
           var result = confirm("您真的打算删除这个这个Worker吗?");
           if (!result) return;
-          WS.sendMsg("workers/delete", JSON.stringify(obj), function () {
+          WS.sendMsg("workers/delete", obj, function () {
             RES.redirectPage("./template/workers.html", "workers");
           });
         },

@@ -206,7 +206,7 @@
             timeLimitDate: this.timeLimitDate,
             stopCommand: this.stopCommand
           };
-          WS.sendMsg("server/rebuilder", JSON.stringify(obj));
+          WS.sendMsg("server/rebuilder", obj);
           setTimeout(function () {
             RES.redirectPage("./template/server.html", "server/view");
           }, 100);

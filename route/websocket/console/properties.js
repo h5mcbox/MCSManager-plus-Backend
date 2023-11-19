@@ -20,7 +20,7 @@ WebSocketObserver().listener("server/properties",async (data) => {
 
 //更新配置
 WebSocketObserver().listener("server/properties_update",async (data) => {
-  let config = JSON.parse(data.body);
+  let config = data.body;
   let properties = config.properties;
   var serverName=config.serverName;
   if (permssion.isCanServer(data.WsSession.username, config.serverName)) {

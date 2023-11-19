@@ -8,9 +8,8 @@ const HISTORY_SIZE_LINE = 1024;
 
 // 正序历史记录路由
 WebSocketObserver().listener("server/console/history", async (data) => {
-  let userName = data.WsSession.username;
-  let bodyJson = JSON.parse(data.body);
-  let serverName = bodyJson["serverName"] || "";
+  let { WsSession: { username: userName }, body: reqBody } = data;
+  let serverName = reqBody["serverName"] || "";
 
   if (permssion.isCanServer(userName, serverName)) {
     const server = serverModel.ServerManager().getServer(serverName);
@@ -25,9 +24,8 @@ WebSocketObserver().listener("server/console/history", async (data) => {
 /*
 // 首次进入终端使用,倒序历史记录路由
 WebSocketObserver().listener("server/console/history_reverse", (data) => {
-  let userName = data.WsSession.username;
-  let bodyJson = JSON.parse(data.body);
-  let serverName = bodyJson["serverName"] || "";
+  let {WsSession:{userName},body:reqBody} = data;
+  let serverName = reqBody["serverName"] || "";
 
   if (permssion.isCanServer(userName, serverName)) {
     const server = serverModel.ServerManager().getServer(serverName);
@@ -42,9 +40,8 @@ WebSocketObserver().listener("server/console/history_reverse", (data) => {
 // 历史指针重置路由
 /*
 WebSocketObserver().listener("server/console/history_reset", (data) => {
-  let userName = data.WsSession.username;
-  let bodyJson = JSON.parse(data.body);
-  let serverName = bodyJson["serverName"] || "";
+  let {WsSession:{userName},body:reqBody} = data;
+  let serverName = reqBody["serverName"] || "";
 
   if (permssion.isCanServer(userName, serverName)) {
     const server = serverModel.ServerManager().getServer(serverName);

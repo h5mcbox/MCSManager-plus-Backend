@@ -190,7 +190,7 @@
             serverName: serverName
           };
           if (this.command.length >= 1 || typeof parCommand == "string") {
-            WS.sendMsg("server/console/command", JSON.stringify(data));
+            WS.sendMsg("server/console/command", data);
           }
           this.command = "";
         },

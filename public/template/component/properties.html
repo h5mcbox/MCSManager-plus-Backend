@@ -90,7 +90,7 @@
             serverName: this.serverName,
             properties: this.properties
           };
-          WS.sendMsg("server/properties_update", JSON.stringify(obj));
+          WS.sendMsg("server/properties_update", obj);
         },
         toBackConsole: function () {
           RES.redirectPage("./template/component/console.html", "server/console", this.serverName);

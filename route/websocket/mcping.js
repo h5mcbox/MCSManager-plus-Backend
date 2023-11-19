@@ -7,8 +7,8 @@ const workerModel = require("../../model/WorkerModel");
 
 // 保存配置
 WebSocketObserver().listener("mcping/config_save",async (data) => {
-  const jsonObject = JSON.parse(data.body);
-  const serverName = jsonObject.mcpingServerName;
+  const {body} = data;
+  const serverName = body.mcpingServerName;
   const userName = data.WsSession.username;
   const user = userCenter().get(userName);
   if (!user) {

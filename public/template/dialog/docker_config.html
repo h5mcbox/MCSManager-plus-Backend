@@ -52,7 +52,7 @@
         ok: function () {
           WS.sendMsg(
             "docker/setconfig",
-            JSON.stringify({
+            {
               serverName: PAGE.selectServerName,
               dockerConfig: {
                 dockerCommand: this.dockerCommand.trim() || "",
@@ -61,7 +61,7 @@
                 dockerPorts: this.dockerPorts.trim(),
                 isDocker: this.isDocker
               }
-            })
+            }
           );
           TOOLS.popWindClose();
         }

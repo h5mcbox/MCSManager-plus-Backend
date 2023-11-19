@@ -13,7 +13,7 @@ WebSocketObserver().listener("soft/view", (data) => {
 //更新配置
 WebSocketObserver().listener("soft/update", (data) => {
   if (!permssion.hasRights(data.WsSession.username,"soft")) return;
-  let newConfig = JSON.parse(data.body);
+  let newConfig = data.body;
   if (newConfig) {
     for (let k in MCSERVER.softConfig) {
       if (k == "__filename__") continue;

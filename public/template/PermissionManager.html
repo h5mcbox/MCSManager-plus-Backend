@@ -79,17 +79,17 @@
         },
         toGrantPermission:function(item){
           var index=this.items.indexOf(item);
-          WS.sendMsg("Permissions/grant",JSON.stringify({
+          WS.sendMsg("Permissions/grant",{
             index
-          }),function(){
+          },function(){
             PAGE.refresh();
           })
         },
         toRemovePermission:function(item){
           var index=this.items.indexOf(item);
-          WS.sendMsg("Permissions/remove",JSON.stringify({
+          WS.sendMsg("Permissions/remove",{
             index
-          }),function(){
+          },function(){
             PAGE.refresh();
           })
         }

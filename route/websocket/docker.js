@@ -15,7 +15,7 @@ const WorkerCenter = require("../../model/WorkerModel");
 //Docker 容器创建路由
 WebSocketObserver().listener("docker/new",async (data) => {
   if(!permssion.hasRights(data.WsSession.username,"docker:new"))return;
-  let dockerConfig = JSON.parse(data.body);
+  let dockerConfig = data.body;
   //{dockerImageName: "",
   //dockerfile: "FROM java:latest↵RUN mkdir -p /mcsd↵RUN echo "Asia…teractive tzdata↵WORKDIR / mcsd↵RUN apt - get update"}
   let serverLocation = dockerConfig.workerName;
@@ -118,9 +118,9 @@ WebSocketObserver().listener("docker/setconfig",async (data) => {
   //     serverName: "xxxx",
   //     dockerConfig: { ... }
   // }
-  let jsonObj = JSON.parse(data.body);
-  if (jsonObj.serverName) {
-    let serverName = jsonObj.serverName;
+  let newConfig = data.body;
+  if (newConfig.serverName) {
+    let serverName = newConfig.serverName;
     /*
     let mcserver = serverModel.ServerManager().getServer(serverName);
     mcserver.dataModel.dockerConfig = jsonObj.dockerConfig;

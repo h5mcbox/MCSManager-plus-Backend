@@ -26,7 +26,7 @@ WebSocketObserver().listener("userset/create", (data) => {
   if (!permssion.hasRights(data.WsSession.username,"userset:createUser")) return;
 
   try {
-    let newUserConfig = JSON.parse(data.body);
+    let newUserConfig = data.body;
     if (!(newUserConfig.allowedServer instanceof Array)) {
       response.wsMsgWindow(data.ws, "用户服务器列表格式不正确");
       return;
@@ -40,7 +40,7 @@ WebSocketObserver().listener("userset/create", (data) => {
       permissionTable=permissionTableBucket[PID];
       if(permissionTable){
         delete permissionTableBucket[PID];
-        if(!permissionTable.RestrictedUsername){
+        if(permissionTable.RestrictedUsername){
           response.wsMsgWindow(data.ws, "用户名与权限表限定用户名不一致");
           return;
         }
@@ -89,7 +89,7 @@ WebSocketObserver().listener("userset/delete", (data) => {
   if (!permssion.hasRights(data.WsSession.username,"userset:deleteUser")) return;
 
   try {
-    let deleteObj = JSON.parse(data.body);
+    let deleteObj = data.body;
     let username = deleteObj.username.trim();
     MCSERVER.info("用户", data.WsSession.username, "删除", username, "用户");
     deleteUser(
@@ -147,7 +147,7 @@ WebSocketObserver().listener("userset/upinfo", (data) => {
   if (!permssion.hasRights(data.WsSession.username,"userset:uploadInfomation")) return;
 
   try {
-    let newUserConfig = JSON.parse(data.body);
+    let newUserConfig = data.body;
     if (!(newUserConfig.allowedServer instanceof Array)) {
       response.wsSend(data.ws, "userset/upinfo", null);
       return;
@@ -238,7 +238,7 @@ WebSocketObserver().listener("userset/2fa/set", (data) => {
   if (!permssion.hasRights(data.WsSession.username,"2FA:enable")) return;
   var totp = require("../../helper/totp");
   //try {
-  let form = JSON.parse(data.body);
+  let form = data.body;
   var tempuser = userCenter().get(data.req.session["username"]);
   if(tempuser.dataModel.randomPassword){
     response.wsMsgWindow(data.ws, "错误：只使用公钥登录的用户无法启用2FA,请先重置密码");
@@ -264,7 +264,7 @@ WebSocketObserver().listener("userset/2fa/disable", (data) => {
   if (!permssion.hasRights(data.WsSession.username,"2FA:disable")) return;
   var totp = require("../../helper/totp");
   try {
-    let form = JSON.parse(data.body);
+    let form = data.body;
     var tempuser = userCenter().get(data.req.session["username"]);
     if(tempuser.dataModel.randomPassword){
       response.wsMsgWindow(data.ws, "错误：只使用公钥登录的用户无法启用2FA,请先重置密码");
