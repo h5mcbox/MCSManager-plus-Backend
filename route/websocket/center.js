@@ -57,9 +57,9 @@ setInterval(async function () {
   //获取正在运行服务器的数量
   let allOnlineServers = 0;
   for (let item of workerModel.getOnlineWorkers()) {
-    let [header,body] = await item.send("server/view");
-    if (header.ResponseKey !== "server/view") return false;
-    header.ResponseValue.items.forEach(e => { if (e.data.run) allOnlineServers++ });
+    let [{ ResponseKey, ResponseValue }] = await item.send("server/view");
+    if (ResponseKey !== "server/view") return false;
+    ResponseValue.items.forEach(e => { if (e.data.run) allOnlineServers++ });
   }
   //缓存值
   cacheSystemInfo = {

@@ -13,7 +13,7 @@ const WorkerCenter = require("../../model/WorkerModel");
 //MCSERVER.PAGE.DockerRes = [];
 
 //Docker 容器创建路由
-WebSocketObserver().listener("docker/new", (data) => {
+WebSocketObserver().listener("docker/new",async (data) => {
   if(!permssion.hasRights(data.WsSession.username,"docker:new"))return;
   let dockerConfig = JSON.parse(data.body);
   //{dockerImageName: "",
@@ -22,7 +22,8 @@ WebSocketObserver().listener("docker/new", (data) => {
   if(!WorkerCenter.get(serverLocation)){
     response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
   }
-  WorkerCenter.get(serverLocation).send("docker/new",data.body).then((_)=>{data.ws.send(_)});
+  let [{ ResponseKey, ResponseValue}, body] = await workerModel.get(serverLocation).send("docker/new", data.body);
+  response.wsSend(data.ws, ResponseKey, ResponseValue, body);
   /*
   let dockerImageName = dockerConfig.dockerImageName;
   let dockerfileData = dockerConfig.dockerfile;
@@ -91,7 +92,7 @@ WebSocketObserver().listener("docker/res", async (data) => {
 });
 
 //获取配置
-WebSocketObserver().listener("docker/config", (data) => {
+WebSocketObserver().listener("docker/config",async (data) => {
   if(!permssion.hasRights(data.WsSession.username,"docker:config"))return;
   let serverName = data.body || "";
   if (serverName) {
@@ -105,12 +106,13 @@ WebSocketObserver().listener("docker/config", (data) => {
     if(!WorkerCenter.get(serverLocation)){
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
     }
-    WorkerCenter.get(serverLocation).send("docker/config",data.body).then((_)=>{data.ws.send(_)});
+    let [{ ResponseKey, ResponseValue}, body] = await workerModel.get(serverLocation).send("docker/config", data.body);
+    response.wsSend(data.ws, ResponseKey, ResponseValue, body);
   }
 });
 
 //设置配置
-WebSocketObserver().listener("docker/setconfig", (data) => {
+WebSocketObserver().listener("docker/setconfig",async (data) => {
   if(!permssion.hasRights(data.WsSession.username,"docker:setConfig"))return;
   // {
   //     serverName: "xxxx",
@@ -131,7 +133,8 @@ WebSocketObserver().listener("docker/setconfig", (data) => {
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
     }
     serverModel.deleteServer(serverName);
-    WorkerCenter.get(serverLocation).send("docker/setconfig",data.body).then((_)=>{data.ws.send(_)});
+    let [{ ResponseKey, ResponseValue}, body] = await workerModel.get(serverLocation).send("docker/setconfig", data.body);
+    response.wsSend(data.ws, ResponseKey, ResponseValue, body);
   }
 });
 MCSERVER.addProbablyPermissions("docker","使用Docker");

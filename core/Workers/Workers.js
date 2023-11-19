@@ -119,7 +119,7 @@ class Worker {
   /**
    * @param {String} path
    * @param {String} data
-   * @returns {String}
+   * @returns {Promise<any[]>}
    */
   async send(path, data) {
     if (!this.connected) {

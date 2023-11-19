@@ -5,7 +5,7 @@ const permssion = require("../../../helper/Permission");
 const { WebSocketObserver } = require("../../../model/WebSocketModel");
 
 //自动重启设定
-WebSocketObserver().listener("server/console/autorestart", (data) => {
+WebSocketObserver().listener("server/console/autorestart",async (data) => {
   let serverName = data.body.trim();
   let userName = data.WsSession.username;
   if (permssion.isCanServer(userName, serverName)) {
@@ -14,7 +14,8 @@ WebSocketObserver().listener("server/console/autorestart", (data) => {
     if(!workerModel.get(serverLocation)){
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
     }
-    workerModel.get(serverLocation).send("server/console/autorestart",data.body).then((_)=>{data.ws.send(_)})
+    let [{ ResponseKey, ResponseValue }, body] = await workerModel.get(serverLocation).send("server/console/autorestart", data.body);
+    response.wsSend(data.ws, ResponseKey, ResponseValue, body);
   }
   response.wsMsgWindow(data.ws, "权限不足!您并不拥有此服务器.");
 });

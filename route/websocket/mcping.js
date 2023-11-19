@@ -6,7 +6,7 @@ const response = require("../../helper/Response");
 const workerModel = require("../../model/WorkerModel");
 
 // 保存配置
-WebSocketObserver().listener("mcping/config_save", (data) => {
+WebSocketObserver().listener("mcping/config_save",async (data) => {
   const jsonObject = JSON.parse(data.body);
   const serverName = jsonObject.mcpingServerName;
   const userName = data.WsSession.username;
@@ -20,14 +20,15 @@ WebSocketObserver().listener("mcping/config_save", (data) => {
     if(!workerModel.get(serverLocation)){
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
     }
-    workerModel.get(serverLocation).send("mcping/config_save",data.body).then((_)=>{data.ws.send(_)});
+    let [{ ResponseKey, ResponseValue}, body] = await workerModel.get(serverLocation).send("mcping/config_save", data.body);
+    response.wsSend(data.ws, ResponseKey, ResponseValue, body);
   }
   //response.wsSend(data.ws, "mcping/config_save", true);
 });
 
 // 获取配置
 // 获取配置是公开的，任何人可以获取到你填写的配置，无权限控制
-WebSocketObserver().listener("mcping/config", (data) => {
+WebSocketObserver().listener("mcping/config",async (data) => {
   const serverName = data.body || "";
   if (serverName) {
     const server = serverModel.ServerManager().getServer(serverName);
@@ -35,6 +36,7 @@ WebSocketObserver().listener("mcping/config", (data) => {
     if(!workerModel.get(serverLocation)){
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
     }
-    workerModel.get(serverLocation).send("mcping/config",data.body).then((_)=>{data.ws.send(_)})
+    let [{ ResponseKey, ResponseValue}, body] = await workerModel.get(serverLocation).send("mcping/config", data.body);
+    response.wsSend(data.ws, ResponseKey, ResponseValue, body);
   }
 });

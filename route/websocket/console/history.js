@@ -7,7 +7,7 @@ const response = require("../../../helper/Response");
 const HISTORY_SIZE_LINE = 1024;
 
 // 正序历史记录路由
-WebSocketObserver().listener("server/console/history", (data) => {
+WebSocketObserver().listener("server/console/history", async (data) => {
   let userName = data.WsSession.username;
   let bodyJson = JSON.parse(data.body);
   let serverName = bodyJson["serverName"] || "";
@@ -15,10 +15,11 @@ WebSocketObserver().listener("server/console/history", (data) => {
   if (permssion.isCanServer(userName, serverName)) {
     const server = serverModel.ServerManager().getServer(serverName);
     let serverLocation = server.dataModel.location;
-    if(!workerModel.get(serverLocation)){
+    if (!workerModel.get(serverLocation)) {
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
     }
-    workerModel.get(serverLocation).send("server/console/history",data.body).then((_)=>{data.ws.send(_)})
+    let [{ ResponseKey, ResponseValue }, body] = await workerModel.get(serverLocation).send("server/console/history", data.body);
+    response.wsSend(data.ws, ResponseKey, ResponseValue, body);
   }
 });
 /*

@@ -7,12 +7,12 @@ const msgpack = require("../../helper/msgpack");
 WebSocketObserver().listener("workers", (data) => {
   //Object {ws: WebSocket, req: IncomingMessage, user: undefined, header: Object, body: "[body 开始]
   //Object {RequestKey: "req", RequestValue: "some"}
-  if (!permssion.hasRights(data.WsSession.username,"workers:overview")) return;
+  if (!permssion.hasRights(data.WsSession.username, "workers:overview")) return;
 
-  response.wsSend(data.ws,"workers",{items:WorkerCenter.getWorkerList()});
+  response.wsSend(data.ws, "workers", { items: WorkerCenter.getWorkerList() });
 });
 WebSocketObserver().listener("workers/view", (data) => {
-  if (!permssion.hasRights(data.WsSession.username,"workers:view")) return;
+  if (!permssion.hasRights(data.WsSession.username, "workers:view")) return;
 
   let worker = WorkerCenter.get(data.body.trim());
   response.wsSend(data.ws, "workers/view", {
@@ -24,7 +24,7 @@ WebSocketObserver().listener("workers/view", (data) => {
   });
 });
 WebSocketObserver().listener("workers/upinfo", (data) => {
-  if (!permssion.hasRights(data.WsSession.username,"workers:uploadInfomation")) return;
+  if (!permssion.hasRights(data.WsSession.username, "workers:uploadInfomation")) return;
 
   try {
     let newWorkerConfig = JSON.parse(data.body);
@@ -34,11 +34,11 @@ WebSocketObserver().listener("workers/upinfo", (data) => {
     let newRemoteDescription = newWorkerConfig.newRemoteDescription
 
     //更改服务器拥有列表
-    var newEndpoint=newRemoteDescription.endpoint.trim()
+    var newEndpoint = newRemoteDescription.endpoint.trim()
     //如果需求，则更改地址
     if (newEndpoint.trim() != "") {
-      var vaildURL=false;
-      try{new URL(newEndpoint);vaildURL=true;}catch{}
+      var vaildURL = false;
+      try { new URL(newEndpoint); vaildURL = true; } catch { }
       if (!vaildURL) {
         response.wsMsgWindow(data.ws, "新的地址格式不正确，已舍弃远程端点的更改");
       } else {
@@ -52,11 +52,11 @@ WebSocketObserver().listener("workers/upinfo", (data) => {
 
     //如果需求，则更改Worker名以及存储文件
     if (workername != newworkername) {
-      let oldWorker=WorkerCenter.get(workername);
-      let connected=oldWorker.connected;
-      if(connected)oldWorker.disconnect();
+      let oldWorker = WorkerCenter.get(workername);
+      let connected = oldWorker.connected;
+      if (connected) oldWorker.disconnect();
       WorkerCenter.reWorkername(workername, newworkername);
-      if(connected)WorkerCenter.get(newworkername).connect();
+      if (connected) WorkerCenter.get(newworkername).connect();
       WorkerCenter.get(newworkername).dataModel.save();
     } else {
       WorkerCenter.get(workername).dataModel.save();
@@ -71,21 +71,21 @@ WebSocketObserver().listener("workers/upinfo", (data) => {
   }
 });
 WebSocketObserver().listener("workers/up", (data) => {
-  if (!permssion.hasRights(data.WsSession.username,"workers:connect")) return;
-  var ro=JSON.parse(data.body) //RequestObject
+  if (!permssion.hasRights(data.WsSession.username, "workers:connect")) return;
+  var ro = JSON.parse(data.body) //RequestObject
   let worker = WorkerCenter.get(ro.workername.trim());
-  worker.connect(data.ws).then(function(success){
-    if(success){
-      response.wsMsgWindow(data.ws,"连接成功")
-    }else{
-      response.wsMsgWindow(data.ws,"连接失败")
+  worker.connect(data.ws).then(function (success) {
+    if (success) {
+      response.wsMsgWindow(data.ws, "连接成功")
+    } else {
+      response.wsMsgWindow(data.ws, "连接失败")
     }
     response.wsSend(data.ws, "workers/up", {});
   });
 });
 WebSocketObserver().listener("workers/down", (data) => {
-  if (!permssion.hasRights(data.WsSession.username,"workers:disconnect")) return;
-  var ro=JSON.parse(data.body) //RequestObject
+  if (!permssion.hasRights(data.WsSession.username, "workers:disconnect")) return;
+  var ro = JSON.parse(data.body) //RequestObject
   let worker = WorkerCenter.get(ro.workername.trim());
   worker.disconnect()
   response.wsSend(data.ws, "workers/down", {});
@@ -93,71 +93,69 @@ WebSocketObserver().listener("workers/down", (data) => {
 WebSocketObserver().listener("workers/add", (data) => {
   //Object {ws: WebSocket, req: IncomingMessage, user: undefined, header: Object, body: "[body 开始]
   //Object {RequestKey: "req", RequestValue: "some"}
-  if (!permssion.hasRights(data.WsSession.username,"workers:addWorker")) return;
-  var ro=JSON.parse(data.body) //RequestObject
-  var newEndpoint=ro.RemoteDescription.endpoint.trim()
-  var vaildURL=false;
-  try{new URL(newEndpoint);vaildURL=true;}catch{}
+  if (!permssion.hasRights(data.WsSession.username, "workers:addWorker")) return;
+  var ro = JSON.parse(data.body) //RequestObject
+  var newEndpoint = ro.RemoteDescription.endpoint.trim()
+  var vaildURL = false;
+  try { new URL(newEndpoint); vaildURL = true; } catch { }
   if (!vaildURL) {
     response.wsMsgWindow(data.ws, "新的地址格式不正确");
     return false;
   }
-  WorkerCenter.createWorker(ro.workername.trim(),ro.MasterKey,ro.RemoteDescription);
-  response.wsSend(data.ws,"workers/add",null);
+  WorkerCenter.createWorker(ro.workername.trim(), ro.MasterKey, ro.RemoteDescription);
+  response.wsSend(data.ws, "workers/add", null);
 });
 WebSocketObserver().listener("workers/delete", (data) => {
   //Object {ws: WebSocket, req: IncomingMessage, user: undefined, header: Object, body: "[body 开始]
   //Object {RequestKey: "req", RequestValue: "some"}
-  if (!permssion.hasRights(data.WsSession.username,"workers:deleteWorker")) return;
-  var ro=JSON.parse(data.body) //RequestObject
-  let worker=WorkerCenter.get(ro.workername);
-  if(worker.connected)worker.disconnect();
+  if (!permssion.hasRights(data.WsSession.username, "workers:deleteWorker")) return;
+  var ro = JSON.parse(data.body) //RequestObject
+  let worker = WorkerCenter.get(ro.workername);
+  if (worker.connected) worker.disconnect();
   WorkerCenter.deleteWorker(ro.workername.trim());
-  response.wsSend(data.ws,"workers/delete",null)
+  response.wsSend(data.ws, "workers/delete", null)
 });
-WebSocketObserver().listener("workers/center",async (data) => {
-  if (!permssion.hasRights(data.WsSession.username,"workers:viewWorkerCenter")) return;
+WebSocketObserver().listener("workers/center", async (data) => {
+  if (!permssion.hasRights(data.WsSession.username, "workers:viewWorkerCenter")) return;
 
   let workerName = data.body.trim();
   try {
-    if(!WorkerCenter.get(workerName)){
+    if (!WorkerCenter.get(workerName)) {
       response.wsMsgWindow(data.ws, "访问出错:" + "Worker不存在");
     }
-    var worker=WorkerCenter.get(workerName);
-    var [header,body]=await worker.send("center/show",data.body);
-    if(header.ResponseKey!=="center/show")return false;
-    header.ResponseKey="workers/center";
-    data.ws.send(msgpack.encode([header,body]));
+    var worker = WorkerCenter.get(workerName);
+    let [{ ResponseKey, ResponseValue }, body] = await worker.send("center/show", data.body);
+    if (ResponseKey !== "center/show") return false;
+    response.wsSend(data.ws, "workers/center", ResponseValue, body);
   } catch (e) {
     response.wsSend(data.ws, "workers/center", null);
     response.wsMsgWindow(data.ws, "访问Worker失败" + e);
   }
 });
-WebSocketObserver().listener("workers/restart",async (data) => {
-  if (!permssion.hasRights(data.WsSession.username,"workers:restartWorker")) return;
+WebSocketObserver().listener("workers/restart", async (data) => {
+  if (!permssion.hasRights(data.WsSession.username, "workers:restartWorker")) return;
 
   let workerName = data.body.trim();
   try {
-    if(!WorkerCenter.get(workerName)){
+    if (!WorkerCenter.get(workerName)) {
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
     }
-    var worker=WorkerCenter.get(workerName);
-    var [header,body]=await worker.send("center/restart",data.body);
-    if(header.ResponseKey!=="center/restart")return false;
-    header.ResponseKey="workers/restart";
-    data.ws.send(msgpack.encode([header,body]));
+    var worker = WorkerCenter.get(workerName);
+    let [{ ResponseKey, ResponseValue }, body] = await worker.send("center/restart", data.body);
+    if (ResponseKey !== "center/restart") return false;
+    response.wsSend(data.ws, "workers/restart", ResponseValue, body);
   } catch (e) {
     response.wsSend(data.ws, "workers/restart", null);
     response.wsMsgWindow(data.ws, "访问Worker失败" + e);
   }
 });
-MCSERVER.addProbablyPermissions("workers","管理分布式服务");
-MCSERVER.addProbablyPermissions("workers:overview","访问分布式服务中心");
-MCSERVER.addProbablyPermissions("workers:view","访问详细信息");
-MCSERVER.addProbablyPermissions("workers:uploadInfomation","保存Worker配置");
-MCSERVER.addProbablyPermissions("workers:connect","连接Worker");
-MCSERVER.addProbablyPermissions("workers:disconnect","断开与Worker的链接");
-MCSERVER.addProbablyPermissions("workers:addWorker","新增Worker");
-MCSERVER.addProbablyPermissions("workers:deleteWorker","删除Worker");
-MCSERVER.addProbablyPermissions("workers:center","访问Worker控制中心");
-MCSERVER.addProbablyPermissions("workers:restart","重启Worker");
+MCSERVER.addProbablyPermissions("workers", "管理分布式服务");
+MCSERVER.addProbablyPermissions("workers:overview", "访问分布式服务中心");
+MCSERVER.addProbablyPermissions("workers:view", "访问详细信息");
+MCSERVER.addProbablyPermissions("workers:uploadInfomation", "保存Worker配置");
+MCSERVER.addProbablyPermissions("workers:connect", "连接Worker");
+MCSERVER.addProbablyPermissions("workers:disconnect", "断开与Worker的链接");
+MCSERVER.addProbablyPermissions("workers:addWorker", "新增Worker");
+MCSERVER.addProbablyPermissions("workers:deleteWorker", "删除Worker");
+MCSERVER.addProbablyPermissions("workers:center", "访问Worker控制中心");
+MCSERVER.addProbablyPermissions("workers:restart", "重启Worker");

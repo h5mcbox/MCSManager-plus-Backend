@@ -7,7 +7,7 @@ const workerModel=require("../../../model/WorkerModel");
 const mcPingProtocol = require("../../../helper/MCPingProtocol");
 
 //发送指令
-WebSocketObserver().listener("server/console/command", (data) => {
+WebSocketObserver().listener("server/console/command",async (data) => {
   let par = JSON.parse(data.body);
   let serverName = par.serverName.trim();
   let command = par.command;
@@ -18,7 +18,8 @@ WebSocketObserver().listener("server/console/command", (data) => {
     if(!workerModel.get(serverLocation)){
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
     }
-    workerModel.get(serverLocation).send("server/console/command",data.body).then((_)=>{data.ws.send(_)})
+    let [{ ResponseKey, ResponseValue }, body] = await workerModel.get(serverLocation).send("server/console/command", data.body);
+    response.wsSend(data.ws, ResponseKey, ResponseValue, body);
   }
   response.wsSend(data.ws, "server/console/command", null);
 });

@@ -8,7 +8,7 @@ const workerModel= require("../../model/WorkerModel");
 //日志缓存记录器
 MCSERVER.consoleLog = {};
 //控制请求监听控制台实例
-WebSocketObserver().listener("server/console/ws", (data) => {
+WebSocketObserver().listener("server/console/ws",async (data) => {
   let userName = data.WsSession.username;
   let serverName = data.body.trim();
 
@@ -27,7 +27,8 @@ WebSocketObserver().listener("server/console/ws", (data) => {
     if (!workerModel.get(serverLocation)) {
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
     }
-    workerModel.get(serverLocation).send("server/console/ws", data.body).then((_) => { data.ws.send(_) })
+    let [{ ResponseKey, ResponseValue}, body] = await workerModel.get(serverLocation).send("server/console/ws", data.body);
+    response.wsSend(data.ws, ResponseKey, ResponseValue, body);
     return;
   }
 
@@ -36,7 +37,7 @@ WebSocketObserver().listener("server/console/ws", (data) => {
 });
 
 //前端退出控制台界面
-WebSocketObserver().listener("server/console/remove", (data) => {
+WebSocketObserver().listener("server/console/remove",async (data) => {
   //单页退出时触发
 
   for (let k in MCSERVER.allSockets) {
@@ -48,7 +49,8 @@ WebSocketObserver().listener("server/console/remove", (data) => {
       if (!workerModel.get(serverLocation)) {
         response.wsMsgWindow(data.ws, "创建出错:" + "Worker不存在");
       }
-      workerModel.get(serverLocation).send("server/console/remove", MCSERVER.allSockets[k]["console"]).then((_) => { data.ws.send(_) })
+      let [{ ResponseKey, ResponseValue}, body] = await workerModel.get(serverLocation).send("server/console/remove", MCSERVER.allSockets[k]["console"]);
+      response.wsSend(data.ws,ResponseKey,ResponseValue,body);
       MCSERVER.allSockets[k]["console"] = undefined;
       return;
     }
