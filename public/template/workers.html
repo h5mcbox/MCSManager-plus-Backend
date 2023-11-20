@@ -40,9 +40,12 @@
                   <!-- <button class="btn btn-primary" v-on:click="">权限配置</button> -->
 
                   <button class="btn btn-info" v-on:click="toWorkerView(item.workername)">详细信息</button>
-                  <button class="btn btn-info" v-if="item.data.online" v-on:click="toCenter(item.workername)">数据中心</button>
-                  <button class="btn btn-info" v-if="item.data.online" v-on:click="toUpdate(item.workername)">更新Worker</button>
-                  <button class="btn btn-success" v-if="!item.data.online" v-on:click="toOnline(item.workername)">连接</button>
+                  <button class="btn btn-info" v-if="item.data.online"
+                    v-on:click="toCenter(item.workername)">数据中心</button>
+                  <button class="btn btn-info" v-if="item.data.online"
+                    v-on:click="toUpdate(item.workername)">更新Worker</button>
+                  <button class="btn btn-success" v-if="!item.data.online"
+                    v-on:click="toOnline(item.workername)">连接</button>
                   <button class="btn btn-warning" v-else v-on:click="toOffline(item.workername)">断开连接</button>
                   <span style="margin-left: 8px"> | </span>
                   <button class="btn btn-danger" v-on:click="toDeleteWorker(item.workername)">删除Worker</button>
@@ -121,7 +124,7 @@
         createWorker: false,
         workername: "",
         MasterKey: "",
-        endpoint:"",
+        endpoint: "",
       },
       methods: {
         toAddWorker: function () {
@@ -133,7 +136,7 @@
             workername: this.workername,
             MasterKey: this.MasterKey,
             RemoteDescription: {
-              endpoint:this.endpoint
+              endpoint: this.endpoint
             }
           };
           WS.sendMsg("workers/add", obj, function () {
@@ -146,38 +149,38 @@
           };
           var result = confirm("您真的打算删除这个这个Worker吗?");
           if (!result) return;
-          WS.sendMsg("workers/delete", JSON.stringify(obj), function () {
+          WS.sendMsg("workers/delete", obj, function () {
             PAGE.refresh();
           });
         },
-        toUpdate:async function(itemWorkername){
-          var input=document.createElement("input");
-          input.type="file";
-          var onChanged=new Promise((resolve,reject)=>input.oninput=resolve);
+        toUpdate: async function (itemWorkername) {
+          var input = document.createElement("input");
+          input.type = "file";
+          var onChanged = new Promise((resolve, reject) => input.oninput = resolve);
           input.click();
           await onChanged;
-          input.oninput=null;
-          blob=input.files[0];
-          if(!blob){
+          input.oninput = null;
+          blob = input.files[0];
+          if (!blob) {
             return;
           }
-          var urlo=new URL(location.href);
-          urlo.pathname="/update/worker/"+itemWorkername;
-          await fetch(urlo.href,{
-            method:"POST",
-            body:blob
+          var urlo = new URL(location.href);
+          urlo.pathname = "/update/worker/" + itemWorkername;
+          await fetch(urlo.href, {
+            method: "POST",
+            body: blob
           });
           TOOLS.pushMsgWindow("Worker开始更新");
         },
-        toCenter:async function(itemWorkername){
-          MCSERVER.workername=itemWorkername;
+        toCenter: async function (itemWorkername) {
+          MCSERVER.workername = itemWorkername;
           RES.redirectPage("./template/center.html", "workers/center", itemWorkername);
         },
         toOnline: function (itemWorkername) {
           var obj = {
             workername: itemWorkername
           };
-          WS.sendMsg("workers/up", JSON.stringify(obj), function () {
+          WS.sendMsg("workers/connect", obj, function () {
             PAGE.refresh();
           });
         },
@@ -185,7 +188,7 @@
           var obj = {
             workername: itemWorkername
           };
-          WS.sendMsg("workers/down", JSON.stringify(obj), function () {
+          WS.sendMsg("workers/disconnect", obj, function () {
             PAGE.refresh();
           });
         },

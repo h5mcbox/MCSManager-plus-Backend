@@ -70,7 +70,7 @@ WebSocketObserver().listener("workers/upinfo", (data) => {
     MCSERVER.error(e);
   }
 });
-WebSocketObserver().listener("workers/up", (data) => {
+WebSocketObserver().listener("workers/connect", (data) => {
   if (!permssion.hasRights(data.WsSession.username, "workers:connect")) return;
   var ro = data.body //RequestObject
   let worker = WorkerCenter.get(ro.workername.trim());
@@ -80,15 +80,15 @@ WebSocketObserver().listener("workers/up", (data) => {
     } else {
       response.wsMsgWindow(data.ws, "连接失败")
     }
-    response.wsSend(data.ws, "workers/up", {});
+    response.wsSend(data.ws, "workers/connect", {});
   });
 });
-WebSocketObserver().listener("workers/down", (data) => {
+WebSocketObserver().listener("workers/disconnect", (data) => {
   if (!permssion.hasRights(data.WsSession.username, "workers:disconnect")) return;
   var ro = data.body //RequestObject
   let worker = WorkerCenter.get(ro.workername.trim());
-  worker.disconnect()
-  response.wsSend(data.ws, "workers/down", {});
+  worker.disconnect();
+  response.wsSend(data.ws, "workers/disconnect", {});
 });
 WebSocketObserver().listener("workers/add", (data) => {
   //Object {ws: WebSocket, req: IncomingMessage, user: undefined, header: Object, body: "[body 开始]
