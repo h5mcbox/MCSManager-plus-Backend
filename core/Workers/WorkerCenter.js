@@ -1,4 +1,4 @@
-const { Worker, WORKER_SAVE_PATH } = require("./Workers");
+const { Worker, WORKER_SAVE_PATH } = require("./Worker");
 const ServerModel = require("../../model/ServerModel");
 const fs = require("fs");
 

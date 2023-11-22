@@ -1,5 +1,5 @@
 const WorkerCenter = require("../core/Workers/WorkerCenter");
-const Worker=require("../core/Workers/Workers")
+const Worker=require("../core/Workers/Worker")
 
 let OnlyWorkerCenters = new WorkerCenter();
 module.exports = OnlyWorkerCenters;

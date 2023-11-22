@@ -60,7 +60,9 @@
     if (MCSERVER.group==="master") {
       data.obj.items = MCSERVER.meumObject.masterMeum;
     } else if(MCSERVER.group==="user"){
-      data.obj.items = MCSERVER.meumObject.notMasterMeum;
+      data.obj.items = data.obj.customMenu ?? MCSERVER.meumObject.masterMeum;
+    } else if(MCSERVER.group==="banned"){
+      data.obj.items = MCSERVER.meumObject.bannedMeum;
     }else{
       data.obj.items = MCSERVER.meumObject.bannedMeum;
     }
