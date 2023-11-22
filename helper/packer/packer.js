@@ -30,7 +30,7 @@ let exceptions = [
   "key.pem",
   "property.js",
   "helper/packer/",
-  "info.json"
+  "core/info.json"
 ].map(e => normalize(e));
 let bufs = [];
 let cursor = 0;

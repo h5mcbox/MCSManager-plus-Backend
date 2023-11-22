@@ -17,10 +17,6 @@ WebSocketObserver().listener("menu", async (data) => {
   // response.wsMsgWindow(data.ws, '欢迎上线 ' + data.WsSession.username);
 });
 
-WorkerObserver().listener("window/msg", msg => {
-  let payload = msgpack.encode([{
-    ResponseKey: "window/msg",
-    ResponseValue: ""
-  }, msg]);
-  for (let client of Object.values(MCSERVER.allSockets)) client.ws.send(payload);
+WorkerObserver().listener("window/msg", ({body}) => {
+  for (let client of Object.values(MCSERVER.allSockets)) response.wsMsgWindow(client.ws,body);
 })
