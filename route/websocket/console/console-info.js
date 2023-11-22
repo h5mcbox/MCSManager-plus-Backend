@@ -1,9 +1,8 @@
 const response = require("../../../helper/Response");
-var serverModel = require("../../../model/ServerModel");
-const workerModel = require("../../../model/WorkerModel");
+const serverModel = require("../../../model/ServerModel");
 const permssion = require("../../../helper/Permission");
 const { WebSocketObserver } = require("../../../model/WebSocketModel");
-const os = require("os");
+//const os = require("os");
 
 const mcPingProtocol = require("../../../helper/MCPingProtocol");
 
@@ -14,12 +13,11 @@ WebSocketObserver().listener("server/console", async (data) => {
   let serverName = data.body.trim();
 
   if (permssion.isCanServer(userName, serverName)) {
-    const server = serverModel.ServerManager().getServer(serverName);
-    let serverLocation = server.dataModel.location;
-    if (!workerModel.get(serverLocation)) {
+    const { worker } = serverModel.ServerManager().getServer(serverName);
+    if (!worker) {
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
     }
-    let [{ ResponseKey: key, ResponseValue: value }, body] = await workerModel.get(serverLocation).send("server/console", data.body);
+    let [{ ResponseKey: key, ResponseValue: value }, body] = await worker.call("server/console", data.body);
     response.wsSend(data.ws, key, value, body);
     // MCSERVER.log('准许用户 [' + userName + '] 获取控制台实时数据');
   }

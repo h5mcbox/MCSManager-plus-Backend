@@ -18,6 +18,7 @@ McserverConfig.json
 core/*.json
 property.js
 !model/init_config/property.js
+info.json
 
 # builds
 app.apkg

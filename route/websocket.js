@@ -165,14 +165,14 @@ router.ws("/ws", function (ws, req) {
       }
 
       WebSocketObserver().emit("ws/req", {
-        ws: ws,
-        req: req,
+        ws,
+        req,
         user: username,
-        header: header,
-        body: body,
-        RequestValue: header["RequestValue"],
-        token: token,
-        WsSession: WsSession
+        header,
+        body,
+        RequestValue: header.RequestValue,
+        token,
+        WsSession
       });
     } catch (err) {
       MCSERVER.error("WebSocket 请求处理时异常:", err);

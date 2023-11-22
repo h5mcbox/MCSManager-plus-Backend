@@ -8,7 +8,7 @@ WebSocketObserver().listener("server/view", async (data) => {
   if (!permssion.hasRights(data.WsSession.username, "server:overview")) return;
   let allServers = [];
   for (let item of workerModel.getOnlineWorkers()) {
-    let [{ ResponseKey, ResponseValue }] = await item.send("server/view", data.body);
+    let [{ ResponseKey, ResponseValue }] = await item.call("server/view", data.body);
     if (ResponseKey !== "server/view") return false;
     ResponseValue.items.forEach(e => allServers.push(e));
   }
@@ -28,18 +28,17 @@ WebSocketObserver().listener("server/get", async (data) => {
     return;
   }
 
-  let serverLoc = mcserver.dataModel.location;
-  if (!workerModel.get(serverLoc)) {
+  if (!mcserver.worker) {
     response.wsMsgWindow(data.ws, "获取出错:" + "Worker不存在");
   }
-  let worker = workerModel.get(serverLoc);
-  let [{ ResponseKey, ResponseValue }, body] = await worker.send("server/get", data.body);
+  let worker = mcserver.worker;
+  let [{ ResponseKey, ResponseValue }, body] = await worker.call("server/get", data.body);
   if (ResponseKey !== "server/get") return false;
-  ResponseValue.location = serverLoc;
+  ResponseValue.location = mcserver.location;
   response.wsSend(data.ws, ResponseKey, ResponseValue, body);
 });
 
-WebSocketObserver().listener("server/create", (data) => {
+WebSocketObserver().listener("server/create", async (data) => {
   if (!permssion.hasRights(data.WsSession.username, "server:createServer")) return;
 
   let ServerConfig = data.body;
@@ -50,11 +49,12 @@ WebSocketObserver().listener("server/create", (data) => {
     return;
   }
   try {
-    if (!workerModel.get(serverLocation)) {
+    let worker = workerModel.get(serverLocation);
+    if (!worker) {
       response.wsMsgWindow(data.ws, "创建出错:" + "Worker不存在");
     }
     serverModel.createServer(serverName, ServerConfig);
-    workerModel.get(serverLocation).send("server/create", data.body);
+    await worker.call("server/create", data.body);
   } catch (err) {
     response.wsMsgWindow(data.ws, "创建出错:" + err);
     MCSERVER.error("创建服务器时出错", err);
@@ -66,13 +66,12 @@ WebSocketObserver().listener("server/create_dir", async (data) => {
   if (!permssion.hasRights(data.WsSession.username, "server:create_dir")) return;
 
   let ServerConfig = data.body;
-  const server = serverModel.ServerManager().getServer(ServerConfig.serverName);
-  let serverLocation = server.dataModel.location;
-  if (!workerModel.get(serverLocation)) {
+  const { worker } = serverModel.ServerManager().getServer(ServerConfig.serverName);
+  if (!worker) {
     response.wsMsgWindow(data.ws, "创建出错:" + "Worker不存在");
   }
   try {
-    let [{ ResponseKey, ResponseValue }, body] = await workerModel.get(serverLocation).send("server/create_dir", data.body);
+    let [{ ResponseKey, ResponseValue }, body] = await worker.call("server/create_dir", data.body);
     response.wsSend(data.ws, ResponseKey, ResponseValue, body);
   } catch (e) {
     response.wsMsgWindow(data.ws, "创建目录" + ServerConfig.cwd + "出错");
@@ -83,27 +82,25 @@ WebSocketObserver().listener("server/rebuilder", async (data) => {
   if (!permssion.hasRights(data.WsSession.username, "server:rebuilder")) return;
   let ServerConfig = data.body;
   let oldServerName = ServerConfig.oldServerName.trim();
-  const server = serverModel.ServerManager().getServer(oldServerName);
-  let serverLocation = server.dataModel.location;
-  if (!workerModel.get(serverLocation)) {
+  const { worker } = serverModel.ServerManager().getServer(oldServerName);
+  if (!worker) {
     response.wsMsgWindow(data.ws, "修改出错:" + "Worker不存在");
   }
-  let [{ ResponseKey, ResponseValue }, body] = await workerModel.get(serverLocation).send("server/rebuilder", data.body);
+  let [{ ResponseKey, ResponseValue }, body] = await worker.call("server/rebuilder", data.body);
   response.wsSend(data.ws, ResponseKey, ResponseValue, body);
 });
 
-WebSocketObserver().listener("server/delete", (data) => {
+WebSocketObserver().listener("server/delete", async (data) => {
   if (!permssion.hasRights(data.WsSession.username, "server:deleteServer")) return;
 
   let serverName = data.body.trim();
   try {
-    const server = serverModel.ServerManager().getServer(serverName);
-    let serverLocation = server.dataModel.location;
-    if (!workerModel.get(serverLocation)) {
+    const { worker } = serverModel.ServerManager().getServer(serverName);
+    if (!worker) {
       response.wsMsgWindow(data.ws, "删除出错:" + "Worker不存在");
     }
     serverModel.deleteServer(serverName);
-    workerModel.get(serverLocation).send("server/delete", data.body)
+    worker.call("server/delete", data.body)
   } catch (e) {
     response.wsSend(data.ws, "server/delete", null);
     response.wsMsgWindow(data.ws, "删除服务器失败" + e);
@@ -116,7 +113,7 @@ WebSocketObserver().listener("server/opt_all", async (data) => {
 
   try {
     for (let item of workerModel.getOnlineWorkers()) {
-      await item.send("server/opt_all");
+      await item.call("server/opt_all");
     }
   } catch (err) {
     response.wsMsgWindow(data.ws, "执行失败:" + err);

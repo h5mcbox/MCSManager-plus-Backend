@@ -2,7 +2,6 @@ const { WebSocketObserver } = require("../../model/WebSocketModel");
 const response = require("../../helper/Response");
 const permssion = require("../../helper/Permission");
 const WorkerCenter = require("../../model/WorkerModel");
-const msgpack = require("../../helper/msgpack");
 
 WebSocketObserver().listener("workers", (data) => {
   //Object {ws: WebSocket, req: IncomingMessage, user: undefined, header: Object, body: "[body 开始]
@@ -34,10 +33,10 @@ WebSocketObserver().listener("workers/upinfo", (data) => {
     let newRemoteDescription = newWorkerConfig.newRemoteDescription
 
     //更改服务器拥有列表
-    var newEndpoint = newRemoteDescription.endpoint.trim()
+    let newEndpoint = newRemoteDescription.endpoint.trim()
     //如果需求，则更改地址
     if (newEndpoint.trim() != "") {
-      var vaildURL = false;
+      let vaildURL = false;
       try { new URL(newEndpoint); vaildURL = true; } catch { }
       if (!vaildURL) {
         response.wsMsgWindow(data.ws, "新的地址格式不正确，已舍弃远程端点的更改");
@@ -72,7 +71,7 @@ WebSocketObserver().listener("workers/upinfo", (data) => {
 });
 WebSocketObserver().listener("workers/connect", (data) => {
   if (!permssion.hasRights(data.WsSession.username, "workers:connect")) return;
-  var ro = data.body //RequestObject
+  let ro = data.body //RequestObject
   let worker = WorkerCenter.get(ro.workername.trim());
   worker.connect(data.ws).then(function (success) {
     if (success) {
@@ -85,7 +84,7 @@ WebSocketObserver().listener("workers/connect", (data) => {
 });
 WebSocketObserver().listener("workers/disconnect", (data) => {
   if (!permssion.hasRights(data.WsSession.username, "workers:disconnect")) return;
-  var ro = data.body //RequestObject
+  let ro = data.body //RequestObject
   let worker = WorkerCenter.get(ro.workername.trim());
   worker.disconnect();
   response.wsSend(data.ws, "workers/disconnect", {});
@@ -94,9 +93,9 @@ WebSocketObserver().listener("workers/add", (data) => {
   //Object {ws: WebSocket, req: IncomingMessage, user: undefined, header: Object, body: "[body 开始]
   //Object {RequestKey: "req", RequestValue: "some"}
   if (!permssion.hasRights(data.WsSession.username, "workers:addWorker")) return;
-  var ro = data.body //RequestObject
-  var newEndpoint = ro.RemoteDescription.endpoint.trim()
-  var vaildURL = false;
+  let ro = data.body //RequestObject
+  let newEndpoint = ro.RemoteDescription.endpoint.trim()
+  let vaildURL = false;
   try { new URL(newEndpoint); vaildURL = true; } catch { }
   if (!vaildURL) {
     response.wsMsgWindow(data.ws, "新的地址格式不正确");
@@ -109,7 +108,7 @@ WebSocketObserver().listener("workers/delete", (data) => {
   //Object {ws: WebSocket, req: IncomingMessage, user: undefined, header: Object, body: "[body 开始]
   //Object {RequestKey: "req", RequestValue: "some"}
   if (!permssion.hasRights(data.WsSession.username, "workers:deleteWorker")) return;
-  var ro = data.body //RequestObject
+  let ro = data.body //RequestObject
   let worker = WorkerCenter.get(ro.workername);
   if (worker.connected) worker.disconnect();
   WorkerCenter.deleteWorker(ro.workername.trim());
@@ -123,8 +122,8 @@ WebSocketObserver().listener("workers/center", async (data) => {
     if (!WorkerCenter.get(workerName)) {
       response.wsMsgWindow(data.ws, "访问出错:" + "Worker不存在");
     }
-    var worker = WorkerCenter.get(workerName);
-    let [{ ResponseKey, ResponseValue }, body] = await worker.send("center/show", data.body);
+    let worker = WorkerCenter.get(workerName);
+    let [{ ResponseKey, ResponseValue }, body] = await worker.call("center/show", data.body);
     if (ResponseKey !== "center/show") return false;
     response.wsSend(data.ws, "workers/center", ResponseValue, body);
   } catch (e) {
@@ -140,8 +139,8 @@ WebSocketObserver().listener("workers/restart", async (data) => {
     if (!WorkerCenter.get(workerName)) {
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
     }
-    var worker = WorkerCenter.get(workerName);
-    let [{ ResponseKey, ResponseValue }, body] = await worker.send("center/restart", data.body);
+    let worker = WorkerCenter.get(workerName);
+    let [{ ResponseKey, ResponseValue }, body] = await worker.call("center/restart", data.body);
     if (ResponseKey !== "center/restart") return false;
     response.wsSend(data.ws, "workers/restart", ResponseValue, body);
   } catch (e) {

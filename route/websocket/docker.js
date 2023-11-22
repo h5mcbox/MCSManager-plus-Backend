@@ -1,7 +1,7 @@
 const { WebSocketObserver } = require("../../model/WebSocketModel");
 const serverModel = require("../../model/ServerModel");
 const response = require("../../helper/Response");
-const permssion = require("../../helper/Permission");
+const permission = require("../../helper/Permission");
 /*
 const tools = require("../../core/tools");
 const fs = require("fs");
@@ -13,16 +13,17 @@ const WorkerCenter = require("../../model/WorkerModel");
 //MCSERVER.PAGE.DockerRes = [];
 
 //Docker 容器创建路由
-WebSocketObserver().listener("docker/new",async (data) => {
-  if(!permssion.hasRights(data.WsSession.username,"docker:new"))return;
+WebSocketObserver().listener("docker/new", async (data) => {
+  if (!permission.hasRights(data.WsSession.username, "docker:new")) return;
   let dockerConfig = data.body;
   //{dockerImageName: "",
   //dockerfile: "FROM java:latest↵RUN mkdir -p /mcsd↵RUN echo "Asia…teractive tzdata↵WORKDIR / mcsd↵RUN apt - get update"}
   let serverLocation = dockerConfig.workerName;
-  if(!WorkerCenter.get(serverLocation)){
+  let worker = WorkerCenter.get(serverLocation);
+  if (!worker) {
     response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
   }
-  let [{ ResponseKey, ResponseValue}, body] = await workerModel.get(serverLocation).send("docker/new", data.body);
+  let [{ ResponseKey, ResponseValue }, body] = await worker.call("docker/new", data.body);
   response.wsSend(data.ws, ResponseKey, ResponseValue, body);
   /*
   let dockerImageName = dockerConfig.dockerImageName;
@@ -81,19 +82,19 @@ WebSocketObserver().listener("docker/new",async (data) => {
 //结果列表获取
 //路由
 WebSocketObserver().listener("docker/res", async (data) => {
-  if(!permssion.hasRights(data.WsSession.username,"docker:res"))return;
-  let result=[];
-  for(let item of WorkerCenter.getOnlineWorkers()){
-    var [header]=await item.send("docker/res");
-    if(header.ResponseKey!=="docker/res")return false;
-    header.ResponseValue.forEach(e=>result.push(e));
+  if (!permission.hasRights(data.WsSession.username, "docker:res")) return;
+  let result = [];
+  for (let item of WorkerCenter.getOnlineWorkers()) {
+    var [header] = await item.call("docker/res");
+    if (header.ResponseKey !== "docker/res") return false;
+    header.ResponseValue.forEach(e => result.push(e));
   }
   response.wsSend(data.ws, "server/view", result);
 });
 
 //获取配置
-WebSocketObserver().listener("docker/config",async (data) => {
-  if(!permssion.hasRights(data.WsSession.username,"docker:config"))return;
+WebSocketObserver().listener("docker/config", async (data) => {
+  if (!permission.hasRights(data.WsSession.username, "docker:config")) return;
   let serverName = data.body || "";
   if (serverName) {
     /*
@@ -101,19 +102,18 @@ WebSocketObserver().listener("docker/config",async (data) => {
     response.wsSend(data.ws, "docker/config", mcserver.dataModel.dockerConfig);
     mcserver.dataModel.save();
     */
-    const server = serverModel.ServerManager().getServer(serverName);
-    let serverLocation = server.dataModel.location;
-    if(!WorkerCenter.get(serverLocation)){
+    const { worker } = serverModel.ServerManager().getServer(serverName);
+    if (!worker) {
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
     }
-    let [{ ResponseKey, ResponseValue}, body] = await workerModel.get(serverLocation).send("docker/config", data.body);
+    let [{ ResponseKey, ResponseValue }, body] = await worker.send("docker/config", data.body);
     response.wsSend(data.ws, ResponseKey, ResponseValue, body);
   }
 });
 
 //设置配置
-WebSocketObserver().listener("docker/setconfig",async (data) => {
-  if(!permssion.hasRights(data.WsSession.username,"docker:setConfig"))return;
+WebSocketObserver().listener("docker/setconfig", async (data) => {
+  if (!permission.hasRights(data.WsSession.username, "docker:setConfig")) return;
   // {
   //     serverName: "xxxx",
   //     dockerConfig: { ... }
@@ -127,18 +127,17 @@ WebSocketObserver().listener("docker/setconfig",async (data) => {
     mcserver.dataModel.save();
     response.wsMsgWindow(data.ws, "操作成功，数据已保存");
     */
-    const server = serverModel.ServerManager().getServer(serverName);
-    let serverLocation = server.dataModel.location;
-    if(!WorkerCenter.get(serverLocation)){
+    const { worker } = serverModel.ServerManager().getServer(serverName);
+    if (!worker) {
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
     }
-    serverModel.deleteServer(serverName);
-    let [{ ResponseKey, ResponseValue}, body] = await workerModel.get(serverLocation).send("docker/setconfig", data.body);
+    //serverModel.deleteServer(serverName);
+    let [{ ResponseKey, ResponseValue }, body] = await worker.send("docker/setconfig", data.body);
     response.wsSend(data.ws, ResponseKey, ResponseValue, body);
   }
 });
-MCSERVER.addProbablyPermissions("docker","使用Docker");
-MCSERVER.addProbablyPermissions("docker:new","新建容器");
-MCSERVER.addProbablyPermissions("docker:res","结果列表获取");
-MCSERVER.addProbablyPermissions("docker:config","获取配置");
-MCSERVER.addProbablyPermissions("docker:setConfig","设置配置");
+MCSERVER.addProbablyPermissions("docker", "使用Docker");
+MCSERVER.addProbablyPermissions("docker:new", "新建容器");
+MCSERVER.addProbablyPermissions("docker:res", "结果列表获取");
+MCSERVER.addProbablyPermissions("docker:config", "获取配置");
+MCSERVER.addProbablyPermissions("docker:setConfig", "设置配置");

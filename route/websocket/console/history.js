@@ -1,7 +1,6 @@
 const { WebSocketObserver } = require("../../../model/WebSocketModel");
-const permssion = require("../../../helper/Permission");
+const permission = require("../../../helper/Permission");
 const serverModel = require("../../../model/ServerModel");
-const workerModel = require("../../../model/WorkerModel");
 const response = require("../../../helper/Response");
 
 const HISTORY_SIZE_LINE = 1024;
@@ -11,13 +10,12 @@ WebSocketObserver().listener("server/console/history", async (data) => {
   let { WsSession: { username: userName }, body: reqBody } = data;
   let serverName = reqBody["serverName"] || "";
 
-  if (permssion.isCanServer(userName, serverName)) {
-    const server = serverModel.ServerManager().getServer(serverName);
-    let serverLocation = server.dataModel.location;
-    if (!workerModel.get(serverLocation)) {
+  if (permission.isCanServer(userName, serverName)) {
+    const { worker } = serverModel.ServerManager().getServer(serverName);
+    if (!worker) {
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
     }
-    let [{ ResponseKey, ResponseValue }, body] = await workerModel.get(serverLocation).send("server/console/history", data.body);
+    let [{ ResponseKey, ResponseValue }, body] = await worker.call("server/console/history", data.body);
     response.wsSend(data.ws, ResponseKey, ResponseValue, body);
   }
 });
@@ -28,12 +26,11 @@ WebSocketObserver().listener("server/console/history_reverse", (data) => {
   let serverName = reqBody["serverName"] || "";
 
   if (permssion.isCanServer(userName, serverName)) {
-    const server = serverModel.ServerManager().getServer(serverName);
-    let serverLocation = server.dataModel.location;
-    if(!workerModel.get(serverLocation)){
+    const { worker } = serverModel.ServerManager().getServer(serverName);
+    if(!worker){
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
     }
-    workerModel.get(serverLocation).send("server/console/history_reverse",data.body).then((_)=>{data.ws.send(_)})
+    worker.send("server/console/history_reverse",data.body).then((_)=>{data.ws.send(_)})
   }
 });
 */
@@ -44,12 +41,11 @@ WebSocketObserver().listener("server/console/history_reset", (data) => {
   let serverName = reqBody["serverName"] || "";
 
   if (permssion.isCanServer(userName, serverName)) {
-    const server = serverModel.ServerManager().getServer(serverName);
-    let serverLocation = server.dataModel.location;
-    if(!workerModel.get(serverLocation)){
+    const { worker } = serverModel.ServerManager().getServer(serverName);
+    if(!worker){
       response.wsMsgWindow(data.ws, "创建出错:" + "Worker不存在");
     }
-    workerModel.get(serverLocation).send("server/console/history_reset",data.body).then((_)=>{data.ws.send(_)})
+    worker.send("server/console/history_reset",data.body).then((_)=>{data.ws.send(_)})
   }
 });
 */

@@ -1,17 +1,17 @@
 const { Worker, WORKER_SAVE_PATH } = require("./Workers");
-const ServerModel=require("../../model/ServerModel");
+const ServerModel = require("../../model/ServerModel");
 const fs = require("fs");
 
 const WORKER_DIR = "./" + WORKER_SAVE_PATH;
 
 class WorkerCenter {
+  /** @type {Object.<string,Worker>} */
+  workerList = {}
   constructor() {
-    this.workerList = {};
     this.initWorker();
   }
 
   initWorker() {
-    this.workerList = {};
     let workers = fs.readdirSync(WORKER_DIR);
     let workername = null;
     let workerTemp = null;
@@ -23,7 +23,7 @@ class WorkerCenter {
     }
   }
 
-  createWorker(workername, MasterKey,RemoteDescription) {
+  createWorker(workername, MasterKey, RemoteDescription) {
     let newWorker = new Worker(workername, MasterKey, RemoteDescription);
     if (!newWorker.dataModel.OnlyMemoryWorker) newWorker.save();
     this.workerList[workername] = newWorker;
@@ -55,12 +55,12 @@ class WorkerCenter {
     newWorker.save();
     this.workerList[newWorkername] = newWorker;
     this.deleteWorker(workername);
-    
+
     //修改服务器的Worker指针
-    let serverObjs=ServerModel.ServerManager().getServerObjects()
-    Object.values(serverObjs).forEach(function(e){
-      if(e.dataModel.location===workername){
-        e.dataModel.location=newWorkername;
+    let serverObjs = ServerModel.ServerManager().getServerObjects()
+    Object.values(serverObjs).forEach(function (e) {
+      if (e.dataModel.location === workername) {
+        e.dataModel.location = newWorkername;
         e.dataModel.save();
       }
     });
@@ -94,18 +94,18 @@ class WorkerCenter {
 
   getWorkerList() {
     let list = [];
-    let data = {};
-    let tmp = null;
-    for (let k in this.workerList) {
-      data = {}; //BUG Note: 引用初始化
-      if (!this.workerList[k]) continue;
-      tmp = this.workerList[k].dataModel;
+    for (let worker of Object.values(this.workerList)) {
+      let data = {};
+      if (!worker) continue;
+      let tmp = worker.dataModel;
       //删除掉一些不可泄露的信息
-      data.online = this.workerList[k].connected;
+      data.online = worker.connected;
       data.lastDate = tmp.lastDate;
       data.createDate = tmp.createDate;
       list.push({
-        workername: this.workerList[k].dataModel.workername,
+        /** @type {string} */
+        workername: worker.dataModel.workername,
+        /** @type {{online:boolean,lastDate:number,createDate:number}} */
         data: data
       });
     }
@@ -141,6 +141,10 @@ class WorkerCenter {
 
   returnWorkerObjList() {
     return this.workerList;
+  }
+
+  getOnlineWorkers() {
+    return Object.values(this.workerList).filter(({ connected }) => connected);
   }
 }
 

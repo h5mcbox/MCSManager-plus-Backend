@@ -1,22 +1,20 @@
 const response = require("../../../helper/Response");
 var serverModel = require("../../../model/ServerModel");
-const permssion = require("../../../helper/Permission");
+const permission = require("../../../helper/Permission");
 const { WebSocketObserver } = require("../../../model/WebSocketModel");
-const mcPingProtocol = require("../../../helper/MCPingProtocol");
-const workerModel=require("../../../model/WorkerModel");
+//const mcPingProtocol = require("../../../helper/MCPingProtocol");
 
 //开启服务器
-WebSocketObserver().listener("server/console/open",async (data) => {
+WebSocketObserver().listener("server/console/open", async (data) => {
   let serverName = data.body.trim();
   let userName = data.WsSession.username;
-  
-  if (permssion.isCanServer(userName, serverName)) {
-    const server = serverModel.ServerManager().getServer(serverName);
-    let serverLocation = server.dataModel.location;
-    if(!workerModel.get(serverLocation)){
+
+  if (permission.isCanServer(userName, serverName)) {
+    const { worker } = serverModel.ServerManager().getServer(serverName);
+    if (!worker) {
       response.wsMsgWindow(data.ws, "启动出错:" + "Worker不存在");
     }
-    let [{ ResponseKey, ResponseValue }, body] = await workerModel.get(serverLocation).send("server/console/open", data.body);
+    let [{ ResponseKey, ResponseValue }, body] = await worker.call("server/console/open", data.body);
     response.wsSend(data.ws, ResponseKey, ResponseValue, body);
   }
   response.wsSend(data.ws, "server/console/open", null);

@@ -652,7 +652,7 @@ function moduleEntry(returnMethod) {
             this.y = y;
           }
         }
-      
+
         function pointAdd(p, q) {
           return fromJacobian(jacobianAdd(toJacobian(p), toJacobian(q)));
         };
@@ -702,7 +702,7 @@ function moduleEntry(returnMethod) {
           let z = mod(2n * pA.y * pA.z, p);
           return new jacobianPoint(x, y, z);
         };
-      
+
         /**
          * 
          * @param {jacobianPoint} pA 
@@ -878,17 +878,14 @@ function moduleEntry(returnMethod) {
     var fs = require("fs");
     const fromHEXString = hexString =>
       new Uint8Array(hexString.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-    function read(currentVersion = VERSION, packageFile = PACKAGEFILE, _PublicKey = PUBLICKEY) {
+    /**
+     * @param {Buffer|Uint8Array} package 
+     */
+    function read(currentVersion = VERSION, package, _PublicKey = PUBLICKEY) {
       let err = new Error();
-      let filesbuf, Header;
-      if (fs.existsSync(packageFile)) {
-        filesbuf = fs.readFileSync(packageFile);
-      } else {
-        err.message = "错误:无法找到新版本文件";
-        throw err;
-      }
-      let fileheaderPointer = filesbuf.length - 1 - (Buffer.from(filesbuf).reverse().indexOf(10) - 1);
-      let fileheaderBuf = filesbuf.subarray(fileheaderPointer);
+      let Header;
+      let fileheaderPointer = package.length - 1 - (Buffer.from(package).reverse().indexOf(10) - 1);
+      let fileheaderBuf = package.subarray(fileheaderPointer);
       let fileheader = (new TextDecoder).decode(fileheaderBuf);
       try {
         Header = JSON.parse(fileheader);
@@ -912,12 +909,12 @@ function moduleEntry(returnMethod) {
         "users",
         "workers"].map(e => normalize(e));
       var files = {};
-      function verifyAndUnzip() {
+      function verifyAndUnarchive() {
         var vaild = true;
         for (let metadataIndex in Header.entries) {
           metadataIndex = Number(metadataIndex);
           const metadata = Header.entries[metadataIndex];//[filename,hash,start,size]
-          var filebuf = filesbuf.subarray(metadata[2], metadata[2] + metadata[3]);
+          var filebuf = package.subarray(metadata[2], metadata[2] + metadata[3]);
           var checksum = hash(filebuf);
           var isok = metadata[1] === checksum;
           var _path = path.resolve(metadata[0]);
@@ -937,7 +934,7 @@ function moduleEntry(returnMethod) {
           err.message = "错误:软件包版本太旧";
           throw err;
         }
-        if (!verifyAndUnzip()) {
+        if (!verifyAndUnarchive()) {
           err.message = "错误:文件损坏(校验值不符)";
           throw err;
         }
@@ -1261,15 +1258,28 @@ function DaemonEntry() {
 function AppEntry() {
   let sharedObject = {};
   module.exports = sharedObject;
+  let fs=require("fs");
+  const existsFile={
+    PACKAGEFILE:fs.existsSync(PACKAGEFILE),
+    BACKUPPACKAGEFILE:fs.existsSync(BACKUPPACKAGEFILE),
+  };
   try {
-    sharedObject.mode = "normal";
-    sharedObject.PACKAGEFILE = PACKAGEFILE;
-    moduleEntry(true)(VERSION, PACKAGEFILE, PUBLICKEY); //安装文件钩子
+    if(existsFile.PACKAGEFILE){
+      sharedObject.mode = "normal";
+      sharedObject.PACKAGEFILE = PACKAGEFILE;
+      moduleEntry(true)(VERSION, fs.readFileSync(PACKAGEFILE), PUBLICKEY); //安装文件钩子
+    }else{
+      throw new Error("错误:无法找到新版本文件");
+    }
   } catch (error) {
     console.error(error);
-    sharedObject.mode = "recovery";
-    sharedObject.PACKAGEFILE = BACKUPPACKAGEFILE;
-    moduleEntry(true)(VERSION, BACKUPPACKAGEFILE, PUBLICKEY); //安装文件钩子
+    if(existsFile.BACKUPPACKAGEFILE){
+      sharedObject.mode = "recovery";
+      sharedObject.PACKAGEFILE = BACKUPPACKAGEFILE;
+      moduleEntry(true)(VERSION, fs.readFileSync(BACKUPPACKAGEFILE), PUBLICKEY); //安装文件钩子
+    }else{
+      throw new Error("错误:无法找到备份版本文件");
+    }
   }
   return require("./_app");
 }

@@ -1,8 +1,8 @@
-const { WebSocketObserver } = require("../../model/WebSocketModel");
+const { WebSocketObserver, WorkerObserver } = require("../../model/WebSocketModel");
 const response = require("../../helper/Response");
 const permission = require("../../helper/Permission");
 
-WebSocketObserver().listener("menu",async (data) => {
+WebSocketObserver().listener("menu", async (data) => {
   //Object {ws: WebSocket, req: IncomingMessage, user: undefined, header: Object, body: "[body 开始]
   //Object {RequestKey: "req", RequestValue: "some"}
 
@@ -16,3 +16,11 @@ WebSocketObserver().listener("menu",async (data) => {
   });
   // response.wsMsgWindow(data.ws, '欢迎上线 ' + data.WsSession.username);
 });
+
+WorkerObserver().listener("window/msg", msg => {
+  let payload = msgpack.encode([{
+    ResponseKey: "window/msg",
+    ResponseValue: ""
+  }, msg]);
+  for (let client of Object.values(MCSERVER.allSockets)) client.ws.send(payload);
+})

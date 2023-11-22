@@ -57,7 +57,7 @@ setInterval(async function () {
   //获取正在运行服务器的数量
   let allOnlineServers = 0;
   for (let item of workerModel.getOnlineWorkers()) {
-    let [{ ResponseKey, ResponseValue }] = await item.send("server/view");
+    let [{ ResponseKey, ResponseValue }] = await item.call("server/view");
     if (ResponseKey !== "server/view") return false;
     ResponseValue.items.forEach(e => { if (e.data.run) allOnlineServers++ });
   }
@@ -110,5 +110,5 @@ WebSocketObserver().listener("center/show", (data) => {
   response.wsSend(data.ws, "center/show", cacheSystemInfo);
 });
 
-MCSERVER.addProbablyPermissions("center","查看面板中心数据");
-MCSERVER.addProbablyPermissions("restart","重启面板");
+MCSERVER.addProbablyPermissions("center", "查看面板中心数据");
+MCSERVER.addProbablyPermissions("restart", "重启面板");

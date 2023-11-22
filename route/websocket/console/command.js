@@ -1,24 +1,22 @@
 const { WebSocketObserver } = require("../../../model/WebSocketModel");
 const response = require("../../../helper/Response");
-var serverModel = require("../../../model/ServerModel");
-const permssion = require("../../../helper/Permission");
-const workerModel=require("../../../model/WorkerModel");
+const serverModel = require("../../../model/ServerModel");
+const permission = require("../../../helper/Permission");
 
-const mcPingProtocol = require("../../../helper/MCPingProtocol");
+//const mcPingProtocol = require("../../../helper/MCPingProtocol");
 
 //发送指令
-WebSocketObserver().listener("server/console/command",async (data) => {
+WebSocketObserver().listener("server/console/command", async (data) => {
   let par = data.body;
   let serverName = par.serverName.trim();
-  let command = par.command;
+  //let command = par.command;
   let userName = data.WsSession.username;
-  if (permssion.isCanServer(userName, serverName)) {
-    const server = serverModel.ServerManager().getServer(serverName);
-    let serverLocation = server.dataModel.location;
-    if(!workerModel.get(serverLocation)){
+  if (permission.isCanServer(userName, serverName)) {
+    const { worker } = serverModel.ServerManager().getServer(serverName);
+    if (!worker) {
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
     }
-    let [{ ResponseKey, ResponseValue }, body] = await workerModel.get(serverLocation).send("server/console/command", data.body);
+    let [{ ResponseKey, ResponseValue }, body] = await worker.call("server/console/command", data.body);
     response.wsSend(data.ws, ResponseKey, ResponseValue, body);
   }
   response.wsSend(data.ws, "server/console/command", null);

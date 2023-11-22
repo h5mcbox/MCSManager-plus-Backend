@@ -1,5 +1,6 @@
 const EventEmitter = require("events");
 const fs = require("fs-extra");
+const workerModel = require("../model/WorkerModel");
 const DataModel = require("./DataModel");
 const BASE_SERVER_DIR = "./server/";
 
@@ -14,6 +15,15 @@ class MinecraftServer extends EventEmitter {
   }
   save() {
     this.dataModel.save();
+  }
+  /**
+   * @return {String}
+   */
+  get location(){
+    return this.dataModel.location;
+  }
+  get worker(){
+    return workerModel.get(this.location);
   }
 }
 class ServerManager extends EventEmitter {
