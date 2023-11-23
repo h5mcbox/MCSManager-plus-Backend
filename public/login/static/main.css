@@ -30,7 +30,7 @@ body {
     position: fixed;
     min-height: 475px;
     /* 图片地址 */
-    background-image: url(../static/bg.jpg);
+    background-image: url(../static/background.jpg);
     background-repeat: no-repeat;
     background-size: cover;
 }

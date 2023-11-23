@@ -7,8 +7,7 @@ const permission = require("../../../helper/Permission");
 
 //发送指令
 WebSocketObserver().listener("server/console/command", async (data) => {
-  let par = data.body;
-  let serverName = par.serverName.trim();
+  let serverName = data.body.serverName.trim();
   //let command = par.command;
   let userName = data.WsSession.username;
   if (permission.isCanServer(userName, serverName)) {

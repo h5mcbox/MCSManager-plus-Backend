@@ -1,71 +1,89 @@
 ﻿<!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <meta http-equiv="Content-Language" content="zh-CN" />
-    <meta name="renderer" content="webkit" />
-    <meta name="viewport" content="initial-scale=1, maximum-scale=3, minimum-scale=1, user-scalable=no" />
 
-    <title>Mcserver Manager | 身份验证</title>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1" />
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Language" content="zh-CN" />
+  <meta name="renderer" content="webkit" />
+  <meta name="viewport" content="initial-scale=1, maximum-scale=3, minimum-scale=1, user-scalable=no" />
 
-    <link href="/public/common/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
-    <link href="./static/login/css/action.css" rel="stylesheet" />
-    <link href="./static/login/css/style.css" rel="stylesheet" />
-    <link href="./static/common/image/icon.ico" rel="shortcut icon" />
-    <!--[if lt IE 9]>
+  <title>Mcserver Manager | 身份验证</title>
+
+  <link href="/public/common/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="./static/login/css/action.css" rel="stylesheet" />
+  <link href="./static/login/css/style.css" rel="stylesheet" />
+  <link href="./static/common/image/icon.ico" rel="shortcut icon" />
+  <!--[if lt IE 9]>
       <div id="Not_" class="show-ui" style="height: 40px; background-color: rgb(221, 79, 67); text-align: center; line-height: 40px; color: white">
         <b>无法访问! 您的浏览器版本过低或是兼容模式,请使用最新/更高版本的浏览器: IE10+ chrome FireFox 等，如果是国内浏览器请打开极速浏览模式（webkit内核）。</b>
       </div>
     <![endif]-->
-  </head>
+</head>
 
-  <body>
-    <div id="view-bg" class="phone-none">
-      <img src="./static/login/img/background.jpg" height="100%" width="100%" />
-    </div>
-    <!-- <div id="view-bg-back"></div> -->
-    <div id="view-page">
-      <div id="panel-login">
-        <div id="panel-title">
-          <!-- 如果您想使用图片，或者文字作为 Logo，请修改这里 -->
-          <!-- <img src="./static/login/img/small_logo.png" width="120px" height="22px" /> -->
-          <span id="mptit">验证</span>
-        </div>
+<body>
+  <div id="view-bg" class="phone-none">
+    <img src="./static/background.jpg" height="100%" width="100%" />
+  </div>
+  <!-- <div id="view-bg-back"></div> -->
+  <div id="view-page">
+    <div id="panel-login">
+      <div id="panel-title">
+        <!-- 如果您想使用图片，或者文字作为 Logo，请修改这里 -->
+        <!-- <img src="./static/login/img/small_logo.png" width="120px" height="22px" /> -->
+        <span id="mptit">验证</span>
+      </div>
+      <div id="panel-context" class="login">
         <p>您必须要进行身份识别，才可以进入面板</p>
-        <div id="panel-context">
-          <!-- 元素的 id 不可更改 -->
-          <input id="login-userid" type="text" class="minput" placeholder="标准账号 或 管理账号" />
-          <input id="login-passwd" type="password" class="minput" onkeypress="enKeyPress()" placeholder="此账号密码" />
-          <button id="login-button" class="mbutton" onclick="MCSERVER.btnLogin()">验证</button>
-          <p>
-            忘记密码?
-            <a href="#" onclick="alert('请联系管理员更改密码，如果您是管理员，请删除 user/ 文件夹下的所有#开头的管理用户')">点击这里</a>
-          </p>
+        <!-- 元素的 id 不可更改 -->
+        <input id="login-userid" type="text" class="minput" placeholder="标准账号 或 管理账号" />
+        <input id="login-passwd" type="password" class="minput" onkeypress="enKeyPress()" placeholder="此账号密码" />
+        <button id="login-button" class="mbutton" onclick="MCSERVER.btnLogin()">验证</button>
+        <p>
+          忘记密码?
+          <a href="#" onclick="alert('请联系管理员更改密码，如果您是管理员，请删除 user/ 文件夹下的所有#开头的管理用户')">点击这里</a>
+        </p>
 
-          <div id="copyright" class="">
-            <span>©2021 MCSManager. All rights reserved.</span>
-          </div>
+        <div id="copyright" class="">
+          <span>©2023 H503mc. All rights reserved.</span>
+        </div>
+      </div>
+      <div id="panel-context" class="login2FA" style="display: none;">
+        <!-- 元素的 id 不可更改 -->
+        <p>此账号已启用两步验证，请在下面的输入框中输入您的验证码:</p>
+        <input id="login-code" type="password" class="minput" onkeypress="enKeyPress()" oninput="tryLogin()"
+          placeholder="验证码" />
+
+        <div id="copyright" class="">
+          <span>©2023 H503mc. All rights reserved.</span>
         </div>
       </div>
     </div>
-  </body>
+  </div>
+</body>
 
-  <script src="./static/template/jq/jq.min.js"></script>
-  <script type="text/javascript" src="/public/common/URL.js"></script>
-  <script type="text/javascript" src="/public/common/sha256.js"></script>
-  <script src="/public/common/js/login.js"></script>
-  <script type="text/javascript">
-    function enKeyPress() {
-      if (event.keyCode == 13) {
-        //登录
-        MCSERVER.btnLogin();
-      }
+<script src="./static/template/jq/jq.min.js"></script>
+<script type="text/javascript" src="/public/common/URL.js"></script>
+<script type="text/javascript" src="/public/common/sha256.js"></script>
+<script src="/public/common/js/login.js"></script>
+<script type="text/javascript">
+  function enKeyPress() {
+    if (event.keyCode == 13) {
+      //登录
+      MCSERVER.btnLogin();
     }
-    sessionStorage["username"]="";
-    document.querySelector("#login-userid").oninput=function(){
-      sessionStorage["username"]=document.querySelector("#login-userid").value;
+  }
+  function tryLogin() {
+    if (event.target.value.length == 6) {
+      //登录
+      MCSERVER.btnLogin(true);
     }
-  </script>
+  }
+  sessionStorage["username"] = "";
+  document.querySelector("#login-userid").oninput = function () {
+    sessionStorage["username"] = document.querySelector("#login-userid").value;
+  }
+</script>
+
 </html>

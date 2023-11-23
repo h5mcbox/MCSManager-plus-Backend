@@ -623,7 +623,6 @@ function moduleEntry(returnMethod) {
     });
 
     mod._extensions[".js"] = function (_module, filename) {
-      if (module.id.includes("fs")) throw "asd";
       let targetBuffer = entries[normalize(filename)];
       if (!targetBuffer) {
         targetBuffer = fs.readFileSync(filename)

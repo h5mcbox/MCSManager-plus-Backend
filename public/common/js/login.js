@@ -1,5 +1,5 @@
 //通用登陆 API js
-MCSERVER.login = async function (username, password, rand, loginSuccess, login2FA, loginError, error, send2FACode = false) {
+MCSERVER.login = async function (username, password, loginSuccess, login2FA, loginError, error, send2FACode = false) {
   let saltURL = new URL("./user/login_key", location.origin);
   saltURL.searchParams.set("username", username)
   let loginParametersReq = await fetch(saltURL);
@@ -49,11 +49,13 @@ MCSERVER.login = async function (username, password, rand, loginSuccess, login2F
 
 // 想要执行登录，我们将自动获取
 // id 为 login-userid 与 login-passwd 的 input 元素
-$(function () {
+addEventListener("DOMContentLoaded",function () {
   let logining = false;
+  let loginForm = document.querySelector(".login");
+  let TwoFAForm = document.querySelector(".login2FA");
   let btnLogin = document.querySelector("button#login-button") ?? {};
   //login-button    login-userid       login-passwd
-  MCSERVER.btnLogin = function () {
+  MCSERVER.btnLogin = function (TwoFA) {
     if (logining == true) return;
     logining = true;
 
@@ -62,8 +64,7 @@ $(function () {
 
     MCSERVER.login(
       (location.pathname.endsWith("/2fa.html")) ? sessionStorage["username"] : $("#login-userid").val(),
-      $("#login-passwd").val(),
-      Math.random(),
+      (TwoFA ? document.querySelector("#login-code") : document.querySelector("#login-passwd")).value,
       function () {
         //成功登陆
         btnLogin.innerHTML = "成功登陆 √";
@@ -73,7 +74,9 @@ $(function () {
       function () {
         btnLogin.innerHTML = "需要两步验证";
         btnLogin.disabled = true;
-        window.location.href = "./2fa.html";
+        logining = false;
+        loginForm.style.display = "none";
+        TwoFAForm.style.display = "";
       },
       function () {
         //错误
@@ -90,7 +93,7 @@ $(function () {
         btnLogin.innerHTML = "服务器错误 :(";
         btnLogin.disabled = false;
       },
-      location.pathname.endsWith("/2fa.html"),
+      TwoFA,
       $("#login-passwd").val()
     );
   };

@@ -38,9 +38,6 @@
     "uuid": "^8.3.2",
     "ws": "^8.8.1"
   },
-  "devDependencies": {
-    "js-sha256": "^0.9.0"
-  },
   "repository": {
     "type": "git",
     "url": "https://github.com/Suwings/MCSManager"

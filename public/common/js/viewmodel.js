@@ -57,13 +57,13 @@
     MCSERVER.username = data.obj.username;
     MCSERVER.group = data.obj.group;
     //虚拟的数据接受，让前端数据得到，菜单在前端建筑
-    if (MCSERVER.group==="master") {
+    if (MCSERVER.group === "master") {
       data.obj.items = MCSERVER.meumObject.masterMeum;
-    } else if(MCSERVER.group==="user"){
+    } else if (MCSERVER.group === "user") {
       data.obj.items = data.obj.customMenu ?? MCSERVER.meumObject.masterMeum;
-    } else if(MCSERVER.group==="banned"){
+    } else if (MCSERVER.group === "banned") {
       data.obj.items = MCSERVER.meumObject.bannedMeum;
-    }else{
+    } else {
       data.obj.items = MCSERVER.meumObject.bannedMeum;
     }
     //copy
@@ -275,7 +275,7 @@
           };
           if (this.command.length >= 1 || typeof parCommand == "string") {
             //压入命令栈 并 发送
-            WS.sendMsg("server/console/command", JSON.stringify(data));
+            WS.sendMsg("server/console/command", data);
           }
           this.command = "";
         },

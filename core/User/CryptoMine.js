@@ -1,4 +1,6 @@
-const hash=require("js-sha256");
+const { createHash, createHmac } = require('crypto');
+const hash = data => createHash('sha256').update(data).digest('hex');
+hash.hmac = (key, data) => createHmac("sha256", key).update(data).digest('hex');
 
 function createPassword(_password, _salt) {
   let PasswordHash = hash(_password);
