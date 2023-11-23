@@ -78,7 +78,7 @@ function moveFile(_startsWith, first) {
   }
 }
 const AppEntry = fs.readFileSync("app.js").toString();
-const AppEntryPatched = AppEntry.replaceAll("VERSION=0", `VERSION=${now}`) //修改硬编码时间
+const AppEntryPatched = AppEntry.replaceAll("const VERSION = 0;", `const VERSION = ${now};`) //修改硬编码时间
 addFile("app.js", Buffer.from(AppEntryPatched.replaceAll("./helper/packer/packer.js", "./app.js")), false); //修改入口
 let databuf = Buffer.concat(bufs);
 let Header = {

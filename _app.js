@@ -390,7 +390,6 @@ app.use("/fs", require("./onlinefs/controller/function"));
     MCSERVER.infoLog("BaseService", "BaseService 模块监听: [ //" + (host || "127.0.0.1".yellow) + ":" + port + " ]");
 
     MCSERVER.infoLog("INFO", "配置文件: property.js 文件");
-    MCSERVER.infoLog("INFO", "文档参阅: https://github.com/Suwings/mcsmanager");
 
     if (MCSERVER.allError <= 0) {
       MCSERVER.infoLog("INFO", "控制面板已经启动");
