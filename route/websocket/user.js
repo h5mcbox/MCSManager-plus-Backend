@@ -6,13 +6,13 @@ const tools = require("../../core/tools");
 const totp = require("../../helper/totp");
 
 WebSocketObserver().listener("userset/update", (data) => {
-  if (!permssion.hasRights(data.WsSession.username,"userset:overview")) return;
+  if (!permssion.hasRights(data.WsSession.username, "userset:overview")) return;
 
   //添加是否在线
   let userNameList = userCenter().getUserList();
   for (let k in userNameList) {
     let userdata = userNameList[k];
-    userdata.data.group=permssion.getUserGroup(userdata.username);
+    userdata.data.group = permssion.getUserGroup(userdata.username);
     if (permssion.isOnline(userdata.username)) userdata.data.online = true;
     else userdata.data.online = false;
   }
@@ -23,7 +23,7 @@ WebSocketObserver().listener("userset/update", (data) => {
 });
 
 WebSocketObserver().listener("userset/create", (data) => {
-  if (!permssion.hasRights(data.WsSession.username,"userset:createUser")) return;
+  if (!permssion.hasRights(data.WsSession.username, "userset:createUser")) return;
 
   try {
     let newUserConfig = data.body;
@@ -35,12 +35,12 @@ WebSocketObserver().listener("userset/create", (data) => {
     let password = newUserConfig.password.trim();
     let newGroup = newUserConfig.newGroup.trim();
     let PID = newUserConfig.PID.trim();
-    let permissionTableBucket=data.WsSession.PIDs,permissionTable={};
-    if(permissionTableBucket&&permissionTableBucket[PID]){
-      permissionTable=permissionTableBucket[PID];
-      if(permissionTable){
+    let permissionTableBucket = data.WsSession.PIDs, permissionTable = {};
+    if (permissionTableBucket && permissionTableBucket[PID]) {
+      permissionTable = permissionTableBucket[PID];
+      if (permissionTable) {
         delete permissionTableBucket[PID];
-        if(permissionTable.RestrictedUsername){
+        if (permissionTable.RestrictedUsername) {
           response.wsMsgWindow(data.ws, "用户名与权限表限定用户名不一致");
           return;
         }
@@ -56,13 +56,13 @@ WebSocketObserver().listener("userset/create", (data) => {
     }
     //如果需求，则增加用户组
     if (newGroup.trim() != "") {
-      if(!permssion.groups().includes(newGroup)){
+      if (!permssion.groups().includes(newGroup)) {
         response.wsMsgWindow(data.ws, "用户组不存在，已舍弃用户组的更改");
         return;
       }
     }
 
-    userCenter().register(username, password, LoginPublicKey,newGroup,permissionTable.permissions);
+    userCenter().register(username, password, LoginPublicKey, newGroup, permissionTable.permissions);
     //去除掉空白的
     let allowedServerList = [];
     for (let k in newUserConfig.allowedServer) {
@@ -72,7 +72,7 @@ WebSocketObserver().listener("userset/create", (data) => {
     }
     userCenter().get(username).allowedServer(allowedServerList);
     //其数据模型保存
-    userCenter().get(username).dataModel.lastOperator=data.WsSession.username;
+    userCenter().get(username).dataModel.lastOperator = data.WsSession.username;
     userCenter().get(username).dataModel.save();
     MCSERVER.info("用户", data.WsSession.username, "建立", username, "用户");
     response.wsSend(data.ws, "userset/create", true);
@@ -86,7 +86,7 @@ WebSocketObserver().listener("userset/create", (data) => {
 });
 
 WebSocketObserver().listener("userset/delete", (data) => {
-  if (!permssion.hasRights(data.WsSession.username,"userset:deleteUser")) return;
+  if (!permssion.hasRights(data.WsSession.username, "userset:deleteUser")) return;
 
   try {
     let deleteObj = data.body;
@@ -112,7 +112,7 @@ WebSocketObserver().listener("userset/delete", (data) => {
 });
 
 WebSocketObserver().listener("userset/reload", (data) => {
-  if (!permssion.hasRights(data.WsSession.username,"userset:reloadFromFile")) return;
+  if (!permssion.hasRights(data.WsSession.username, "userset:reloadFromFile")) return;
 
   try {
     userCenter().initUser();
@@ -128,7 +128,7 @@ WebSocketObserver().listener("userset/reload", (data) => {
 
 //查看某个用戶信息
 WebSocketObserver().listener("userset/view", (data) => {
-  if (!permssion.hasRights(data.WsSession.username,"userset:view")) return;
+  if (!permssion.hasRights(data.WsSession.username, "userset:view")) return;
 
   let user = userCenter().get(data.body.trim());
   response.wsSend(data.ws, "userset/view", {
@@ -144,7 +144,7 @@ WebSocketObserver().listener("userset/view", (data) => {
 
 //更新用户配置
 WebSocketObserver().listener("userset/upinfo", (data) => {
-  if (!permssion.hasRights(data.WsSession.username,"userset:uploadInfomation")) return;
+  if (!permssion.hasRights(data.WsSession.username, "userset:uploadInfomation")) return;
 
   try {
     let newUserConfig = data.body;
@@ -163,20 +163,20 @@ WebSocketObserver().listener("userset/upinfo", (data) => {
     let newPW = newUserConfig.newPassword.trim();
     let newUS = newUserConfig.newUsername.trim();
     let PID = newUserConfig.PID.trim();
-    let permissionTableBucket=data.WsSession.PIDs,permissionTable={};
-    if(permissionTableBucket&&permissionTableBucket[PID]){
-      permissionTable=permissionTableBucket[PID];
-      if(permissionTable){
+    let permissionTableBucket = data.WsSession.PIDs, permissionTable = {};
+    if (permissionTableBucket && permissionTableBucket[PID]) {
+      permissionTable = permissionTableBucket[PID];
+      if (permissionTable) {
         delete permissionTableBucket[PID];
-        if(permissionTable.RestrictedUsername!==username){
+        if (permissionTable.RestrictedUsername !== username) {
           response.wsMsgWindow(data.ws, "用户名与权限表限定用户名不一致");
           return;
         }
       }
     }
-    if(permissionTable.permissions){
-      let userDataModel=userCenter().get(username).dataModel;
-      userDataModel.userRights=permissionTable.permissions;
+    if (permissionTable.permissions) {
+      let userDataModel = userCenter().get(username).dataModel;
+      userDataModel.userRights = permissionTable.permissions;
       userDataModel.save();
     }
     let newGroup = newUserConfig.newGroup.trim();
@@ -195,9 +195,9 @@ WebSocketObserver().listener("userset/upinfo", (data) => {
     }
     //如果需求，则更改用户组
     if (newGroup.trim() != "") {
-      if(!permssion.groups().includes(newGroup)){
+      if (!permssion.groups().includes(newGroup)) {
         response.wsMsgWindow(data.ws, "用户组不存在，已舍弃用户组的更改");
-      }else{
+      } else {
         userCenter().reGroup(username, newGroup);
       }
     }
@@ -210,9 +210,9 @@ WebSocketObserver().listener("userset/upinfo", (data) => {
       }
     }
 
+    const uPattern = /^[a-zA-Z0-9_#$]{4,18}$/;
     //如果需求，则更改用户名以及存储文件
-    if (username != newUS) {
-      let uPattern = /^[a-zA-Z0-9_#$]{4,18}$/;
+    if (username !== newUS) {
       if (!uPattern.test(newUS)) {
         response.wsMsgWindow(data.ws, "新的用户名格式不正确，已舍弃用户名的更改");
         return;
@@ -224,8 +224,9 @@ WebSocketObserver().listener("userset/upinfo", (data) => {
     }
 
     //其数据模型保存
-    userCenter().get(username).dataModel.lastOperator=data.WsSession.username;
-    userCenter().get(username).dataModel.save();
+    let user = userCenter().get(((username !== newUS) && uPattern.test(newUS)) ? newUS : username)
+    user.dataModel.lastOperator = data.WsSession.username;
+    user.dataModel.save();
     response.wsMsgWindow(data.ws, "更新用户数据完成√");
     return;
   } catch (e) {
@@ -235,12 +236,12 @@ WebSocketObserver().listener("userset/upinfo", (data) => {
 
 //更新用户配置
 WebSocketObserver().listener("userset/2fa/set", (data) => {
-  if (!permssion.hasRights(data.WsSession.username,"2FA:enable")) return;
+  if (!permssion.hasRights(data.WsSession.username, "2FA:enable")) return;
   var totp = require("../../helper/totp");
   //try {
   let form = data.body;
   var tempuser = userCenter().get(data.req.session["username"]);
-  if(tempuser.dataModel.randomPassword){
+  if (tempuser.dataModel.randomPassword) {
     response.wsMsgWindow(data.ws, "错误：只使用公钥登录的用户无法启用2FA,请先重置密码");
     return false;
   }
@@ -261,12 +262,12 @@ WebSocketObserver().listener("userset/2fa/set", (data) => {
   //}
 });
 WebSocketObserver().listener("userset/2fa/disable", (data) => {
-  if (!permssion.hasRights(data.WsSession.username,"2FA:disable")) return;
+  if (!permssion.hasRights(data.WsSession.username, "2FA:disable")) return;
   var totp = require("../../helper/totp");
   try {
     let form = data.body;
     var tempuser = userCenter().get(data.req.session["username"]);
-    if(tempuser.dataModel.randomPassword){
+    if (tempuser.dataModel.randomPassword) {
       response.wsMsgWindow(data.ws, "错误：只使用公钥登录的用户无法启用2FA,请先重置密码");
       return false;
     }
@@ -287,11 +288,11 @@ WebSocketObserver().listener("userset/2fa/disable", (data) => {
   }
 });
 WebSocketObserver().listener("userset/2fa/updateKey", (data) => {
-  if (!permssion.hasRights(data.WsSession.username,"2FA:update")) return;
+  if (!permssion.hasRights(data.WsSession.username, "2FA:update")) return;
   var cryptoMine = require("../../core/User/CryptoMine");
   try {
     var tempuser = userCenter().get(data.req.session["username"]);
-    if(tempuser.dataModel.randomPassword){
+    if (tempuser.dataModel.randomPassword) {
       response.wsMsgWindow(data.ws, "错误：只使用公钥登录的用户无法启用2FA,请先重置密码");
       return false;
     }
@@ -306,21 +307,21 @@ WebSocketObserver().listener("userset/2fa/updateKey", (data) => {
   }
 });
 WebSocketObserver().listener("userset/2fa/getAuthURL", (data) => {
-  if (!permssion.hasRights(data.WsSession.username,"2FA:getAuthURL")) return;
+  if (!permssion.hasRights(data.WsSession.username, "2FA:getAuthURL")) return;
   var tempuser = userCenter().get(data.req.session["username"]);
-  var auth= {
+  var auth = {
     randomPassword: tempuser.dataModel.randomPassword
   };
-  if(!auth.randomPassword){auth.authURL=totp.createURL((tempuser.dataModel.TwoFAKey || ""), "MCSManager", data.req.session["username"])}
-  response.wsSend(data.ws, "userset/2fa/getAuthURL",auth);
+  if (!auth.randomPassword) { auth.authURL = totp.createURL((tempuser.dataModel.TwoFAKey || ""), "MCSManager", data.req.session["username"]) }
+  response.wsSend(data.ws, "userset/2fa/getAuthURL", auth);
 });
-MCSERVER.addProbablyPermissions("userset:overview","返回用户中心数据");
-MCSERVER.addProbablyPermissions("userset:createUser","新建用户");
-MCSERVER.addProbablyPermissions("userset:deleteUser","删除用户");
-MCSERVER.addProbablyPermissions("userset:reloadFromFile","从文件加载用户列表");
-MCSERVER.addProbablyPermissions("userset:view","查看某个用戶信息");
-MCSERVER.addProbablyPermissions("userset:uploadInfomation","更新用户信息");
-MCSERVER.addProbablyPermissions("2FA:enable","启用双因素验证");
-MCSERVER.addProbablyPermissions("2FA:disable","启用双因素验证");
-MCSERVER.addProbablyPermissions("2FA:update","更新双因素验证密钥");
-MCSERVER.addProbablyPermissions("2FA:getAuthURL","获取双因素验证密钥添加地址");
+MCSERVER.addProbablyPermissions("userset:overview", "返回用户中心数据");
+MCSERVER.addProbablyPermissions("userset:createUser", "新建用户");
+MCSERVER.addProbablyPermissions("userset:deleteUser", "删除用户");
+MCSERVER.addProbablyPermissions("userset:reloadFromFile", "从文件加载用户列表");
+MCSERVER.addProbablyPermissions("userset:view", "查看某个用戶信息");
+MCSERVER.addProbablyPermissions("userset:uploadInfomation", "更新用户信息");
+MCSERVER.addProbablyPermissions("2FA:enable", "启用双因素验证");
+MCSERVER.addProbablyPermissions("2FA:disable", "启用双因素验证");
+MCSERVER.addProbablyPermissions("2FA:update", "更新双因素验证密钥");
+MCSERVER.addProbablyPermissions("2FA:getAuthURL", "获取双因素验证密钥添加地址");
