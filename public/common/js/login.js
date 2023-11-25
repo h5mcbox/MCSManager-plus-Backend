@@ -1,12 +1,12 @@
 //通用登陆 API js
-MCSERVER.login = async function (username, password, loginSuccess, login2FA, loginError, error, send2FACode = false) {
+MCSERVER.login = async function (username, password, loginSuccess, login2FA, loginError, error, is2FACode = false) {
   let saltURL = new URL("./user/login_key", location.origin);
   saltURL.searchParams.set("username", username)
   let loginParametersReq = await fetch(saltURL);
   let { salt1, salt2 } = await loginParametersReq.json();
 
-  let HashPassword = sha256(sha256(password) + salt1); //账号注册时保存的格式
-  let HashPassworded = sha256(HashPassword + salt2); //登陆的格式
+  let HashPassword = sha256.hmac(salt1, password); //账号注册时保存的格式
+  let HashPassworded = sha256.hmac(salt2, is2FACode ? password : HashPassword); //登陆的格式
   let loginReq = await fetch("./user/login", {
     method: "POST",
     headers: {
@@ -15,7 +15,7 @@ MCSERVER.login = async function (username, password, loginSuccess, login2FA, log
     body: JSON.stringify({
       username: username,
       password: HashPassworded,
-      "2FACode": send2FACode ? send2FACode : ""
+      is2FACode
     })
   }).catch(function () {
     error && error();
@@ -49,7 +49,7 @@ MCSERVER.login = async function (username, password, loginSuccess, login2FA, log
 
 // 想要执行登录，我们将自动获取
 // id 为 login-userid 与 login-passwd 的 input 元素
-addEventListener("DOMContentLoaded",function () {
+addEventListener("DOMContentLoaded", function () {
   let logining = false;
   let loginForm = document.querySelector(".login");
   let TwoFAForm = document.querySelector(".login2FA");

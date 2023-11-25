@@ -50,15 +50,18 @@ class User {
   }
 
   isPassword(password) {
-    let tmp = createPassword(password, this.dataModel.salt);
-    if (tmp.password === this.dataModel.password) {
+    let {_password} = createPassword(password, this.dataModel.salt);
+    if (_password === this.dataModel.password) {
       this.updateLastDate();
       return true;
     }
     return false;
   }
 
-  getPasswordHash() {
+  /**
+   * @return {String}
+   */
+  get passwordHash() {
     return this.dataModel.password;
   }
 

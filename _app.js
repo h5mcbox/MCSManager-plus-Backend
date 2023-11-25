@@ -107,14 +107,12 @@ MCSERVER.info("控制面板正在启动中...");
   const SERVER_PATH_SCH = "./server/schedule/";
   const CENTEN_LOG_JSON_PATH = "./core/info.json";
   const PUBLIC_URL_PATH = "./public/common/URL.js";
-  const RECORD_PARH = "./server/record_tmp/";
 
   try {
     if (!fs.existsSync(USERS_PATH)) fs.mkdirSync(USERS_PATH);
     if (!fs.existsSync(WORKERS_PATH)) fs.mkdirSync(WORKERS_PATH);
     if (!fs.existsSync(SERVER_PATH)) fs.mkdirSync(SERVER_PATH);
     if (!fs.existsSync(SERVER_PATH_SCH)) fs.mkdirSync(SERVER_PATH_SCH);
-    if (!fs.existsSync(RECORD_PARH)) fs.mkdirSync(RECORD_PARH);
 
     // 生成不 git 同步的文件
     if (!fs.existsSync(CENTEN_LOG_JSON_PATH)) tools.mCopyFileSync(INIT_CONFIG_PATH + "info_reset.json", CENTEN_LOG_JSON_PATH);

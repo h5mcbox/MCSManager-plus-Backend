@@ -61,20 +61,22 @@ router.get("/login", function (req, res) {
     response.returnMsg(res, "login/check", "密码错误次数过多!您已被锁定!请10分钟之后再进行登录!");
     return;
   }
-  var ChallengeID = randomString(32);
-  var salt = MCSERVER.localProperty.MasterSalt;
-  var period = MCSERVER.localProperty.ChallengePeriod || 30;
+  let ChallengeID = randomString(32);
+  let salt = MCSERVER.localProperty.MasterSalt;
+  let period = MCSERVER.localProperty.ChallengePeriod || 30;
   MCSERVER.ChallengeIDSet.add(ChallengeID);
   setTimeout(function () { MCSERVER.ChallengeIDSet.delete(ChallengeID) }, period * 1024);
-  var Challenge = hash.hmac(salt, ChallengeID);
+  let Challenge = hash.hmac(salt, ChallengeID);
   res.json({ ChallengeID, Challenge });
 })
 router.post("/login", function (req, res) {
   let ip = req.socket.remoteAddress;
-  let username = req.body.username || "";
-  let password = req.body.password || "";
-  let ChallengeID = req.body.ChallengeID || false;
-  let TwoFACode = req.body["2FACode"] || false;
+  let {
+    username = "",
+    password = "",
+    ChallengeID = false,
+    is2FACode = false,
+  } = req.body;
   let enkey = req.session["login_Hashkey"] || "";
   //登陆规则
   if (!LoginRule(ip)) {
@@ -97,51 +99,64 @@ router.post("/login", function (req, res) {
   //登陆次数加一
   counter.plus("login");
   MCSERVER.log("用户", username, "正在尝试登录...");
-  loginUser(
+  let { verified, user } = userCenter().loginCheck({
     username,
     password,
-    (loginUser, TwoFAPassed = false) => {
-      //只有这里 唯一的地方设置 login = true
-      req.session["login"] = true;
-      req.session["username"] = loginUser.dataModel.username;
-      req.session["dataModel"] = loginUser.dataModel; //Only read
-      req.session["login_Hashkey"] = undefined;
-      req.session["status"] = "logined";
-      req.session.save();
-      delete MCSERVER.login[ip];
-      let {TwoFAEnabled} = loginUser.dataModel;
-      if (TwoFAEnabled && (!TwoFAPassed) && (!MCSERVER.localProperty.skipLoginCheck)) {
-        req.session["login"] = false;
-        req.session["status"] = "2fa";
-        response.returnMsg(res, "login/2fa-needed", "2fa-needed");
-        return;
-      }
-      //添加到 login 容器  注意，全部代码只能有这一个地方使用这个函数
-      loginedContainer.addLogined(req.sessionID, username, loginUser.dataModel);
-      MCSERVER.log("[ Login ]", "用户:", username, "密匙正确", "准许登录");
-      response.returnMsg(res, "login/check", true);
-    },
-    () => {
-      //密码错误记录
-      MCSERVER.login[ip] ? MCSERVER.login[ip]++ : (MCSERVER.login[ip] = 1);
-      //防止数目过于太大 溢出
-      MCSERVER.login[ip] > 1000 ? (MCSERVER.login[ip] = 1000) : null;
-      //passwordError
-      counter.plus("passwordError");
-      req.session["login"] = false;
-      req.session["username"] = undefined;
-      req.session["login_Hashkey"] = undefined;
-      req.session["dataModel"] = undefined;
-      req.session.save();
-      //删除到 login 容器
-      if (req.session["username"]) loginedContainer.delLogined(req.sessionID);
-      MCSERVER.log("[ Login ]", "用户:", username, "密匙错误", "拒绝登录");
-      response.returnMsg(res, "login/check", false);
-    },
-    enkey,
-    TwoFACode,
+    loginSalt: enkey,
+    notSafeLogin: false,
+    is2FACode,
     ChallengeID
-  );
+  });
+  if (!verified) {
+    //密码错误记录
+    MCSERVER.login[ip] ? MCSERVER.login[ip]++ : (MCSERVER.login[ip] = 1);
+    //防止数目过于太大 溢出
+    MCSERVER.login[ip] > 1000 ? (MCSERVER.login[ip] = 1000) : null;
+    //passwordError
+    counter.plus("passwordError");
+    //删除到 login 容器
+    if (req.session["username"]) loginedContainer.delLogined(req.sessionID);
+    MCSERVER.log("[ Login ]", "用户:", username, "密匙错误", "拒绝登录");
+    response.returnMsg(res, "login/check", false);
+    return;
+  }
+  let { TwoFAEnabled } = user.dataModel;
+  let TwoFAPassed = is2FACode && verified;
+  if (TwoFAEnabled && (!TwoFAPassed) && (!MCSERVER.localProperty.skipLoginCheck)) {
+    Object.assign(req.session, {
+      login: false,
+      username: user.dataModel.username,
+      status: "2fa"
+    });
+    response.returnMsg(res, "login/2fa-needed", "2fa-needed");
+    return;
+  }
+  let trustedTwoFA = (TwoFAPassed && req.session.status === "2fa" && req.session.username === username)
+  if (!TwoFAEnabled || trustedTwoFA) {
+    user.updateLastDate();
+    //只有这里 唯一的地方设置 login = true
+    Object.assign(req.session, {
+      login: true,
+      username: user.dataModel.username,
+      dataModel: user.dataModel, //Only read
+      login_Hashkey: undefined,
+      status: "logined"
+    });
+    req.session.save();
+    delete MCSERVER.login[ip];
+
+    //添加到 login 容器  注意，全部代码只能有这一个地方使用这个函数
+    loginedContainer.addLogined(req.sessionID, username, user.dataModel);
+    MCSERVER.log("[ Login ]", "用户:", username, "密匙正确", "准许登录");
+    response.returnMsg(res, "login/check", true);
+    return false;
+  } else if (TwoFAEnabled && !trustedTwoFA) {
+    MCSERVER.login[ip] ? MCSERVER.login[ip]++ : (MCSERVER.login[ip] = 1);
+    MCSERVER.login[ip] > 1000 ? (MCSERVER.login[ip] = 1000) : null;
+    MCSERVER.log("[ Login ]", "用户:", username, "双因素认证失败", "拒绝登录");
+    response.returnMsg(res, "login/check", false);
+    return;
+  }
 });
 
 //用户请求登录键路由

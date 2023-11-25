@@ -2,14 +2,8 @@ const { createHash, createHmac } = require('crypto');
 const hash = data => createHash('sha256').update(data).digest('hex');
 hash.hmac = (key, data) => createHmac("sha256", key).update(data).digest('hex');
 
-function createPassword(_password, _salt) {
-  let PasswordHash = hash(_password);
-  PasswordHash = PasswordHash + _salt;
-  PasswordHash = hash(PasswordHash);
-  return {
-    password: PasswordHash,
-    salt: _salt
-  };
+function createPassword(password, salt="") {
+  return [hash.hmac(salt,password),salt];
 }
 
 function randomString(len) {

@@ -14,23 +14,25 @@ const toHEXString = bytes =>
 const USER_DIR = "./" + USER_SAVE_PATH;
 
 class UserCenter {
+  /** @type {Object.<string,User>} */
+  userList = {}
   constructor() {
     this.userList = {};
   }
 
   initUser() {
-    let memoryUser={};
-    if(this.userList){
-      for(let uName of Object.keys(this.userList)){
-        let user=this.userList[uName];
-        if(user.dataModel.OnlyMemory){
-          memoryUser[uName]=user;
+    let memoryUser = {};
+    if (this.userList) {
+      for (let uName of Object.keys(this.userList)) {
+        let user = this.userList[uName];
+        if (user.dataModel.OnlyMemory) {
+          memoryUser[uName] = user;
         }
       }
     }
     this.userList = {};
-    for(let uName of Object.keys(memoryUser)){
-      this.userList[uName]=memoryUser[uName];
+    for (let uName of Object.keys(memoryUser)) {
+      this.userList[uName] = memoryUser[uName];
     }
     let users = fs.readdirSync(USER_DIR);
     let username = null;
@@ -43,8 +45,8 @@ class UserCenter {
       userTemp.load();
       this.userList[username] = userTemp;
     }
-    for(let userTemp of Object.values(this.userList)){
-      if (userTemp.dataModel.group === "master" || (userTemp.dataModel.username.substring(0,1) === "#")) masterUserCounter++;
+    for (let userTemp of Object.values(this.userList)) {
+      if (userTemp.dataModel.group === "master" || (userTemp.dataModel.username.substring(0, 1) === "#")) masterUserCounter++;
     }
     //删除所有管理员账号后，自动创建一个新的初始化用户
     if (masterUserCounter == 0) {
@@ -59,19 +61,17 @@ class UserCenter {
     }
   }
 
-  register(username, password,LoginPublicKey,group,userRights) {
-    var data,isRandomPassword=password.length==0&&LoginPublicKey;
-    if(isRandomPassword){
-      data = createPassword(randomString(32), randomString(16));
-    }else{
-      data = createPassword(password, randomString(16));
-    }
-    let newUser = new User(username, data.password, data.salt);
-    newUser.dataModel.LoginPublicKey = LoginPublicKey;
-    newUser.dataModel.group = group;
-    newUser.dataModel.randomPassword = false;
-    if(userRights)newUser.dataModel.userRights=userRights;
-    if(isRandomPassword)newUser.dataModel.randomPassword = true;
+  register(username, password, LoginPublicKey, group, userRights) {
+    let isRandomPassword = password.length == 0 && LoginPublicKey;
+    let [passwordHash, salt] = createPassword(isRandomPassword ? randomString(32) : password, randomString(16));
+    let newUser = new User(username, passwordHash, salt);
+    Object.assign(newUser.dataModel, {
+      LoginPublicKey,
+      group,
+      randomPassword: isRandomPassword
+    });
+    if (userRights) newUser.dataModel.userRights = userRights;
+    if (isRandomPassword) newUser.dataModel.randomPassword = true;
     if (!newUser.dataModel.OnlyMemoryUser) newUser.save();
     this.userList[username] = newUser;
     return newUser;
@@ -79,10 +79,10 @@ class UserCenter {
 
   //理应只有管理员可以操作
   rePassword(username, password) {
-    let data = createPassword(password, randomString(6));
-    this.get(username).dataModel.randomPassword = !password;
-    this.get(username).dataModel.password = data.password;
-    this.get(username).dataModel.salt = data.salt;
+    let [passwordHash, salt] = createPassword(password, randomString(16));
+    this.get(username).dataModel.randomPassword = password.length === 0;
+    this.get(username).dataModel.password = passwordHash;
+    this.get(username).dataModel.salt = salt;
     this.userList[username].save();
   }
   //理应只有管理员可以操作
@@ -115,84 +115,45 @@ class UserCenter {
     this.deleteUser(username);
   }
 
-  loginCheck(username, password, truecb, falsecb, loginSalt, notSafeLogin = false, isTwoFACode = false, ChallengeID) {
-    if (this.userList.hasOwnProperty(username) && this.userList[username] != undefined) {
-      let loginUser = this.userList[username];
-      try {
-        loginUser.load();
-      } catch (err) {
-        falsecb && falsecb();
-        return false;
-      }
-      // 目前只准许 登陆时进行hash 或 数字签名登录 ，不准传输明文
-      if (!ChallengeID && loginSalt && !notSafeLogin) {
-        let userHashPassword = isTwoFACode ? hash(hash(totp.totp(loginUser.dataModel.TwoFAKey, 6)) + loginUser.dataModel.salt) : loginUser.getPasswordHash();
-        let hashPassworded = hash(userHashPassword + loginSalt);
-        let isok = hashPassworded === password;
-        if (isok && (!MCSERVER.localProperty.skipLoginCheck)) {
-          loginUser.updateLastDate();
-          truecb && truecb(loginUser, isTwoFACode);
-          return true;
-        }
-        falsecb && falsecb();
-        return false;
-      }
-      
-      // 一般模式 供可信任内部代码使用，无需要Hash加密传值方式验证。
-      // 感谢来自 @axuanfeng 的 BUG 反馈
-      if (!ChallengeID && notSafeLogin && loginUser.isPassword(password)) {
-        if (isTwoFACode) {
-          truecb && truecb(loginUser, true);
-          return true;
-        }
-        truecb && truecb(loginUser);
-        return true;
-      }
-
-      //数字签名登录核心
-      if (ChallengeID) {
-        try {
-          if (MCSERVER.ChallengeIDSet.has(ChallengeID)) {
-            MCSERVER.ChallengeIDSet.delete(ChallengeID);
-          } else {
-            falsecb && falsecb();
-            return false;
-          }
-          var salt = MCSERVER.localProperty.MasterSalt;
-          var Response = fromHEXString(password);
-          var PublicKey = ECC.importKey(true, fromHEXString(loginUser.dataModel.LoginPublicKey));
-          var Challenge = hash.hmac(salt, ChallengeID);
-          var isok = ECC.ECDSA.verify(fromHEXString(Challenge), Response, PublicKey);
-          if (isok && (!MCSERVER.localProperty.skipLoginCheck)) {
-            loginUser.updateLastDate();
-            try{
-              truecb && truecb(loginUser, true); //ECDSA签名通过,没有需要再过2FA
-            }catch(err){
-              MCSERVER.error(error);
-            }
-            return true;
-          }
-        } catch {
-          falsecb && falsecb();
-          return false;
-        }
-      }
+  /**
+   * @description 统一登录验证
+   * @param {Object} param0 
+   * @param {string} param0.loginSalt
+   * @param {string} param0.password
+   * @param {string} param0.username
+   * @param {boolean} param0.notSafeLogin
+   * @returns {{verified:boolean,user:User}}
+   */
+  loginCheck({
+    username = "",
+    password = "",
+    loginSalt = "",
+    is2FACode = false,
+    notSafeLogin = false,
+  }) {
+    let user = this.userList[username];
+    if (!user && !this.userList.hasOwnProperty(username)) return { verified: false };
+    user.load();
+    if (loginSalt && !notSafeLogin) {
+      let verified = password === hash.hmac(loginSalt, is2FACode ? totp.totp(user.dataModel.TwoFAKey,6) : user.passwordHash);
+      return { verified, user: user };
     }
-    falsecb && falsecb();
-    return false;
+    if (notSafeLogin) {
+      return { verified: user.isPassword(password), user: user };
+    }
   }
 
   deleteUser(username) {
     let isMemoryUser;
-    if(this.userList[username]){
-      isMemoryUser=this.userList[username].dataModel.OnlyMemoryUser
+    if (this.userList[username]) {
+      isMemoryUser = this.userList[username].dataModel.OnlyMemoryUser
     }
     let filePath = "./" + USER_SAVE_PATH + username + ".json";
     if (fs.existsSync(filePath)) {
       delete this.userList[username];
       fs.unlinkSync(filePath);
       return true;
-    }else if(isMemoryUser){
+    } else if (isMemoryUser) {
       delete this.userList[username];
       return true;
     }
@@ -254,7 +215,7 @@ class UserCenter {
 
   getUserCounter() {
     let tmp = 0;
-    // eslint-disable-next-line no-unused-vars
+    // eslint-disable-next-line no-unused-lets
     for (let k in this.userList) tmp++;
     return tmp;
   }
