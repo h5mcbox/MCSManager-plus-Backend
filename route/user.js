@@ -74,7 +74,7 @@ router.post("/login", function (req, res) {
   let {
     username = "",
     password = "",
-    ChallengeID = false,
+    ChallengeID = "",
     is2FACode = false,
   } = req.body;
   let enkey = req.session["login_Hashkey"] || "";

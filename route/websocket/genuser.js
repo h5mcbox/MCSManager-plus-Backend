@@ -123,24 +123,24 @@ WebSocketObserver().listener("genuser/re_password", (data) => {
     }
   }
   if (config.oldPassword) {
-    believeLogin(
+    let { verified } = userCenter().loginCheck({
       username,
-      config.oldPassword,
-      () => {
-        if ((config.newPassword.length > 100 || config.newPassword.length < 6) && !(config.newPassword.length == 0 && userCenter().get(username).dataModel.LoginPublicKey)) {
-          response.wsMsgWindow(data.ws, "新的密码长度不正确，需要 6~100 位长度");
-          return;
-        }
-        userCenter().rePassword(username, config.newPassword);
-        userCenter().reLoginPublicKey(username, config.newLoginPublicKey);
-        userCenter().initUser();
-        response.wsMsgWindow(data.ws, "密码修改完成!");
-      },
-      () => {
-        response.wsMsgWindow(data.ws, "很抱歉，原密码错误，无法修改");
-      },
-      config.ChallengeID
-    );
+      password: config.oldPassword,
+      loginSalt: null,
+      notSafeLogin: true
+    });
+    if (verified) {
+      if ((config.newPassword.length > 100 || config.newPassword.length < 6) && !(config.newPassword.length == 0 && userCenter().get(username).dataModel.LoginPublicKey)) {
+        response.wsMsgWindow(data.ws, "新的密码长度不正确，需要 6~100 位长度");
+        return;
+      }
+      userCenter().rePassword(username, config.newPassword);
+      userCenter().reLoginPublicKey(username, config.newLoginPublicKey);
+      userCenter().initUser();
+      response.wsMsgWindow(data.ws, "密码修改完成!");
+    } else {
+      response.wsMsgWindow(data.ws, "很抱歉，原密码错误，无法修改");
+    }
   }
 });
 MCSERVER.addProbablyPermissions("genuser", "查看普通用户面板数据");

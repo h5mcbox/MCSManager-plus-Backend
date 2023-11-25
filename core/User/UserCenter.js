@@ -122,7 +122,7 @@ class UserCenter {
    * @param {string} param0.password
    * @param {string} param0.username
    * @param {boolean} param0.notSafeLogin
-   * @returns {{verified:boolean,user:User}}
+   * @returns {{verified:boolean,bypassTwoFA:boolean,user:User}}
    */
   loginCheck({
     username = "",
@@ -130,16 +130,42 @@ class UserCenter {
     loginSalt = "",
     is2FACode = false,
     notSafeLogin = false,
+    ChallengeID = ""
   }) {
     let user = this.userList[username];
     if (!user && !this.userList.hasOwnProperty(username)) return { verified: false };
     user.load();
     if (loginSalt && !notSafeLogin) {
-      let verified = password === hash.hmac(loginSalt, is2FACode ? totp.totp(user.dataModel.TwoFAKey,6) : user.passwordHash);
-      return { verified, user: user };
+      let verified = password === hash.hmac(loginSalt, is2FACode ? totp.totp(user.dataModel.TwoFAKey, 6) : user.passwordHash);
+      return { verified, user };
     }
     if (notSafeLogin) {
-      return { verified: user.isPassword(password), user: user };
+      return { verified: user.isPassword(password), user };
+    }
+    //数字签名登录核心
+    if (ChallengeID) {
+      try {
+        if (MCSERVER.ChallengeIDSet.has(ChallengeID)) {
+          MCSERVER.ChallengeIDSet.delete(ChallengeID);
+        } else {
+          return { verified: false, user };
+        }
+        let salt = MCSERVER.localProperty.MasterSalt;
+        let Response = fromHEXString(password);
+        let PublicKey = ECC.importKey(true, fromHEXString(loginUser.dataModel.LoginPublicKey));
+        let Challenge = hash.hmac(salt, ChallengeID);
+        let isok = ECC.ECDSA.verify(fromHEXString(Challenge), Response, PublicKey);
+        if (isok && (!MCSERVER.localProperty.skipLoginCheck)) {
+          try {
+            return { verified: true, user, bypassTwoFA: true }; ////ECDSA签名通过,没有需要再过2FA
+          } catch (err) {
+            MCSERVER.error(error);
+          }
+          return true;
+        }
+      } catch {
+        return { verified: false, user };
+      }
     }
   }
 

@@ -1,11 +1,8 @@
 const UserCenter = require("../core/User/UserCenter");
 
 let userCenter = new UserCenter;
-module.exports.userCenter = () => userCenter;
 
-module.exports.believeLogin = (username, password, truecb, falsecb, ChallengeID) => {
-  return userCenter.loginCheck(username, password, truecb, falsecb, null, true, null, ChallengeID);
-};
+module.exports.userCenter = () => userCenter;
 
 module.exports.deleteUser = (username, truecb, falsecb) => {
   try {
