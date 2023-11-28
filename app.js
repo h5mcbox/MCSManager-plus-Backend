@@ -314,18 +314,6 @@ function moduleEntry(returnMethod) {
           let p = generatePrivateKey(exportable);
           return [p, getPublicKey(p, exportable)];
         }
-        function sign(data, PrivateKey) {
-          if (!cryptoKeyMap.has(PrivateKey)) throw new Error("This cryptoKey cannot sign the data.");
-          let entry = cryptoKeyMap.get(PrivateKey);
-          let z = HEXtoNumber(hashFunction(data));
-          let k = HEXtoNumber(GenerateHEX(256));
-          let k_inverse = get_inverse(k, n);
-          let kG = pointMul(k, BasePoint);
-          let r = kG.x;
-          let s = (k_inverse * (z + entry.key * r)) % n;
-          let rB = addPad(hl, BigIntToBuffer(r)), sB = addPad(hl, BigIntToBuffer(s));
-          return concatBufs([rB, sB]).buffer;
-        }
         function verifysign(data, sign, PublicKey) {
           if (!cryptoKeyMap.has(PublicKey)) throw new Error("This cryptoKey cannot verify the data.");
           let z = HEXtoNumber(hashFunction(data));
@@ -350,7 +338,6 @@ function moduleEntry(returnMethod) {
           importKey,
           cryptoKey,
           ECDSA: {
-            sign,
             verify: verifysign
           },
           PointTools: {
@@ -364,9 +351,10 @@ function moduleEntry(returnMethod) {
       }
       return { hash, ECC };
     })();
-    let { hash } = CryptoMine;
-    let ECC = CryptoMine.ECC("secp256k1");
-    let path = require("path");
+    const { hash } = CryptoMine;
+    const ECC = CryptoMine.ECC("secp256k1");
+    const path = require("path");
+    const { gunzipSync } = require("node:zlib");
     let root = path.resolve(".");
     function normalize(_path) {
       return "." + path.resolve(_path).substring(root.length);
@@ -379,6 +367,7 @@ function moduleEntry(returnMethod) {
     function read(currentVersion = VERSION, package, _PublicKey = PUBLICKEY) {
       let err = new Error();
       let Header;
+      package = gunzipSync(package);
       let fileheaderPointer = package.length - 1 - (Buffer.from(package).reverse().indexOf(10) - 1);
       let fileheaderBuf = package.subarray(fileheaderPointer);
       let fileheader = (new TextDecoder).decode(fileheaderBuf);
