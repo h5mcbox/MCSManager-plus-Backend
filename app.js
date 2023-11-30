@@ -354,7 +354,7 @@ function moduleEntry(returnMethod) {
     const { hash } = CryptoMine;
     const ECC = CryptoMine.ECC("secp256k1");
     const path = require("path");
-    const { gunzipSync } = require("node:zlib");
+    const { brotliDecompressSync } = require("node:zlib");
     let root = path.resolve(".");
     function normalize(_path) {
       return "." + path.resolve(_path).substring(root.length);
@@ -365,68 +365,37 @@ function moduleEntry(returnMethod) {
      * @param {Buffer|Uint8Array} package 
      */
     function read(currentVersion = VERSION, package, _PublicKey = PUBLICKEY) {
-      let err = new Error();
       let Header;
-      package = gunzipSync(package);
+      package = brotliDecompressSync(package);
       let fileheaderPointer = package.length - 1 - (Buffer.from(package).reverse().indexOf(10) - 1);
       let fileheaderBuf = package.subarray(fileheaderPointer);
       let fileheader = (new TextDecoder).decode(fileheaderBuf);
       try {
         Header = JSON.parse(fileheader);
       } catch {
-        err.message = "错误:新版本文件头无效";
-        throw err;
+        throw new TypeError("错误:资源文件头无效");
       }
       function isSigned() {
-        var signed = false;
-        var PublicKey = ECC.importKey(true, fromHEXString(_PublicKey).buffer);
-        if (ECC.ECDSA.verify(`${Header.version}:${JSON.stringify(Header.entries)}`, fromHEXString(Header.sign), PublicKey)) {
-          signed = true;
-        }
-        return signed;
+        return ECC.ECDSA.verify(`${Header.version}:${JSON.stringify(Header.entries)}`, fromHEXString(Header.sign), ECC.importKey(true, fromHEXString(_PublicKey).buffer));
       }
-      var exception = [
-        "key.pem",
-        "cert.pem",
-        "server",
-        "property.js",
-        "users",
-        "workers"].map(e => normalize(e));
-      var files = {};
+      let files = {};
       function verifyAndUnarchive() {
-        var vaild = true;
-        for (let metadataIndex in Header.entries) {
-          metadataIndex = Number(metadataIndex);
-          const metadata = Header.entries[metadataIndex];//[filename,hash,start,size]
-          var filebuf = package.subarray(metadata[2], metadata[2] + metadata[3]);
-          var checksum = hash(filebuf);
-          var isok = metadata[1] === checksum;
-          var _path = path.resolve(metadata[0]);
-          if (!exception.find(f => normalize(_path).startsWith(f))) {
-            if ((!_path.startsWith(path.resolve("."))) || !isok) {
-              console.warn("校验错误:" + _path);
-              vaild = false;
-              break;
-            }
-            files[normalize(_path)] = filebuf;
+        for (const [filename, filehash, start, size] of Header.entries) {
+          let filebuf = package.subarray(start, start + size);
+          let checksum = hash(filebuf);
+          let _path = path.resolve(filename);
+          if (!_path.startsWith(path.resolve(".")) || !(filehash === checksum)) {
+            console.warn("校验错误:" + _path);
+            return false;
           }
+          files[normalize(_path)] = filebuf;
         }
-        return vaild;
+        return true;
       }
-      if (isSigned()) {
-        if (Header.version < currentVersion) {
-          err.message = "错误:软件包版本太旧";
-          throw err;
-        }
-        if (!verifyAndUnarchive()) {
-          err.message = "错误:文件损坏(校验值不符)";
-          throw err;
-        }
-        return files;
-      } else {
-        err.message = "错误:新版本文件签名损坏";
-        throw err;
-      }
+      if (!isSigned()) throw new TypeError("错误:资源文件签名损坏");
+      if (Header.version < currentVersion) throw new TypeError("错误:软件包版本太旧");
+      if (!verifyAndUnarchive()) throw new TypeError("错误:文件损坏(校验值不符)");
+      return files;
     }
     read.CryptoMine = CryptoMine;
     return read;
