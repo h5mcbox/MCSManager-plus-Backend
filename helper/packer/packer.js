@@ -31,14 +31,19 @@ let exceptions = [
   "key.pem",
   "property.js",
   "helper/packer/",
-  "core/info.json"
+  "core/info.json",
+  "public/onlinefs_public/src/"
 ].map(e => normalize(e));
+let exceptionsEnd = [
+  ".js.map",
+];
 let bufs = [];
 let cursor = 0;
 let entries = [];
 Filenames.forEach(e => {
   let skip = false;
   exceptions.forEach(f => normalize(e).startsWith(f) ? skip = true : false);
+  exceptionsEnd.forEach(f => normalize(e).endsWith(f) ? skip = true : false);
   if (skip) {
     console.log("skip:" + e);
     return false;
