@@ -4,8 +4,8 @@ const BACKUPPACKAGEFILE = "./app.backup.apkg";
 const PUBLICKEY = "02f0251528c2917ad1bb93ccf455b6576435560b2c7571d3c3792accdb544b8781";
 function moduleEntry(returnMethod) {
   //unpacker
-  var unpack = (function () {
-    var CryptoMine = (function () {
+  let unpack = (function () {
+    let CryptoMine = (function () {
       const { createHash } = require('crypto');
       const hash = data => createHash('sha256').update(data).digest('hex');
 
@@ -72,20 +72,6 @@ function moduleEntry(returnMethod) {
           type;
           exportable;
           revokeKey;
-          exportKey(getPoint) {
-            let entry = cryptoKeyMap.get(this);
-            if (!entry.exportable) throw "You can't export this key.";
-            if (getPoint) return entry.key;
-            if (entry.type === "public") {
-              if (entry.key.y % 2n === 0n) {
-                return concatBufs([Uint8Array.from([2]), BigIntToBuffer(entry.key.x)]).buffer;
-              } else {
-                return concatBufs([Uint8Array.from([3]), BigIntToBuffer(entry.key.x)]).buffer;
-              }
-            } else if (entry.type === "private") {
-              return concatBufs([Uint8Array.from([5]), BigIntToBuffer(entry.key)]).buffer;
-            }
-          }
           constructor(type, exportable, key) {
             this.type = type;
             this.exportable = exportable;
@@ -125,12 +111,6 @@ function moduleEntry(returnMethod) {
           }
           return get_inv(b % p, p, p);
         }
-        function addPad(l = 0, u) {
-          if (u.length > l) throw new Error("PadingError");
-          let r = new Uint8Array(l);
-          r.set(u, l - u.length);
-          return r;
-        }
         function removePad(u) {
           for (let i = 0; i < u.length; i++) {
             if (!u[i]) continue;
@@ -148,7 +128,6 @@ function moduleEntry(returnMethod) {
             this.y = y;
           }
         }
-
         function pointAdd(p, q) {
           return fromJacobian(jacobianAdd(toJacobian(p), toJacobian(q)));
         };
@@ -252,30 +231,9 @@ function moduleEntry(returnMethod) {
           };
           throw new Error(`unexcept number or point.`);
         };
-        function GenerateHEX(len) {
-          let result = [];
-          for (let i = 0; i < len; i++) {
-            let temp = Math.floor(Math.random() * 256).toString(16);
-            if (temp.length == 1) {
-              result[i] = "0" + temp;
-            } else {
-              result[i] = temp;
-            }
-          }
-          return result.join("");
-        }
         let BasePoint = new Point(basePoint.x, basePoint.y);
         function HEXtoNumber(HEX) {
           return BigInt("0x" + HEX);
-        }
-        function BigIntToBuffer(n = 0n) {
-          let l = Math.ceil(n.toString(16).length / 2);
-          let result = new Uint8Array(l);
-          for (let i = l - 1; i >= 0; i--) {
-            result[i] = Number(n % 256n);
-            n = n / 256n;
-          }
-          return result;
         }
         function BufferToBigInt(b) {
           let r = 0n;
@@ -285,34 +243,6 @@ function moduleEntry(returnMethod) {
             r *= 256n;
           });
           return r;
-        }
-        function concatBufs(bufs = []) {
-          let totalLength = 0, result;
-          for (const e of bufs) {
-            totalLength += e.length;
-          }
-          result = new Uint8Array(totalLength);
-          let position = 0;
-          for (const e of bufs) {
-            result.set(e, position);
-            position += e.length;
-          }
-          return result;
-        }
-        function generatePrivateKey(exportable = true) {
-          return new cryptoKey("private", exportable, HEXtoNumber(GenerateHEX(l)));
-        }
-        function getPublicKey(PrivateKey, exportable = true) {
-          let entry = cryptoKeyMap.get(PrivateKey);
-          if (typeof PrivateKey == "bigint") {
-            return new cryptoKey("public", exportable, pointMul(PrivateKey, BasePoint));
-          } else {
-            return new cryptoKey("public", exportable, pointMul(entry.key, BasePoint));
-          }
-        }
-        function genKeyPair(exportable = true) {
-          let p = generatePrivateKey(exportable);
-          return [p, getPublicKey(p, exportable)];
         }
         function verifysign(data, sign, PublicKey) {
           if (!cryptoKeyMap.has(PublicKey)) throw new Error("This cryptoKey cannot verify the data.");
@@ -332,9 +262,6 @@ function moduleEntry(returnMethod) {
           return p3.x === r;
         }
         return {
-          generatePrivateKey,
-          getPublicKey,
-          generateKeyPair: genKeyPair,
           importKey,
           cryptoKey,
           ECDSA: {
@@ -378,23 +305,27 @@ function moduleEntry(returnMethod) {
       function isSigned() {
         return ECC.ECDSA.verify(`${Header.version}:${JSON.stringify(Header.entries)}`, fromHEXString(Header.sign), ECC.importKey(true, fromHEXString(_PublicKey).buffer));
       }
-      let files = {};
+      /**
+       * @returns {[boolean,Object.<string,typeof package>|null]}
+       */
       function verifyAndUnarchive() {
+        let files = {};
         for (const [filename, filehash, start, size] of Header.entries) {
           let filebuf = package.subarray(start, start + size);
           let checksum = hash(filebuf);
           let _path = path.resolve(filename);
           if (!_path.startsWith(path.resolve(".")) || !(filehash === checksum)) {
             console.warn("校验错误:" + _path);
-            return false;
+            return [false, null];
           }
           files[normalize(_path)] = filebuf;
         }
-        return true;
+        return [true, files];
       }
       if (!isSigned()) throw new TypeError("错误:资源文件签名损坏");
       if (Header.version < currentVersion) throw new TypeError("错误:软件包版本太旧");
-      if (!verifyAndUnarchive()) throw new TypeError("错误:文件损坏(校验值不符)");
+      let [verified, files] = verifyAndUnarchive()
+      if (!verified) throw new TypeError("错误:文件损坏(校验值不符)");
       return files;
     }
     read.CryptoMine = CryptoMine;
@@ -426,7 +357,6 @@ function moduleEntry(returnMethod) {
       return "." + result;
     }
     const fs = require("fs");
-    let backupFsFunc = fn => originalFsFuncs[fn] = fs[fn];
     ["readdirSync",
       "readFileSync",
       "writeFileSync",
@@ -435,7 +365,7 @@ function moduleEntry(returnMethod) {
       "existsSync",
       "statSync",
       "lstatSync",
-      "fstatSync"].forEach(e => backupFsFunc(e));
+      "fstatSync"].forEach(e => originalFsFuncs[e] = fs[e]);
     fs.readFileSync = function (p, o) {
       if (typeof p === "string") {
         if (o === "utf8" || o === "utf-8") {
@@ -539,14 +469,14 @@ function moduleEntry(returnMethod) {
       } catch {
         originalResult = [];
       }
-      var result = [...(new Set([...inPackage, ...originalResult]))];
+      let result = [...(new Set([...inPackage, ...originalResult]))];
       return result;
     };
     ["stat", "lstat", "fstat", "readdir", "exists"].forEach(function (fn) {
       fs[fn] = function (path, callback) {
         let result;
         try {
-          result = fs[fn + "Sync"](path);
+          result = fs[`${fn}Sync`](path);
         } catch (e) {
           setImmediate(function () {
             callback(e);
@@ -567,7 +497,7 @@ function moduleEntry(returnMethod) {
         }
         let result;
         try {
-          result = fs[fn + "Sync"](path, optArg);
+          result = fs[`${fn}Sync`](path, optArg);
         } catch (e) {
           setImmediate(function () {
             callback(e);
@@ -605,13 +535,14 @@ function moduleEntry(returnMethod) {
     };
     const originalLookup = mod._resolveLookupPaths;
     mod._resolveLookupPaths = function () {
-      var result = originalLookup.apply(this, arguments);
+      let result = originalLookup.apply(this, arguments);
       return result;
     }
     mod._findPath = function () {
-      arguments[1] = arguments[1].map(e => path.resolve(e));
-      arguments[1] = arguments[1].filter(e => e.startsWith(root));
-      var result = originalResolve.apply(this, arguments);
+      arguments[1] = arguments[1]
+        .map(e => path.resolve(e))
+        .filter(e => e.startsWith(root));
+      let result = originalResolve.apply(this, arguments);
       if (result) return result;
       function tryExtensions(_base) {
         for (let i of exts) {
@@ -675,8 +606,8 @@ function CLIEntry() {
   return ((process.send) ? AppEntry : DaemonEntry).apply(this, arguments);
 }
 function DaemonEntry() {
-  var cp = require("child_process");
-  var instance = cp.fork("./helper/packer/packer.js");
+  let cp = require("child_process");
+  let instance = cp.fork("./helper/packer/packer.js");
   process.on("SIGINT", function () { });
   function exithandler(code) {
     if (code === null) {
@@ -685,7 +616,7 @@ function DaemonEntry() {
       process.exit(code);
     }
   }
-  var ProcessClosed = new WeakSet();
+  let ProcessClosed = new WeakSet();
   function handler(msg) {
     if (typeof msg !== "object") { return; }
     if (msg.restart) {
