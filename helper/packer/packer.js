@@ -19,6 +19,7 @@ function normalize(_path) {
 }
 let exceptions = [
   ".git",
+  ".github",
   "server",
   "users",
   "workers",
