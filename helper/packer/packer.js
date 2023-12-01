@@ -85,7 +85,8 @@ function moveFile(_startsWith, first) {
 }
 const AppEntry = fs.readFileSync("app.js").toString();
 const AppEntryPatched = AppEntry.replaceAll("const VERSION = 0;", `const VERSION = ${now};`) //修改硬编码时间
-addFile("app.js", Buffer.from(AppEntryPatched.replaceAll("./helper/packer/packer.js", "./app.js")), false); //修改入口
+const AppEntryPatchedSecond = Buffer.from(AppEntryPatched.replaceAll("./helper/packer/packer.js", "./app.js"));
+addFile("app.js", AppEntryPatchedSecond, false); //修改入口
 let databuf = Buffer.concat(bufs);
 let Header = {
   version: now,
@@ -94,7 +95,9 @@ let Header = {
 Header.sign = toHEXString(new Uint8Array(ECC.ECDSA.sign(`${Header.version}:${JSON.stringify(Header.entries)}`, privateKey)));
 let headerbuf = (new TextEncoder).encode(JSON.stringify(Header));
 let packagebuf = brotliCompressSync(Buffer.concat([databuf, Buffer.from("\n"), headerbuf]));
-fs.writeFileSync("./app.apkg", packagebuf);
+fs.mkdirSync("./dist",{recursive:true});
+fs.writeFileSync("./dist/app.apkg", packagebuf);
+fs.writeFileSync("./dist/app.js", AppEntryPatchedSecond);
 console.log("写入完成");
 if (!packerNoRestart) process.send({ restart: "./app.js" });
 process.exit();

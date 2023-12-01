@@ -21,7 +21,7 @@ property.js
 info.json
 
 # builds
-app.apkg
+dist/
 
 tmp_upload/
 
