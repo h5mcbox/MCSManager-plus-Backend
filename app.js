@@ -350,11 +350,9 @@ function moduleEntry(returnMethod) {
     const slash = normalize("./node_modules").substring(1, 2);
     const isDir = (filename) => Object.keys(entries).filter(e => e.startsWith(normalize(filename) + slash)).length != 0;
     function normalize(_path) {
-      let result = path.resolve(_path).substring(root.length);
-      if (!result) {
-        return path.resolve(_path);
-      }
-      return "." + result;
+      let result = path.resolve(_path);
+      if (result.length < root.length) return path.resolve(_path);
+      return "." + result.substring(root.length);
     }
     const fs = require("fs");
     ["readdirSync",
@@ -453,15 +451,14 @@ function moduleEntry(returnMethod) {
       }
     }
     ["statSync", "lstatSync", "fstatSync"].forEach(e => fs[e] = statGenerator(originalFsFuncs[e]));
-    fs.readdirSync = function (p, o) {
+    fs.readdirSync = function (p = "", o) {
       p = normalize(p);
       let level = p.split(slash).length;
       let inPackageFiles = Object.keys(entries).filter(e => e.startsWith(normalize(p) + slash)).map(e => path.resolve(e));
       let inPkgFileSet = new Set();
-      inPackageFiles.forEach(function (a) {
-        if (normalize(a).split(slash).length != level + 1) return false;
-        inPkgFileSet.add(normalize(a).split(slash).pop());
-      });
+      for (let path of inPackageFiles) {
+        inPkgFileSet.add(normalize(path).split(slash)[level]);
+      };
       let inPackage = [...inPkgFileSet];
       let originalResult;
       try {
