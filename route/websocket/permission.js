@@ -37,7 +37,7 @@ WebSocketObserver().listener("permission/getPermissionID", (data) => {
   }
   PermissionTable.probablyPermissions = MCSERVER.probablyPermissions || [];
 
-  response.wsSend(data.ws, "permission/getPermissionID", PermissionTable);
+  response.wsResponse(data, PermissionTable);
 });
 WebSocketObserver().listener("permission/savePID", (data) => {
   if (!permission.hasRights(data.WsSession.username, "permission:setPermissionID")) return;
@@ -47,12 +47,12 @@ WebSocketObserver().listener("permission/savePID", (data) => {
   if (!permissionTableBucket) data.WsSession.PIDs = permissionTableBucket = {};
   if (!Array.isArray(PermissionTable.permissions)) {
     response.wsMsgWindow(data.ws, "数据格式不正确");
-    //response.wsSend(data.ws, "permission/savePID", false);
+    //response.wsResponse(data, false);
     return false;
   }
   if (!permissionTableBucket[PermissionTable.PID]) {
     response.wsMsgWindow(data.ws, "错误:权限表不存在");
-    //response.wsSend(data.ws, "permission/savePID", false);
+    //response.wsResponse(data, false);
     return false;
   }
   let hasAllRights = true;
@@ -61,7 +61,7 @@ WebSocketObserver().listener("permission/savePID", (data) => {
   }
   if (!hasAllRights) {
     response.wsMsgWindow(data.ws, "错误:权限不足");
-    response.wsSend(data.ws, "permission/savePID", false);
+    response.wsResponse(data, false);
     return false;
   }
   permissionTableBucket[PermissionTable.PID] = {
@@ -70,7 +70,7 @@ WebSocketObserver().listener("permission/savePID", (data) => {
     RestrictedUsername: oldPermissionTable.RestrictedUsername
   };
   response.wsMsgWindow(data.ws, "保存成功√");
-  response.wsSend(data.ws, "permission/savePID", true);
+  response.wsResponse(data, true);
 });
 MCSERVER.addProbablyPermissions("permission","管理子权限");
 MCSERVER.addProbablyPermissions("permission:getPermissionID","获取权限表");

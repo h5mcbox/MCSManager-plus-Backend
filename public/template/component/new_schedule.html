@@ -20,7 +20,8 @@
                   <input style="width: 90%" type="text" v-model="count" placeholder="[必填]" />
                 </th>
                 <th>
-                  <input style="width: 100%" type="text" v-model="commande" placeholder="如: stop,say Hello,__start__ 等等" />
+                  <input style="width: 100%" type="text" v-model="commande"
+                    placeholder="如: stop,say Hello,__start__ 等等" />
                 </th>
               </tr>
             </table>
@@ -107,12 +108,12 @@
       },
       methods: {
         toBack: function () {
-          RES.redirectPage("./template/component/schedule.html", "schedule/list", servername);
+          RES.redirectPage("./template/component/schedule.html");
         },
-        toSave: function () {
+        async toSave() {
           if (this.id.length >= 1) {
             //如果是修改，则删除原先的，再创建一个新的
-            WS.sendMsg(
+            await WS.call(
               "schedule/delete",
               {
                 id: this.id,
@@ -120,7 +121,7 @@
               }
             );
           }
-          WS.sendMsg(
+          await WS.call(
             "schedule/create",
             {
               id: this.id || "",

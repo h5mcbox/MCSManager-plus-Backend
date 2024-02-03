@@ -42,8 +42,8 @@ WebSocketObserver().listener("server/console/ws", async (data) => {
     if (!worker) {
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
     }
-    let [{ ResponseKey, ResponseValue }, body] = await worker.call("server/console/ws", data.body);
-    response.wsSend(data.ws, ResponseKey, ResponseValue, body);
+    let [{ ResponseValue }, body] = await worker.call("server/console/ws", data.body);
+    response.wsResponse(data, ResponseValue, body);
     return;
   }
 
@@ -63,8 +63,8 @@ WebSocketObserver().listener("server/console/remove", async (data) => {
       if (!worker) {
         response.wsMsgWindow(data.ws, "创建出错:" + "Worker不存在");
       }
-      let [{ ResponseKey, ResponseValue }, body] = await worker.call("server/console/remove", MCSERVER.allSockets[k]["console"]);
-      response.wsSend(data.ws, ResponseKey, ResponseValue, body);
+      let [{ ResponseValue }, body] = await worker.call("server/console/remove", MCSERVER.allSockets[k]["console"]);
+      response.wsResponse(data, ResponseValue, body);
       MCSERVER.allSockets[k]["console"] = undefined;
       return;
     }

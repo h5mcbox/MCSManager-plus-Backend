@@ -62,35 +62,33 @@
 
 <!--js-->
 <script>
-  MI.rListener("onload", function () {
+  MI.rListener("onload", async function () {
     // 定义页面地址
-    TOOLS.definePage("template/filemanager", "genuser/home", null);
+    await TOOLS.definePage("template/filemanager", "genuser/home", null, "GenHome");
 
     // MCSERVER.colmSet(false);
     VIEW_MODEL.newVue("GenHome", {
       el: "#QuickOperation",
       methods: {
-        toOnlineFs: function (serverName) {
+        toOnlineFs: async function (serverName) {
           // MCSERVER.listenServername = serverName;
-          WS.sendMsg("onlinefs/getServerKey", serverName, function (data) {
-            window.open(data.ResponseValue.url);
-          });
+          let data = await WS.call("onlinefs/getServerKey", serverName);
+          window.open(data.ResponseValue.url);
           //var path = MCSERVER.URL("fs_auth/auth/" + encodeURIComponent(serverName));
           //window.open(path);
         },
-        toServersDir: function (type=0,workername) {
-          if(type==0){
+        toServersDir: async function (type = 0, workername) {
+          if (type == 0) {
             var path = MCSERVER.URL("fs_auth/auth_master/pwd");
             window.open(path);
-          }else if(type==1){
-            WS.sendMsg("onlinefs/getWorkerKey", workername, function (data) {
-              window.open(data.ResponseValue.url);
-            });
+          } else if (type == 1) {
+            let data = await WS.call("onlinefs/getWorkerKey", workername);
+            window.open(data.ResponseValue.url);
           }
         }
       }
     });
   });
 
-  MI.rListener("onend", function () {});
+  MI.rListener("onend", function () { });
 </script>

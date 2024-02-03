@@ -152,6 +152,7 @@ router.ws("/ws", function (ws, req) {
       //检查完毕 | 开始解析数据
       //解码Message Pack数据包
       let [header,body]=msgpack.decode(data);
+      const {RequestID}=header;
 
       if (!header) return;
 
@@ -169,6 +170,7 @@ router.ws("/ws", function (ws, req) {
         req,
         user: username,
         header,
+        RequestID,
         body,
         RequestValue: header.RequestValue,
         token,

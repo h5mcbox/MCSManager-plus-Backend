@@ -42,15 +42,17 @@
           </div>
           <div class="input-group input-group-sm">
             <span class="input-group-addon"> 权限配置ID </span>
-            <input type="text" class="form-control" v-model="PID" placeholder="[未更改 您可以点击配置权限直接从这里重设此用户的权限]" disabled/>
-            <span class="input-group-btn"><button class="btn btn-primary" v-on:click="toPermissionConfig()">配置权限</button></span>
+            <input type="text" class="form-control" v-model="PID" placeholder="[未更改 您可以点击配置权限直接从这里重设此用户的权限]" disabled />
+            <span class="input-group-btn"><button class="btn btn-primary"
+                v-on:click="toPermissionConfig()">配置权限</button></span>
             <p class="input-group-addon">注：配置权限后会自动产生配置ID</p>
           </div>
           <p>准许的服务器，输入服务器名字，分别以空格分割</p>
           <p>注意，如果是以#开头的最高权限账号，则可以无条件访问任何服务器</p>
           <div class="input-group input-group-sm">
             <span class="input-group-addon"> 准许的服务器 </span>
-            <input type="text" class="form-control" v-model="allowedServer" placeholder="默认空，列如 ServerNameA ServerNameB ServerNameC" />
+            <input type="text" class="form-control" v-model="allowedServer"
+              placeholder="默认空，列如 ServerNameA ServerNameB ServerNameC" />
           </div>
         </div>
       </div>
@@ -73,8 +75,8 @@
 </div>
 
 <script>
-  MI.rListener("onload", function () {
-    PAGE.nowPage="OneUserView";
+  MI.rListener("onload", async function () {
+    PAGE.nowPage = "OneUserView";
     VIEW_MODEL.newVue("OneUserView", {
       el: "#OneUserView",
       data: {
@@ -84,12 +86,12 @@
         PID: ""
       },
       methods: {
-        toUpdate: function () {
+        async toUpdate() {
           if (!TOOLS.isStdText(this.username)) {
             TOOLS.pushMsgWindow("用户名不合法！请重新输入！");
             return;
           }
-          if (((this.password.length < 6 || this.password.length > 100) && this.password.length != 0)&&!(this.password.length == 0 && this.LoginPublicKey.length == 66)) {
+          if (((this.password.length < 6 || this.password.length > 100) && this.password.length != 0) && !(this.password.length == 0 && this.LoginPublicKey.length == 66)) {
             TOOLS.pushMsgWindow("密码长度不正确！");
             return;
           }
@@ -101,14 +103,14 @@
             allowedServer: allowedServers,
             username: this.oldUsername,
             newGroup: this.userGroup,
-            PID:this.PID
+            PID: this.PID
           };
-          WS.sendMsg("userset/upinfo", obj);
+          await WS.call("userset/upinfo", obj);
           //返回到上层
-          RES.redirectPage("./template/userset.html", "userset/update");
+          RES.redirectPage("./template/userset.html");
         },
-        toPermissionConfig:function(){
-          let that=this;
+        toPermissionConfig() {
+          let that = this;
           TOOLS.popWind({
             style: {
               maxWidth: "400px",
@@ -116,15 +118,15 @@
             },
             title: "权限配置页面",
             template: "template/dialog/PermissionConfig.html",
-            callback: function (PID) {that.PID=PID;}
+            callback(PID) { that.PID = PID; }
           });
         },
-        toDeleteUser: function (itemUsername) {
+        async toDeleteUser(itemUsername) {
           var obj = {
             username: this.oldUsername
           };
-          WS.sendMsg("userset/delete", obj, function () {
-            RES.redirectPage("./template/userset.html", "userset/update");
+          await WS.call("userset/delete", obj, function () {
+            RES.redirectPage("./template/userset.html");
           });
         }
       }
@@ -135,5 +137,5 @@
     viewModel.allowedServer = viewModel.allowedServer.toString().replace(/,/gim, " ");
   });
 
-  MI.rListener("onend", function () {});
+  MI.rListener("onend", function () { });
 </script>

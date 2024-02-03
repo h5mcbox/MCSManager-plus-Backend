@@ -50,28 +50,28 @@
 </div>
 
 <script>
-  MI.rListener("onload", function () {
+  MI.rListener("onload", async function () {
     MCSERVER.website.schedule = {};
 
     // 定义页面地址
-    TOOLS.definePage("template/component/schedule", "schedule/list", MCSERVER.listenServername);
+    await TOOLS.definePage("template/component/schedule", "schedule/list", MCSERVER.listenServername, "ServerSchedule");
 
     VIEW_MODEL.newVue("ServerSchedule", {
       el: "#ServerSchedule",
       methods: {
-        toBackConsole: function () {
-          RES.redirectPage("./template/component/console.html", "server/console", this.servername);
+        toBackConsole() {
+          RES.redirectPage("./template/component/console.html");
         },
-        toBackNew: function () {
-          RES.redirectPage("./template/component/new_schedule.html", null);
+        toBackNew() {
+          RES.redirectPage("./template/component/new_schedule.html");
         },
-        toSchedule: function (obj) {
+        toSchedule(obj) {
           MCSERVER.website.schedule.nowdata = obj;
-          RES.redirectPage("./template/component/new_schedule.html", null);
+          RES.redirectPage("./template/component/new_schedule.html");
         },
-        toDelete: function (obj) {
+        async toDelete(obj) {
           if (!confirm("您确定要删除这个计划任务吗？")) return;
-          WS.sendMsg(
+          await WS.call(
             "schedule/delete",
             {
               id: obj.id,

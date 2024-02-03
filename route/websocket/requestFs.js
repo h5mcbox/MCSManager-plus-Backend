@@ -16,7 +16,7 @@ WebSocketObserver().listener("onlinefs/getWorkerKey", (data) => {
   let u = new URL(worker.dataModel.RemoteDescription.endpoint);
   u.pathname = "/fs_auth/auth_master/pwd";
   u.searchParams.set("key", timeKey);
-  response.wsSend(data.ws, "onlinefs/getWorkerKey", {
+  response.wsResponse(data, {
     url: u.href
   });
 });
@@ -34,7 +34,7 @@ WebSocketObserver().listener("onlinefs/getServerKey", (data) => {
   let u = new URL(worker.dataModel.RemoteDescription.endpoint);
   u.pathname = "/fs_auth/auth/" + serverName;
   u.searchParams.set("key", timeKey);
-  response.wsSend(data.ws, "onlinefs/getServerKey", {
+  response.wsResponse(data, {
     url: u.href
   });
 });

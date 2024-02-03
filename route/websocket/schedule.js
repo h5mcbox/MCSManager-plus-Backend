@@ -33,7 +33,7 @@ WebSocketObserver().listener("schedule/list", (data) => {
   let sendlist = getMineScheduleList(servername);
 
   if (permission.isCanServer(username, servername)) {
-    response.wsSend(data.ws, "schedule/list", {
+    response.wsResponse(data, {
       username: data.WsSession.username,
       servername: servername,
       schedules: sendlist

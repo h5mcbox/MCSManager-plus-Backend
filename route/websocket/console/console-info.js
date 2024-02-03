@@ -17,8 +17,8 @@ WebSocketObserver().listener("server/console", async (data) => {
     if (!worker) {
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
     }
-    let [{ ResponseKey: key, ResponseValue: value }, body] = await worker.call("server/console", data.body);
-    response.wsSend(data.ws, key, value, body);
+    let [{ ResponseValue }, body] = await worker.call("server/console", data.body);
+    response.wsResponse(data, ResponseValue, body);
     // MCSERVER.log('准许用户 [' + userName + '] 获取控制台实时数据');
   }
 });

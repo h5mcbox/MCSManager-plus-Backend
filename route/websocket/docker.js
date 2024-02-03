@@ -23,8 +23,8 @@ WebSocketObserver().listener("docker/new", async (data) => {
   if (!worker) {
     response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
   }
-  let [{ ResponseKey, ResponseValue }, body] = await worker.call("docker/new", data.body);
-  response.wsSend(data.ws, ResponseKey, ResponseValue, body);
+  let [{ResponseValue }, body] = await worker.call("docker/new", data.body);
+  response.wsResponse(data, ResponseValue, body);
   /*
   let dockerImageName = dockerConfig.dockerImageName;
   let dockerfileData = dockerConfig.dockerfile;
@@ -106,8 +106,8 @@ WebSocketObserver().listener("docker/config", async (data) => {
     if (!worker) {
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
     }
-    let [{ ResponseKey, ResponseValue }, body] = await worker.send("docker/config", data.body);
-    response.wsSend(data.ws, ResponseKey, ResponseValue, body);
+    let [{ ResponseValue }, body] = await worker.send("docker/config", data.body);
+    response.wsResponse(data, ResponseValue, body);
   }
 });
 
@@ -132,8 +132,8 @@ WebSocketObserver().listener("docker/setconfig", async (data) => {
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
     }
     //serverModel.deleteServer(serverName);
-    let [{ ResponseKey, ResponseValue }, body] = await worker.send("docker/setconfig", data.body);
-    response.wsSend(data.ws, ResponseKey, ResponseValue, body);
+    let [{ ResponseValue }, body] = await worker.send("docker/setconfig", data.body);
+    response.wsResponse(data, ResponseValue, body);
   }
 });
 MCSERVER.addProbablyPermissions("docker", "使用Docker");

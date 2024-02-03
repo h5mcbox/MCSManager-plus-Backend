@@ -17,7 +17,7 @@ WebSocketObserver().listener("userset/update", (data) => {
     else userdata.data.online = false;
   }
 
-  response.wsSend(data.ws, "userset/update", {
+  response.wsResponse(data, {
     items: userNameList
   });
 });
@@ -75,12 +75,12 @@ WebSocketObserver().listener("userset/create", (data) => {
     userCenter().get(username).dataModel.lastOperator = data.WsSession.username;
     userCenter().get(username).dataModel.save();
     MCSERVER.info("用户", data.WsSession.username, "建立", username, "用户");
-    response.wsSend(data.ws, "userset/create", true);
+    response.wsResponse(data, true);
     response.wsMsgWindow(data.ws, "用户建立完成√");
     return;
   } catch (e) {
     MCSERVER.error("用户建立失败", e);
-    response.wsSend(data.ws, "userset/create", null);
+    response.wsResponse(data, null);
     response.wsMsgWindow(data.ws, "用户建立失败: " + e);
   }
 });
@@ -96,7 +96,7 @@ WebSocketObserver().listener("userset/delete", (data) => {
       username,
       () => {
         userCenter().initUser();
-        response.wsSend(data.ws, "userset/delete", true);
+        response.wsResponse(data, true);
         response.wsMsgWindow(data.ws, "删除用户成功√");
       },
       () => {
@@ -106,7 +106,7 @@ WebSocketObserver().listener("userset/delete", (data) => {
     return;
   } catch (e) {
     MCSERVER.error("删除用户失败", e);
-    response.wsSend(data.ws, "userset/delete", null);
+    response.wsResponse(data, null);
     response.wsMsgWindow(data.ws, "删除用户失败:" + e);
   }
 });
@@ -116,12 +116,12 @@ WebSocketObserver().listener("userset/reload", (data) => {
 
   try {
     userCenter().initUser();
-    response.wsSend(data.ws, "userset/reload", true);
+    response.wsResponse(data, true);
     response.wsMsgWindow(data.ws, "用户重新导入完成√");
     return;
   } catch (e) {
     MCSERVER.error("用户重新导入失败", e);
-    response.wsSend(data.ws, "userset/reload", null);
+    response.wsResponse(data, null);
     response.wsMsgWindow(data.ws, "错误：用户重新导入失败" + e);
   }
 });
@@ -131,14 +131,14 @@ WebSocketObserver().listener("userset/view", (data) => {
   if (!permssion.hasRights(data.WsSession.username, "userset:view")) return;
 
   let user = userCenter().get(data.body.trim());
-  response.wsSend(data.ws, "userset/view", {
+  response.wsResponse(data, {
     username: user.dataModel.username,
     lastDate: user.dataModel.lastDate,
     createDate: user.dataModel.createDate,
     randomPassword: user.dataModel.randomPassword,
-    LoginPublicKey: user.dataModel.LoginPublicKey || "",
-    userGroup: user.dataModel.group || "",
-    allowedServer: user.dataModel.allowedServer || []
+    LoginPublicKey: user.dataModel.LoginPublicKey ?? "",
+    userGroup: user.dataModel.group ?? "",
+    allowedServer: user.dataModel.allowedServer ?? []
   });
 });
 
@@ -149,7 +149,7 @@ WebSocketObserver().listener("userset/upinfo", (data) => {
   try {
     let newUserConfig = data.body;
     if (!(newUserConfig.allowedServer instanceof Array)) {
-      response.wsSend(data.ws, "userset/upinfo", null);
+      response.wsResponse(data, null);
       return;
     }
     //去除掉空白的
@@ -313,7 +313,7 @@ WebSocketObserver().listener("userset/2fa/getAuthURL", (data) => {
     randomPassword: tempuser.dataModel.randomPassword
   };
   if (!auth.randomPassword) { auth.authURL = totp.createURL((tempuser.dataModel.TwoFAKey || ""), "MCSManager", data.req.session["username"]) }
-  response.wsSend(data.ws, "userset/2fa/getAuthURL", auth);
+  response.wsResponse(data, auth);
 });
 MCSERVER.addProbablyPermissions("userset:overview", "返回用户中心数据");
 MCSERVER.addProbablyPermissions("userset:createUser", "新建用户");

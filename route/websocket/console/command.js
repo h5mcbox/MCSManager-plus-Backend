@@ -15,8 +15,8 @@ WebSocketObserver().listener("server/console/command", async (data) => {
     if (!worker) {
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
     }
-    let [{ ResponseKey, ResponseValue }, body] = await worker.call("server/console/command", data.body);
-    response.wsSend(data.ws, ResponseKey, ResponseValue, body);
+    let [{ ResponseValue }, body] = await worker.call("server/console/command", data.body);
+    response.wsResponse(data, ResponseValue, body);
   }
   response.wsSend(data.ws, "server/console/command", null);
 });

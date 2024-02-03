@@ -33,27 +33,18 @@
       API_KEY: ""
     },
     methods: {
-      updateKey: function () {
-        var that = this;
-        WS.sendMsg("apikey/update", PAGE.username, function (obj) {
-          var API_KEY = obj.ResponseValue;
-          that.API_KEY = API_KEY;
-        });
+      updateKey: async function () {
+        let obj = await WS.call("apikey/update", PAGE.username)
+        this.API_KEY = obj.ResponseValue;
       },
-      deleteKey: function () {
-        var that = this;
-        WS.sendMsg("apikey/delete", PAGE.username, function (obj) {
-          var API_KEY = obj.ResponseValue;
-          that.API_KEY = API_KEY;
-        });
+      deleteKey: async function () {
+        let obj = await WS.call("apikey/delete", PAGE.username)
+        this.API_KEY = obj.ResponseValue;
       }
     },
-    mounted: function () {
-      var that = this;
-      WS.sendMsg("apikey/get", PAGE.username, function (obj) {
-        var API_KEY = obj.ResponseValue;
-        that.API_KEY = API_KEY;
-      });
+    mounted: async function () {
+      let obj = await WS.call("apikey/get", PAGE.username)
+      this.API_KEY = obj.ResponseValue;
     }
   });
 </script>

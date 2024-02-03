@@ -75,7 +75,7 @@ WebSocketObserver().listener("genuser/home", async (data) => {
     } else {
       resObj.workerNames = [];
     }
-    response.wsSend(data.ws, "genuser/home", resObj);
+    response.wsResponse(data, resObj);
   } catch (err) {
     MCSERVER.error("普通用户访问异常", err);
   }
@@ -84,7 +84,7 @@ WebSocketObserver().listener("genuser/home", async (data) => {
 WebSocketObserver().listener("genuser/banned", (data) => {
   if (!permission.hasRights(data.WsSession.username, "banned")) return;
   let user = userCenter().get(data.WsSession.username.trim());
-  response.wsSend(data.ws, "genuser/banned", {
+  response.wsResponse(data, {
     bannedBy: user.dataModel.lastOperator,
     username: user.dataModel.username,
     lastDate: user.dataModel.lastDate,
@@ -93,7 +93,7 @@ WebSocketObserver().listener("genuser/banned", (data) => {
 });
 WebSocketObserver().listener("genuser/view", (data) => {
   let user = userCenter().get(data.WsSession.username.trim());
-  response.wsSend(data.ws, "genuser/view", {
+  response.wsResponse(data, {
     username: user.dataModel.username,
     lastDate: user.dataModel.lastDate,
     createDate: user.dataModel.createDate,

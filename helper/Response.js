@@ -14,10 +14,11 @@ function send(res, info, value) {
   // res.end();
 }
 
-function wsSend(ws, info, value, body = "") {
+function wsSend(ws, info, value, body = "", RequestID) {
   let header = {
     ResponseKey: info,
-    ResponseValue: value
+    ResponseValue: value,
+    RequestID
   };
   try {
     if (ws.readyState == ws.OPEN) {
@@ -42,6 +43,10 @@ module.exports.returnInfo = (res, value) => {
 module.exports.wsSend = (ws, info, value, body = "") => {
   wsSend(ws, info, value, body);
 };
+
+module.exports.wsResponse = ({ ws, RequestID, RequestValue: info }, value, body = "") => {
+  wsSend(ws, info, value, body, RequestID);
+}
 
 module.exports.wsMsgWindow = (ws, msg = "欢迎使用！") => {
   wsSend(ws, "window/msg", {}, msg);

@@ -91,12 +91,14 @@
                     </p>
                   </div>
                   <div class="col-xs-3" style="text-align: center">
-                    <a href="javascript:void(0);" class="mbuttonWhite" v-on:click="toTerminal(item.serverName);"> <span class="glyphicon glyphicon-console" aria-hidden="true"> </span>&nbsp; 终端 </a>
-                    <a href="javascript:void(0);" class="mbuttonWhite" v-on:click="toConsole(item.serverName);"> <span class="glyphicon glyphicon-th-large" aria-hidden="true"> </span>&nbsp; 管理 </a>
-                    <a href="javascript:void(0);" class="mbuttonWhite" v-on:click="onRedirect('./template/component/server.html','server/get',item.serverName);">
-                      <span class="glyphicon glyphicon-cog" aria-hidden="true"> </span>&nbsp; 参数
-                    </a>
-                    <a href="javascript:void(0);" class="mbuttonWhite" v-on:click="toDeleteServer(item.serverName)"> <span class="glyphicon glyphicon-trash" aria-hidden="true"> </span>&nbsp; 删除 </a>
+                    <a href="javascript:void(0);" class="mbuttonWhite" v-on:click="toTerminal(item.serverName);"> <span
+                        class="glyphicon glyphicon-console" aria-hidden="true"> </span>&nbsp; 终端 </a>
+                    <a href="javascript:void(0);" class="mbuttonWhite" v-on:click="toConsole(item.serverName);"> <span
+                        class="glyphicon glyphicon-th-large" aria-hidden="true"> </span>&nbsp; 管理 </a>
+                    <a href="javascript:void(0);" class="mbuttonWhite" v-on:click="onRedirect(item.serverName);"><span
+                        class="glyphicon glyphicon-cog" aria-hidden="true"> </span>&nbsp; 参数</a>
+                    <a href="javascript:void(0);" class="mbuttonWhite" v-on:click="toDeleteServer(item.serverName)">
+                      <span class="glyphicon glyphicon-trash" aria-hidden="true"> </span>&nbsp; 删除 </a>
                   </div>
                 </div>
               </div>
@@ -144,7 +146,7 @@
     color: rgb(26, 26, 26);
   }
 
-  .AppInlineBlockListTitleMuem > a {
+  .AppInlineBlockListTitleMuem>a {
     color: #2e2e2e;
     display: inline-block;
     margin-left: 6px;
@@ -203,52 +205,53 @@
 </style>
 
 <script>
-  MI.rListener("onload", function () {
+  MI.rListener("onload", async function () {
     // 定义页面地址
-    TOOLS.definePage("template/server", "server/view", null);
+    await TOOLS.definePage("template/server", "server/view", null, "ServerList");
 
     VIEW_MODEL.newVue("ServerList", {
       el: "#ServerList",
       methods: {
-        toConsole: function (serverName) {
+        toConsole(serverName) {
           MCSERVER.listenServername = serverName;
-          RES.redirectPage("./template/component/console.html", "server/console", serverName);
+          RES.redirectPage("./template/component/console.html");
         },
-        onRedirect: function (link, api, serverName) {
-          RES.redirectPage(link, api, serverName);
+        async onRedirect(serverName) {
+          await TOOLS.fetchData('server/get', serverName, "ServerPanel");
+          RES.redirectPage('./template/component/server.html');
         },
-        newServer: function () {
-          RES.redirectPage("./template/component/newserver.html", null, "");
+        newServer() {
+          RES.redirectPage("./template/component/newserver.html");
         },
-        newServerx: function () {
-          RES.redirectPage("./template/component/newserverx.html", null, "");
+        newServerx() {
+          RES.redirectPage("./template/component/newserverx.html");
         },
-        opt_all: function (command) {
+        async opt_all(command) {
           if (confirm("您真的要执行这个影响所有服务器的操作吗？")) {
-            WS.sendMsg("server/opt_all", command);
+            await WS.call("server/opt_all", command);
             setTimeout(function () {
               PAGE.refresh();
             }, 2000);
           }
         },
-        toDeleteServer: function (serverName) {
+        async toDeleteServer(serverName) {
           var result = confirm("是否删除 [" + serverName + "] 这个服务端？\n注意: 此操作不可逆！");
           if (!result) return;
-          WS.sendMsg("server/delete", serverName);
+          await WS.call("server/delete", serverName);
           RES.redirectPage("./template/server.html", "server/view");
         },
-        toTerminal: function (serverName) {
+        toTerminal(serverName) {
           //设置全局监听变量
           MCSERVER.listenServername = serverName;
           TOOLS.listenTerminal(serverName);
           // RES.redirectPage('./template/component/terminal.html', null, '');
         },
-        newDocker: function () {
+        newDocker() {
           RES.redirectPage("./template/component/new_docker_image.html", null, "");
         }
       }
     });
   });
 
-  MI.rListener("onend", function () {});
+  MI.rListener("onend", function () { });
 </script>

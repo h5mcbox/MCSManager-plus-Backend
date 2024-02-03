@@ -13,13 +13,13 @@
 </div>
 
 <script>
-  MI.rListener("onload", function () {
+  MI.rListener("onload", async function () {
     // 定义页面地址
-    TOOLS.definePage("template/banned", "genuser/banned", "");
+    await TOOLS.definePage("template/banned", "genuser/banned", "", "BannedPanel");
     VIEW_MODEL.newVue("BannedPanel", {
       el: "#BannedPanel"
     });
   });
 
-  MI.rListener("onend", function () {});
+  MI.rListener("onend", function () { });
 </script>

@@ -50,11 +50,11 @@
   } else {
     PAGE.data = `PID:`;
   }
-  WS.sendMsg("permission/getPermissionID", PAGE.data, function (obj) {
+  WS.call("permission/getPermissionID", PAGE.data).then(([PermissionConfig]) => {
     new Vue({
       el: "#PermissionConfig",
       data: {
-        PermissionConfig: obj.ResponseValue,
+        PermissionConfig,
         inputPermissionName: ""
       },
       methods: {
@@ -65,11 +65,10 @@
         deletePermission: function (f) {
           this.PermissionConfig.permissions = this.PermissionConfig.permissions.filter(e => (e !== f));
         },
-        ok: function () {
+        async ok() {
           let that = this;
-          WS.sendMsg("permission/savePID", this.PermissionConfig, function () {
-            TOOLS.popWindClose(that.PermissionConfig.PID);
-          });
+          await WS.call("permission/savePID", this.PermissionConfig);
+          TOOLS.popWindClose(that.PermissionConfig.PID);
         }
       }
     });

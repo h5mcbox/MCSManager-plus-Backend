@@ -6,9 +6,7 @@
   window.MCSERVER = {};
   window.PAGE = new Object();
 
-  var MI = (window.MI = function () {
-    return null;
-  });
+  var MI = (window.MI = () => null);
 
   var _maskEventList = {};
   var _routeEvebtList = {};

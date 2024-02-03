@@ -26,7 +26,8 @@
               <p>[选填] 您可以从已有的服务器配置中，复制一份配置到这里，来避免重复的输入相同的数据。</p>
               <div class="input-group input-group-sm">
                 <span class="input-group-addon">目标实例名字</span>
-                <input type="text" class="form-control" v-model="readServerName" placeholder="[在此输入目标服务端的名字即可复制它的配置项目]" />
+                <input type="text" class="form-control" v-model="readServerName"
+                  placeholder="[在此输入目标服务端的名字即可复制它的配置项目]" />
                 <span class="input-group-btn">
                   <button class="btn btn-default" v-on:click="readServerConfig(readServerName)">导入配置</button>
                 </span>
@@ -50,7 +51,7 @@
               <p>[必填] 填写此框决定服务器存放的Worker(创建后不可再更改)</p>
               <div class="input-group input-group-sm">
                 <span class="input-group-addon">Worker名</span>
-                <input type="text" class="form-control" v-model="location" required/>
+                <input type="text" class="form-control" v-model="location" required />
               </div>
               <p>[选填] 根据您的需求或计算机内存大小填写，默认自动，需要在数字后加单位</p>
               <div class="row">
@@ -98,9 +99,9 @@
 </div>
 
 <script>
-  MI.rListener("onload", function () {
+  MI.rListener("onload", async function () {
     // 定义页面地址
-    TOOLS.definePage("template/component/newserver", "genuser/home", "");
+    await TOOLS.definePage("template/component/newserver", "genuser/home", "", "CreateServerView");
 
     VIEW_MODEL.newVue("CreateServerView", {
       el: "#CreateServerView",
@@ -113,10 +114,10 @@
         addCmd: "",
         java: "java",
         readServerName: "",
-        location:""
+        location: ""
       },
       methods: {
-        toCreateServer: function () {
+        async toCreateServer() {
           var addCmdList = this.addCmd.split(" ");
           if (!TOOLS.isStdText(this.name)) {
             TOOLS.pushMsgWindow("服务器名字不合法！仅限字母数字下划线！");
@@ -130,24 +131,24 @@
             Xmx: this.Xmx,
             Xms: this.Xms,
             java: this.Java,
-            location:this.location
+            location: this.location
           };
-          WS.sendMsg("server/create", obj);
-          RES.redirectPage("./template/server.html", "server/view");
+          await WS.call("server/create", obj);
+          RES.redirectPage("./template/server.html");
         },
-        toCreaterDir: function () {
+        async toCreaterDir() {
           var obj = {
             serverName: this.name,
-            location:this.location,
+            location: this.location,
             cwd: this.cwd
           };
-          WS.sendMsg("server/create_dir", obj);
+          await WS.call("server/create_dir", obj);
         },
-        readServerConfig: function (serverName) {
+        async readServerConfig(serverName) {
           if (serverName.trim() == "") return;
           var that = this;
           //请求此服务端配置数据并且赋值给自己
-          WS.sendMsg("server/get", serverName, function (pack) {
+          await WS.call("server/get", serverName, function (pack) {
             serverData = pack.ResponseValue;
             if (serverData == null || serverData["serverName"] == null) {
               return;
@@ -171,5 +172,5 @@
     });
   });
 
-  MI.rListener("onend", function () {});
+  MI.rListener("onend", function () { });
 </script>

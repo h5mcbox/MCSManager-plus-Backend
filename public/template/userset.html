@@ -109,8 +109,10 @@
             </div>
             <div class="input-group input-group-sm">
               <span class="input-group-addon"> 权限配置ID </span>
-              <input type="text" class="form-control" v-model="PID" placeholder="[未配置 您可以点击配置权限直接从这里设置此用户的权限]" disabled />
-              <span class="input-group-btn"><button class="btn btn-primary" v-on:click="toPermissionConfig()">配置权限</button></span>
+              <input type="text" class="form-control" v-model="PID" placeholder="[未配置 您可以点击配置权限直接从这里设置此用户的权限]"
+                disabled />
+              <span class="input-group-btn"><button class="btn btn-primary"
+                  v-on:click="toPermissionConfig()">配置权限</button></span>
               <p class="input-group-addon">注：配置权限后会自动产生配置ID</p>
             </div>
             <p>准许的服务器，输入服务器名字，分别以空格分割</p>
@@ -135,34 +137,34 @@
   </div>
 </div>
 <script>
-  MI.rListener("onload", function () {
+  MI.rListener("onload", async function () {
     // 定义页面地址
-    TOOLS.definePage("template/userset", "userset/update", null);
+    await TOOLS.definePage("template/userset", "userset/update", null, "UsersetList");
 
-    PAGE.nowPage="userset";
+    PAGE.nowPage = "userset";
     VIEW_MODEL.newVue("UsersetList", {
       el: "#UsersetList",
       data: {
         createUser: false,
         username: "",
         password: "",
-        LoginPublicKey:"",
-        userGroup:"user",
+        LoginPublicKey: "",
+        userGroup: "user",
         allowedServer: "",
-        PID:""
+        PID: ""
       },
       methods: {
-        toRegisterUser: function () {
+        async toRegisterUser() {
           var allwoedServers = this.allowedServer.trim().split(" ");
           if (!TOOLS.isStdText(this.username)) {
             TOOLS.pushMsgWindow("用户名不合法！请重新输入！");
             return;
           }
-          if ((this.password.length < 6 || this.password.length > 100)&&!(this.password.length == 0 && this.LoginPublicKey.length == 66)) {
+          if ((this.password.length < 6 || this.password.length > 100) && !(this.password.length == 0 && this.LoginPublicKey.length == 66)) {
             TOOLS.pushMsgWindow("密码长度不正确！");
             return;
           }
-          if (this.LoginPublicKey.length != 66&&!(this.LoginPublicKey.length==0)) {
+          if (this.LoginPublicKey.length != 66 && !(this.LoginPublicKey.length == 0)) {
             TOOLS.pushMsgWindow("公钥长度不正确！");
             return;
           }
@@ -170,27 +172,25 @@
             username: this.username,
             password: this.password,
             newLoginPublicKey: this.LoginPublicKey,
-            newGroup:this.userGroup,
+            newGroup: this.userGroup,
             allowedServer: allwoedServers,
-            PID:this.PID
+            PID: this.PID
           };
-          WS.sendMsg("userset/create", obj, function () {
-            PAGE.refresh();
-          });
+          await WS.call("userset/create", obj)
+          PAGE.refresh();
         },
 
-        toDeleteUser: function (itemUsername) {
+        async toDeleteUser(itemUsername) {
           var obj = {
             username: itemUsername
           };
           var result = confirm("您真的打算删除这个这个用户吗?");
           if (!result) return;
-          WS.sendMsg("userset/delete", obj, function () {
-            PAGE.refresh();
-          });
+          await WS.call("userset/delete", obj)
+          PAGE.refresh();
         },
-        toPermissionConfig:function(){
-          let that=this;
+        toPermissionConfig() {
+          let that = this;
           TOOLS.popWind({
             style: {
               maxWidth: "400px",
@@ -198,25 +198,26 @@
             },
             title: "权限配置页面",
             template: "template/dialog/PermissionConfig.html",
-            callback: function (PID) {that.PID=PID;}
+            callback(PID) { that.PID = PID; }
           });
         },
-        refresh: function () {
+        refresh() {
           PAGE.refresh();
           TOOLS.pushMsgWindow("刷新完毕√");
         },
 
-        reloadUser: function () {
+        async reloadUser() {
           //命令服务器重新刷新
-          WS.sendMsg("userset/reload", "", function () {
-            PAGE.refresh();
-          });
+          await WS.call("userset/reload", "");
+          PAGE.refresh();
         },
 
-        toUserView: function (_username) {
-          RES.redirectPage("./template/component/user.html", "userset/view", _username);
+        async toUserView(_username) {
+          PAGE.usersetUsername = _username;
+          await TOOLS.fetchData("userset/view", _username, "OneUserView");
+          RES.redirectPage("./template/component/user.html");
         },
-        toAPIKey: function (username) {
+        toAPIKey(username) {
           // 弹出用户密匙设置窗口
           PAGE.username = username;
           TOOLS.popWind({
@@ -232,5 +233,5 @@
     });
   });
 
-  MI.rListener("onend", function () {});
+  MI.rListener("onend", function () { });
 </script>

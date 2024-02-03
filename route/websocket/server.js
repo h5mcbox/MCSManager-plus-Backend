@@ -12,7 +12,7 @@ WebSocketObserver().listener("server/view", async (data) => {
     if (ResponseKey !== "server/view") return false;
     ResponseValue.items.forEach(e => allServers.push(e));
   }
-  response.wsSend(data.ws, "server/view", {
+  response.wsResponse(data, {
     items: allServers
   });
 });
@@ -32,10 +32,10 @@ WebSocketObserver().listener("server/get", async (data) => {
     response.wsMsgWindow(data.ws, "获取出错:" + "Worker不存在");
   }
   let worker = mcserver.worker;
-  let [{ ResponseKey, ResponseValue }, body] = await worker.call("server/get", data.body);
+  let [{ ResponseKey, ResponseValue },body] = await worker.call("server/get", data.body);
   if (ResponseKey !== "server/get") return false;
   ResponseValue.location = mcserver.location;
-  response.wsSend(data.ws, ResponseKey, ResponseValue, body);
+  response.wsResponse(data, ResponseValue, body);
 });
 
 WebSocketObserver().listener("server/create", async (data) => {
@@ -71,8 +71,8 @@ WebSocketObserver().listener("server/create_dir", async (data) => {
     response.wsMsgWindow(data.ws, "创建出错:" + "Worker不存在");
   }
   try {
-    let [{ ResponseKey, ResponseValue }, body] = await worker.call("server/create_dir", data.body);
-    response.wsSend(data.ws, ResponseKey, ResponseValue, body);
+    let [{ ResponseValue }, body] = await worker.call("server/create_dir", data.body);
+    response.wsResponse(data, ResponseValue, body);
   } catch (e) {
     response.wsMsgWindow(data.ws, "创建目录" + ServerConfig.cwd + "出错");
   }
@@ -86,8 +86,8 @@ WebSocketObserver().listener("server/rebuilder", async (data) => {
   if (!worker) {
     response.wsMsgWindow(data.ws, "修改出错:" + "Worker不存在");
   }
-  let [{ ResponseKey, ResponseValue }, body] = await worker.call("server/rebuilder", data.body);
-  response.wsSend(data.ws, ResponseKey, ResponseValue, body);
+  let [{ ResponseValue }, body] = await worker.call("server/rebuilder", data.body);
+  response.wsResponse(data, ResponseValue, body);
 });
 
 WebSocketObserver().listener("server/delete", async (data) => {
@@ -102,7 +102,7 @@ WebSocketObserver().listener("server/delete", async (data) => {
     serverModel.deleteServer(serverName);
     worker.call("server/delete", data.body)
   } catch (e) {
-    response.wsSend(data.ws, "server/delete", null);
+    response.wsResponse(data, null);
     response.wsMsgWindow(data.ws, "删除服务器失败" + e);
   }
 });

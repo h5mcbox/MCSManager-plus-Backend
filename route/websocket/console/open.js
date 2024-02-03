@@ -14,8 +14,8 @@ WebSocketObserver().listener("server/console/open", async (data) => {
     if (!worker) {
       response.wsMsgWindow(data.ws, "启动出错:" + "Worker不存在");
     }
-    let [{ ResponseKey, ResponseValue }, body] = await worker.call("server/console/open", data.body);
-    response.wsSend(data.ws, ResponseKey, ResponseValue, body);
+    let [{ ResponseValue }, body] = await worker.call("server/console/open", data.body);
+    response.wsResponse(data, ResponseValue, body);
   }
   response.wsSend(data.ws, "server/console/open", null);
 });

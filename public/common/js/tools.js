@@ -44,7 +44,7 @@
   MI.routeListener("window/msg", function (data) {
     TOOLS.pushMsgWindow(data.body);
   });
-  
+
   // XSS 攻击防御函数
   TOOLS.encode = function (html) {
     var rstr = html.replace(/&/gim, "&amp;").replace(/</gim, "&lt;").replace(/>/gim, "&gt;").replace(/"/gim, "&quot;").replace(/'/gim, "&apos;").replace(/ /gim, "&nbsp;");
@@ -93,7 +93,7 @@
   };
 
   //设置头上显示什么 已舍弃
-  TOOLS.setHeaderTitle = function () {};
+  TOOLS.setHeaderTitle = function () { };
 
   //Minecraft 服务器输出删除双S
   TOOLS.deletDoubleS = function (text) {
@@ -266,7 +266,7 @@
   var _popWindCallback = null;
   TOOLS.popWind = function (config) {
     var popWinContext = $("#PopWinContext");
-    _popWindCallback = config.callback || function () {}; //全局的callback变量
+    _popWindCallback = config.callback || function () { }; //全局的callback变量
     var css = config.style || {
       display: "block"
     };
@@ -339,10 +339,13 @@
     oReq.send(oMyForm);
   };
 
-  TOOLS.page = function (toUrl) {
-    var url = window.location.href;
+  let pageDebounce = false;
+  TOOLS.page = function (noRedirect) {
+    if (pageDebounce) return false;
+    else pageDebounce = true;
+    var page = window.location.hash.slice(1);
+    /*
     //page=template/component/console.html&api=server/console&v=sds
-    var parameter = url.split("#")[1];
     if (!parameter) return false;
     // [api=server/console,xxx=xxx]
     parameter = parameter.split("&");
@@ -352,31 +355,39 @@
       parameters[z[0]] = z[1];
     }
     console.log(parameters);
-    if (parameters["page"]) {
-      RES.redirectPage("./" + parameters["page"] + ".html", parameters["api"], parameters["listen"]);
+    */
+    pageDebounce=false;
+    if (page) {
+      RES.redirectPage(`./${page}.html`);
       return true;
     } else {
       return false;
     }
   };
+  //addEventListener("hashchange", () => TOOLS.page(true));
 
-  TOOLS.definePage = function (v1, v2, v3) {
+  TOOLS.fetchData = async function (v2, v3, copyData) {
+    let [obj] = await WS.call(v2, v3);
+    MI.routeCopy(copyData, obj);
+  }
+  TOOLS.definePage = async function (v1, v2, v3, copyData) {
     if (MCSERVER.listenServername) {
       v3 = MCSERVER.listenServername;
     } else {
-      v3 = MCSERVER.listenServername = TOOLS.pageParameter("listen")||"null";
+      v3 = MCSERVER.listenServername = TOOLS.pageParameter("listen") || "null";
     }
-    console.log("definePage:", "#page=" + v1 + "&api=" + v2 + "&listen=" + v3);
-    window.location.hash = "#page=" + v1 + "&api=" + v2 + "&listen=" + v3;
+    if (copyData) await TOOLS.fetchData(v2, v3, copyData);
+    console.log("definePage:", `#${v1}`);
+    window.location.hash = `#${v1}`;
   };
 
   TOOLS.pageParameter = function (pageKey) {
     var hash = window.location.hash;
     var parameter = hash.split("&");
-    for (var k in parameter) {
-      var z = parameter[k].split("=");
-      if (z[0] == pageKey) {
-        return z[1];
+    for (let k in parameter) {
+      let [key, value] = parameter[k].split("=");
+      if (key == pageKey) {
+        return value;
       }
     }
     return null;

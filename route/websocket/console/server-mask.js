@@ -12,8 +12,8 @@ WebSocketObserver().listener("server/console/autorestart", async (data) => {
     if (!worker) {
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
     }
-    let [{ ResponseKey, ResponseValue }, body] = await worker.call("server/console/autorestart", data.body);
-    response.wsSend(data.ws, ResponseKey, ResponseValue, body);
+    let [{ ResponseValue }, body] = await worker.call("server/console/autorestart", data.body);
+    response.wsResponse(data, ResponseValue, body);
   }
   response.wsMsgWindow(data.ws, "权限不足!您并不拥有此服务器.");
 });

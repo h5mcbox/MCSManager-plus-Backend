@@ -13,6 +13,7 @@
       </div>
     </div>
     <div class="col-md-4">
+      <!--
       <div class="Panel PanelBlack">
         <div class="PanelTitle">客户使用反馈</div>
         <div class="PanelBody">
@@ -40,16 +41,15 @@
           <p>软件所有代码与文件均可转载，修改。</p>
         </div>
       </div>
-
+    -->
       <div class="Panel">
         <div class="PanelTitle">开源协议</div>
         <div class="PanelBody">
           <p>遵循 MIT 开源协议</p>
           <p>
-            <small
-              >A short and simple permissive license with conditions only requiring preservation of copyright and license notices. Licensed works, modifications, and larger works may be distributed
-              under different terms and without source code.</small
-            >
+            <small>A short and simple permissive license with conditions only requiring preservation of copyright and
+              license notices. Licensed works, modifications, and larger works may be distributed
+              under different terms and without source code.</small>
           </p>
           <br />
         </div>
@@ -59,9 +59,9 @@
 </div>
 
 <script>
-  MI.rListener("onload", function () {
+  MI.rListener("onload", async function () {
     // 定义页面地址
-    TOOLS.definePage("template/feelback", "genuser/home", null);
+    await TOOLS.definePage("template/feelback", "genuser/home", null);
 
     RES.ajax({
       type: "GET",
@@ -75,5 +75,5 @@
     });
   });
 
-  MI.rListener("onend", function () {});
+  MI.rListener("onend", function () { });
 </script>

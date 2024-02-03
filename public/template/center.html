@@ -4,7 +4,8 @@
       <div class="Panel">
         <div class="PanelTitle PanelBlack">
           <!--请不要怀疑这是在欺骗您数据统计日期来自前端，事实上，后端是在每月1日统计至今，所以是一致的-->
-          {{isPanel?"控制面板":`Worker ${MCSERVER.workername}`}} {{ new Date().getMonth()+1 }}月1日 ~ {{ new Date().getMonth()+1 }}月{{ new Date().getDate() }}日 基础监控
+          {{isPanel?"控制面板":`Worker ${MCSERVER.workername}`}} {{ new Date().getMonth()+1 }}月1日 ~ {{ new
+          Date().getMonth()+1 }}月{{ new Date().getDate() }}日 基础监控
         </div>
         <div class="PanelBody">
           <div class="row">
@@ -227,11 +228,13 @@
 
 <script>
   //创建
-  MI.rListener("onload", function () {
+  MI.rListener("onload", async function () {
     // 定义页面地址
-    var isPanel=VIEW_MODEL["centerShow"].isPanel;
-    if(isPanel){
-      TOOLS.definePage("template/center","center/show","");
+    var isPanel = VIEW_MODEL["centerShow"]?.isPanel ?? !MCSERVER.workername;
+    if (isPanel) {
+      await TOOLS.definePage("template/center", "center/show", "", "centerShow");
+    } else {
+      await TOOLS.fetchData("workers/center", MCSERVER.workername, "centerShow");
     }
 
     PAGE.time = function (value) {
@@ -262,50 +265,49 @@
       el: "#CenterShow",
       methods: {
         time: PAGE.time(),
-        toUpdate:async function(itemWorkername){
-          var input=document.createElement("input");
-          input.type="file";
-          var onChanged=new Promise((resolve,reject)=>input.oninput=resolve);
+        toUpdate: async function (itemWorkername) {
+          var input = document.createElement("input");
+          input.type = "file";
+          var onChanged = new Promise((resolve, reject) => input.oninput = resolve);
           input.click();
           await onChanged;
-          input.oninput=null;
-          blob=input.files[0];
-          if(!blob){
+          input.oninput = null;
+          blob = input.files[0];
+          if (!blob) {
             return;
           }
-          var urlo=new URL(location.href);
-          urlo.pathname=itemWorkername?"/update/worker/"+itemWorkername:"/update";
-          await fetch(urlo.href,{
-            method:"POST",
-            body:blob
+          var urlo = new URL(location.href);
+          urlo.pathname = itemWorkername ? "/update/worker/" + itemWorkername : "/update";
+          await fetch(urlo.href, {
+            method: "POST",
+            body: blob
           })
-          if(!itemWorkername){
+          if (!itemWorkername) {
             TOOLS.pushMsgWindow("面板开始更新");
-          }else{
+          } else {
             TOOLS.pushMsgWindow("Worker开始更新");
-            RES.redirectPage("./template/workers.html", "workers", "");
+            RES.redirectPage("./template/workers.html");
           }
         },
-        toRestart:async function(itemWorkername){
-          var onRestart=new Promise((resolve)=>WS.sendMsg(itemWorkername?"workers/restart":"center/restart", itemWorkername||"",resolve));
-          await onRestart;
-          if(!itemWorkername){
+        toRestart: async function (itemWorkername) {
+          await WS.call(itemWorkername ? "workers/restart" : "center/restart", itemWorkername || "", resolve);
+          if (!itemWorkername) {
             TOOLS.pushMsgWindow("面板重启");
-          }else{
+          } else {
             TOOLS.pushMsgWindow("重启Worker...");
-            RES.redirectPage("./template/workers.html", "workers", "");
+            RES.redirectPage("./template/workers.html");
           }
         }
       }
     });
 
     PAGE.time = setInterval(async function () {
-      var isPanel=VIEW_MODEL["centerShow"].isPanel;
-      var onRefresh=new Promise(_=>WS.sendMsg(isPanel?"center/show":"workers/center", isPanel?"":MCSERVER.workername,_));
-      var onTimeout=new Promise(_=>setTimeout(_,5000,false));
-      var result=await Promise.race([onRefresh,onTimeout]);
-      if(result===false){
-        RES.redirectPage("./template/workers.html", "workers", "");
+      var isPanel = VIEW_MODEL["centerShow"]?.isPanel ?? MCSERVER.workername;
+      var onRefresh = WS.call(isPanel ? "center/show" : "workers/center", isPanel ? "" : MCSERVER.workername);
+      var onTimeout = new Promise(_ => setTimeout(_, 5000, false));
+      var result = await Promise.race([onRefresh, onTimeout]);
+      if (result === false) {
+        RES.redirectPage("./template/workers.html");
       }
     }, 2100);
   });
@@ -313,8 +315,8 @@
   //关闭
   MI.rListener("onend", function () {
     clearInterval(PAGE.time);
-    var isPanel=VIEW_MODEL["centerShow"].isPanel;
-    if(!isPanel){
+    var isPanel = VIEW_MODEL["centerShow"]?.isPanel ?? MCSERVER.workername;
+    if (!isPanel) {
       delete MCSERVER.workername;
     }
   });

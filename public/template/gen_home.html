@@ -105,9 +105,9 @@
 
 <!--js-->
 <script>
-  MI.rListener("onload", function () {
+  MI.rListener("onload", async function () {
     // 定义页面地址
-    TOOLS.definePage("template/gen_home", "genuser/home", "");
+    await TOOLS.definePage("template/gen_home", "genuser/home", "", "GenHome");
 
     // MCSERVER.colmSet(false);
     VIEW_MODEL.newVue("GenHome", {
@@ -115,10 +115,10 @@
       methods: {
         toConsole: function (serverName) {
           MCSERVER.listenServername = serverName;
-          RES.redirectPage("./template/component/console.html", "server/console", serverName);
+          RES.redirectPage("./template/component/console.html");
         },
         toRePassword: function () {
-          RES.redirectPage("./template/component/gen_repassword.html","genuser/view","");
+          RES.redirectPage("./template/component/gen_repassword.html");
         },
         toApiKey: function () {
           // 弹出用户密匙设置窗口
@@ -136,5 +136,5 @@
     });
   });
 
-  MI.rListener("onend", function () {});
+  MI.rListener("onend", function () { });
 </script>

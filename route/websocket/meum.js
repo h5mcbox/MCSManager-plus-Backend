@@ -89,7 +89,7 @@ WebSocketObserver().listener("menu", async (data) => {
     }
   }
 
-  response.wsSend(data.ws, "ws/muem", {
+  response.wsResponse(data, {
     username,
     group,
     customMenu: group === "user" ? returnMenu : null

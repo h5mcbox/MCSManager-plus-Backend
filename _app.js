@@ -210,7 +210,7 @@ app.use(function (req, res, next) {
     });
   }
   const BaseInstance = net.createServer(BaseService);
-  const expressWs=require("express-ws");
+  const expressWs = require("express-ws");
   let HTTPInstance, HTTPSInstance;
   switch (MCSERVER.localProperty.listen_type) {
     case "strict":
@@ -219,7 +219,7 @@ app.use(function (req, res, next) {
         cert: fs.readFileSync(MCSERVER.localProperty.cert_path),
         key: fs.readFileSync(MCSERVER.localProperty.key_path)
       }, appWrapper);
-      expressWs(app,HTTPSInstance);
+      expressWs(app, HTTPSInstance);
       break;
     case "mixed":
       HTTPInstance = http.createServer(appWrapper);
@@ -227,12 +227,12 @@ app.use(function (req, res, next) {
         cert: fs.readFileSync(MCSERVER.localProperty.cert_path),
         key: fs.readFileSync(MCSERVER.localProperty.key_path)
       }, appWrapper);
-      expressWs(app,HTTPSInstance);
-      expressWs(app,HTTPInstance);
+      expressWs(app, HTTPSInstance);
+      expressWs(app, HTTPInstance);
       break;
     case "onlyhttp":
       HTTPInstance = http.createServer(appWrapper);
-      expressWs(app,HTTPInstance);
+      expressWs(app, HTTPInstance);
       break;
     default:
       throw new TypeError("无效监听方式");
@@ -273,12 +273,8 @@ app.get("/public/login*", function (req, res, next) {
   permission.needLogin(
     req,
     res,
-    () => {
-      res.redirect("/public/#welcome");
-    },
-    () => {
-      next();
-    }
+    () => res.redirect("/public/"),
+    () => next()
   );
 });
 app.use("/public", express.static("./public"));
@@ -306,12 +302,8 @@ app.get(["/"], function (req, res, next) {
   permission.needLogin(
     req,
     res,
-    () => {
-      res.redirect("/public/#welcome");
-    },
-    () => {
-      next();
-    }
+    () => res.redirect("/public/"),
+    () => next()
   );
 });
 if (MCSERVER.localProperty.login_url.startsWith("/public")) {
@@ -323,12 +315,8 @@ app.get(["/login"], function (req, res, next) {
   permission.needLogin(
     req,
     res,
-    () => {
-      res.redirect("/public/#welcome");
-    },
-    () => {
-      res.redirect("/");
-    }
+    () => res.redirect("/public/"),
+    () => res.redirect("/")
   );
 });
 

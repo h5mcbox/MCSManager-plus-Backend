@@ -102,7 +102,7 @@
             <p>填写此框决定服务器存放的Worker(创建后不可再更改)</p>
             <div class="input-group input-group-sm">
               <span class="input-group-addon">Worker名</span>
-              <input type="text" class="form-control" v-model="location" required/>
+              <input type="text" class="form-control" v-model="location" required />
             </div>
             <div class="PAGE_NewserverNextWapper">
               <button class="btn btn-warning" v-on:click="previousStep">上一步</button>
@@ -196,7 +196,8 @@
             <br />
             <div class="input-group input-group-sm">
               <span class="input-group-addon">启动命令</span>
-              <input type="text" class="form-control" placeholder="程序启动命令.... (列如: java -jar xxx.jar)" v-model="highCommande" />
+              <input type="text" class="form-control" placeholder="程序启动命令.... (列如: java -jar xxx.jar)"
+                v-model="highCommande" />
             </div>
             <small>运行目录: {{serverCwd}} </small>
             <br />
@@ -225,9 +226,9 @@
 </div>
 
 <script>
-  MI.rListener("onload", function () {
+  MI.rListener("onload", async function () {
     // 定义页面地址
-    TOOLS.definePage("template/component/newserverx", "genuser/home", "");
+    await TOOLS.definePage("template/component/newserverx", "genuser/home", "", "CreateServerViewx");
 
     VIEW_MODEL.newVue("CreateServerViewx", {
       el: "#CreateServerViewx",
@@ -243,10 +244,10 @@
         java: "",
         highCommande: "",
         uploadPercentComplete: 0,
-        location:""
+        location: ""
       },
       methods: {
-        toCreateServer: function () {
+        toCreateServer: async function () {
           var addCmdList = this.addCmd.split(" ");
           if (!TOOLS.isStdText(this.name)) {
             TOOLS.pushMsgWindow("服务器名字不合法！仅限字母数字下划线！");
@@ -261,18 +262,18 @@
             Xms: this.Xms,
             java: this.Java || "java",
             highCommande: this.highCommande,
-            location:this.location,
+            location: this.location,
           };
-          WS.sendMsg("server/create", obj);
-          RES.redirectPage("./template/server.html", "server/view");
+          await WS.call("server/create", obj);
+          RES.redirectPage("./template/server.html");
         },
-        toCreaterDir: function () {
+        toCreaterDir: async function () {
           var obj = {
             serverName: this.name,
             cwd: this.cwd,
-            location:this.location
+            location: this.location
           };
-          WS.sendMsg("server/create_dir", obj);
+          await WS.call("server/create_dir", obj);
         },
         nextStep: function () {
           this.pagecode += 1;
@@ -285,7 +286,7 @@
           this.nextStep();
         },
         toNewServer: function () {
-          RES.redirectPage("./template/component/newserver.html", null, "");
+          RES.redirectPage("./template/component/newserver.html");
         },
         uploadFile: function () {
           // 若未填写cwd则自动默认
@@ -302,7 +303,7 @@
             var that = this;
             TOOLS.fileupload(
               file,
-              "/fileupload?location="+this.location,
+              "/fileupload?location=" + this.location,
               {
                 cwd: this.cwd
               },
@@ -334,5 +335,5 @@
     });
   });
 
-  MI.rListener("onend", function () {});
+  MI.rListener("onend", function () { });
 </script>

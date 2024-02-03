@@ -5,7 +5,7 @@ const response = require("../../helper/Response");
 //获取信息
 WebSocketObserver().listener("soft/view", (data) => {
   if (!permssion.hasRights(data.WsSession.username,"soft")) return;
-  response.wsSend(data.ws, "soft/view", {
+  response.wsResponse(data, {
     softConfig: MCSERVER.softConfig
   });
 });

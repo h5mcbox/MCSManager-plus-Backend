@@ -1,11 +1,12 @@
 <div id="Terminal">
   <div class="row" style="position: absolute; right: 16px">
     <div class="col-sm-12 PanelItemF">
-      <div class="PanelItem PanelItemBlack" v-on:click="RES.redirectPage('./template/component/console.html', 'server/console', MCSERVER.listenServername);">
+      <div class="PanelItem PanelItemBlack" v-on:click="RES.redirectPage('./template/component/console.html');">
         <span class="glyphicon glyphicon-modal-window" aria-hidden="true"></span>
         控制台
       </div>
-      <div v-if="MCSERVER.group ==='master'" class="PanelItem PanelItemBlack" v-on:click="RES.redirectPage('./template/server.html', 'server/view', '');">
+      <div v-if="MCSERVER.group ==='master'" class="PanelItem PanelItemBlack"
+        v-on:click="RES.redirectPage('./template/server.html');">
         <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
         实例列表
       </div>
@@ -21,7 +22,8 @@
         <span class="glyphicon glyphicon-th-large" aria-hidden="true"></span>
         清屏
       </div>
-      <div class="PanelItem PanelItemBlack" v-on:click="stopServer()"><span class="glyphicon glyphicon-pause" aria-hidden="true"></span> 关闭</div>
+      <div class="PanelItem PanelItemBlack" v-on:click="stopServer()"><span class="glyphicon glyphicon-pause"
+          aria-hidden="true"></span> 关闭</div>
       <div class="PanelItem PanelItemBlack PhoneDisplayNone" v-on:click="toOpenServer()">
         <span class="glyphicon glyphicon-play PhoneDisplayNone" aria-hidden="true"></span>
         开启
@@ -34,25 +36,17 @@
     <br />
   </div>
   <div class="" style="border-top: 1px solid #585858">
-    <input
-      id="TerminalCommand"
-      @keyup.up="toCommandhi(1)"
-      @keyup.down="toCommandhi(-1)"
-      @keyup.enter="toCommand"
-      v-model="command"
-      type="text"
-      class="TerminalCommand"
-      placeholder="[命令输入框] 按下 ↑ 或 ↓ 可以查看本地命令记录,输入 help 或 ? 可以查看帮助信息,回车执行命令."
-      aria-describedby="sizing-addon3"
-      autocomplete="off"
-    />
+    <input id="TerminalCommand" @keyup.up="toCommandhi(1)" @keyup.down="toCommandhi(-1)" @keyup.enter="toCommand"
+      v-model="command" type="text" class="TerminalCommand"
+      placeholder="[命令输入框] 按下 ↑ 或 ↓ 可以查看本地命令记录,输入 help 或 ? 可以查看帮助信息,回车执行命令." aria-describedby="sizing-addon3"
+      autocomplete="off" />
   </div>
 </div>
 
 <script>
-  MI.rListener("onload", function () {
+  MI.rListener("onload", async function () {
     // 定义页面地址
-    TOOLS.definePage("template/component/terminal", "server/console", MCSERVER.listenServername);
+    await TOOLS.definePage("template/component/terminal", "server/console", MCSERVER.listenServername);
 
     PAGE.nowPage = 0; //当前最低页
     PAGE.serverName = MCSERVER.listenServername;
@@ -63,7 +57,7 @@
     $("body").css("background-color", "rgb(60,60,60)");
     $("#ConsoleMain").css("max-width", "999999px");
 
-    WS.sendMsg("server/console/ws", PAGE.serverName);
+    await WS.call("server/console/ws", PAGE.serverName);
 
     PAGE.TerminalMinecraft = $("#TerminalMinecraft");
     PAGE.TerminalMinecraft.css("height", document.body.clientHeight - 45 + "px");
@@ -74,32 +68,22 @@
     MI.listener("resize", PAGE.tmp_onresize);
 
     // 默认请求一段历史
-    WS.sendMsg(
-      "server/console/history",
-      {
-        serverName: PAGE.serverName
-      }
-    );
+    await WS.call("server/console/history", { serverName: PAGE.serverName });
 
     VIEW_MODEL.newVue("Terminal", {
       el: "#Terminal",
       methods: {
-        goBttom: function () {
+        goBttom() {
           var ele = document.getElementById("TerminalMinecraft");
           ele.scrollTop = ele.scrollHeight;
         },
-        loadHistory: function () {
-          WS.sendMsg(
-            "server/console/history",
-            {
-              serverName: PAGE.serverName
-            }
-          );
+        async loadHistory() {
+          await WS.call("server/console/history", { serverName: PAGE.serverName });
         },
-        toOpenServer: function () {
-          WS.sendMsg("server/console/open", PAGE.serverName);
+        async toOpenServer() {
+          await WS.call("server/console/open", PAGE.serverName);
         },
-        toCommand: function (parCommand) {
+        async toCommand(parCommand) {
           if (parCommand && typeof parCommand == "string") this.command = parCommand;
           var data = {
             command: this.command,
@@ -108,12 +92,12 @@
           if (this.command.length >= 1 || typeof parCommand == "string") {
             //压入命令栈 并 发送
             this.commandList.unshift(this.command);
-            WS.sendMsg("server/console/command", data);
+            await WS.call("server/console/command", data);
           }
           this.command = "";
           this.commandListPrint = 0;
         },
-        toCommandhi: function (fl) {
+        toCommandhi(fl) {
           if (this.commandListPrint > this.commandList.length - 1) this.commandListPrint = this.commandList.length - 1;
           if (this.commandListPrint < 0) this.commandListPrint = 0;
           console.log("commandListPrint", this.commandListPrint, "vlaue", this.commandList[this.commandListPrint]);
@@ -128,7 +112,7 @@
           }
           return false;
         },
-        clearConsole: function () {
+        clearConsole() {
           var ele = document.getElementById("TerminalMinecraft");
           ele.innerHTML = [
             "<br /><span style='color:#03ea0a;'>",
@@ -142,7 +126,7 @@
             "如果您在此页面遇到卡顿，内存高等现象，请使用此功能来优化。<br />"
           ].join(" ");
         },
-        stopServer: function () {
+        stopServer() {
           this.toCommand("__stop__");
         }
       },
@@ -159,10 +143,10 @@
     $("#TerminalCommand").focus();
   });
 
-  MI.rListener("onend", function () {
-    WS.sendMsg("server/console/remove", "");
+  MI.rListener("onend", async function () {
+    WS.await("server/console/remove", "");
     PAGE.mainC.innerHTML = "";
-    PAGE.mainC.onscroll = function () {};
+    PAGE.mainC.onscroll = function () { };
 
     MI.onDestroy("resize", PAGE.tmp_onresize);
 

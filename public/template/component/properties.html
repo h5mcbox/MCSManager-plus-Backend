@@ -40,7 +40,8 @@
                   <th v-text="findProperties(key)"></th>
                   <th>
                     <div class="input-group input-group-sm">
-                      <input type="text" class="form-control" aria-describedby="basic-addon1" v-model="properties[key]" />
+                      <input type="text" class="form-control" aria-describedby="basic-addon1"
+                        v-model="properties[key]" />
                     </div>
                   </th>
                 </tr>
@@ -75,33 +76,34 @@
 
 <script src="./common/js/properties.js"></script>
 <script>
-  // 定义页面地址
-  TOOLS.definePage("template/component/properties", "server/properties", MCSERVER.listenServername);
 
-  MI.rListener("onload", function () {
+  MI.rListener("onload", async function () {
     // MCSERVER.autoColmDo();
+
+    // 定义页面地址
+    await TOOLS.definePage("template/component/properties", "server/properties", MCSERVER.listenServername);
 
     VIEW_MODEL.newVue("ServerProperties", {
       el: "#ServerProperties",
       methods: {
-        toUpdateProperties: function () {
+        async toUpdateProperties() {
           if (!this.properties) return;
           var obj = {
             serverName: this.serverName,
             properties: this.properties
           };
-          WS.sendMsg("server/properties_update", obj);
+          WS.call("server/properties_update", obj);
         },
-        toBackConsole: function () {
-          RES.redirectPage("./template/component/console.html", "server/console", this.serverName);
+        toBackConsole() {
+          RES.redirectPage("./template/component/console.html");
         },
-        re: function () {
-          RES.redirectPage("./template/component/properties.html", "server/properties", this.serverName);
+        re() {
+          RES.redirectPage("./template/component/properties.html");
         },
-        toUpdatePropertiesFormFile: function () {
-          WS.sendMsg("server/properties_update_reload", this.serverName);
+        async toUpdatePropertiesFormFile() {
+          await WS.call("server/properties_update_reload", this.serverName);
         },
-        findProperties: function (key) {
+        findProperties(key) {
           return MCSERVER.findPropertiesShow(key);
         }
       }

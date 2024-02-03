@@ -114,9 +114,9 @@
   </div>
 </div>
 <script>
-  MI.rListener("onload", function () {
+  MI.rListener("onload", async function () {
     // 定义页面地址
-    TOOLS.definePage("template/workers", "workers", null);
+    await TOOLS.definePage("template/workers", "workers", null, "Workers");
 
     VIEW_MODEL.newVue("Workers", {
       el: "#Workers",
@@ -127,7 +127,7 @@
         endpoint: "",
       },
       methods: {
-        toAddWorker: function () {
+        toAddWorker: async function () {
           if (!TOOLS.isStdText(this.workername)) {
             TOOLS.pushMsgWindow("Worker名不合法！请重新输入！");
             return;
@@ -139,19 +139,17 @@
               endpoint: this.endpoint
             }
           };
-          WS.sendMsg("workers/add", obj, function () {
-            PAGE.refresh();
-          });
+          await WS.call("workers/add", obj)
+          PAGE.refresh();
         },
-        toDeleteWorker: function (itemWorkername) {
+        toDeleteWorker: async function (itemWorkername) {
           var obj = {
             workername: itemWorkername
           };
           var result = confirm("您真的打算删除这个这个Worker吗?");
           if (!result) return;
-          WS.sendMsg("workers/delete", obj, function () {
-            PAGE.refresh();
-          });
+          await WS.call("workers/delete", obj);
+          PAGE.refresh();
         },
         toUpdate: async function (itemWorkername) {
           var input = document.createElement("input");
@@ -174,31 +172,30 @@
         },
         toCenter: async function (itemWorkername) {
           MCSERVER.workername = itemWorkername;
-          RES.redirectPage("./template/center.html", "workers/center", itemWorkername);
+          RES.redirectPage("./template/center.html");
         },
         toOnline: function (itemWorkername) {
           var obj = {
             workername: itemWorkername
           };
-          WS.sendMsg("workers/connect", obj, function () {
-            PAGE.refresh();
-          });
+          WS.call("workers/connect", obj);
+          PAGE.refresh();
         },
         toOffline: function (itemWorkername) {
           var obj = {
             workername: itemWorkername
           };
-          WS.sendMsg("workers/disconnect", obj, function () {
-            PAGE.refresh();
-          });
+          WS.call("workers/disconnect", obj);
+          PAGE.refresh();
         },
         refresh: function () {
           PAGE.refresh();
           TOOLS.pushMsgWindow("刷新完毕√");
         },
 
-        toWorkerView: function (_workername) {
-          RES.redirectPage("./template/component/worker.html", "workers/view", _workername);
+        toWorkerView: async function (_workername) {
+          await TOOLS.fetchData("workers/view", _workername, "WorkerView");
+          RES.redirectPage("./template/component/worker.html");
         },
         toAPIKey: function (username) {
           // 弹出用户密匙设置窗口
@@ -214,9 +211,7 @@
         }
       }
     });
-    PAGE.time = setInterval(function () {
-      WS.sendMsg("workers", "");
-    }, 1000);
+    PAGE.time = setInterval(() => WS.call("workers", ""), 1000);
   });
 
   //关闭

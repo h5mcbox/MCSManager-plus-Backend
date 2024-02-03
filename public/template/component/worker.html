@@ -21,7 +21,7 @@
               <p>主密钥</p>
               <div class="input-group input-group-sm">
                 <span class="input-group-addon"> 主密钥 </span>
-                <input type="text" class="form-control" v-model="MasterKey"/>
+                <input type="text" class="form-control" v-model="MasterKey" />
               </div>
             </div>
             <div class="col-sm-7">
@@ -52,15 +52,15 @@
 </div>
 
 <script>
-  MI.rListener("onload", function () {
+  MI.rListener("onload", async function () {
     VIEW_MODEL.newVue("WorkerView", {
       el: "#WorkerView",
       data: {
         oldworkername: "",
-        HttpEndpoint:""
+        HttpEndpoint: ""
       },
       methods: {
-        toUpdate: function () {
+        async toUpdate() {
           if (!TOOLS.isStdText(this.workername)) {
             TOOLS.pushMsgWindow("Worker名不合法！请重新输入！");
             return;
@@ -69,23 +69,20 @@
             newworkername: this.workername,
             newMasterKey: this.MasterKey,
             newRemoteDescription: {
-              endpoint:this.HttpEndpoint
+              endpoint: this.HttpEndpoint
             },
             workername: this.oldworkername
           };
-          WS.sendMsg("workers/upinfo", obj);
+          await WS.call("workers/upinfo", obj);
           //返回到上层
-          RES.redirectPage("./template/workers.html", "workers");
+          RES.redirectPage("./template/workers.html");
         },
-        toDeleteWorker: function () {
-          var obj = {
-            workername: this.oldworkername
-          };
+        async toDeleteWorker() {
+          var obj = { workername: this.oldworkername };
           var result = confirm("您真的打算删除这个这个Worker吗?");
           if (!result) return;
-          WS.sendMsg("workers/delete", obj, function () {
-            RES.redirectPage("./template/workers.html", "workers");
-          });
+          await WS.call("workers/delete", obj);
+          RES.redirectPage("./template/workers.html");
         },
       }
     });
@@ -94,5 +91,5 @@
     viewModel.HttpEndpoint = viewModel.RemoteDescription.endpoint;
   });
 
-  MI.rListener("onend", function () {});
+  MI.rListener("onend", function () { });
 </script>

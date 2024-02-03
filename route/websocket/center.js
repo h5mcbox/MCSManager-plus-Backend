@@ -105,9 +105,9 @@ WebSocketObserver().listener("center/restart", (data) => {
 });
 
 //数据中心
-WebSocketObserver().listener("center/show", (data) => {
+WebSocketObserver().listener("center/show", data => {
   if (!permssion.hasRights(data.WsSession.username, "center")) return;
-  response.wsSend(data.ws, "center/show", cacheSystemInfo);
+  response.wsResponse(data, cacheSystemInfo);
 });
 
 MCSERVER.addProbablyPermissions("center", "查看面板中心数据");

@@ -8,13 +8,13 @@ WebSocketObserver().listener("workers", (data) => {
   //Object {RequestKey: "req", RequestValue: "some"}
   if (!permssion.hasRights(data.WsSession.username, "workers:overview")) return;
 
-  response.wsSend(data.ws, "workers", { items: WorkerCenter.getWorkerList() });
+  response.wsResponse(data, { items: WorkerCenter.getWorkerList() });
 });
 WebSocketObserver().listener("workers/view", (data) => {
   if (!permssion.hasRights(data.WsSession.username, "workers:view")) return;
 
   let worker = WorkerCenter.get(data.body.trim());
-  response.wsSend(data.ws, "workers/view", {
+  response.wsResponse(data, {
     workername: worker.dataModel.workername,
     lastDate: worker.dataModel.lastDate,
     createDate: worker.dataModel.createDate,
@@ -79,7 +79,7 @@ WebSocketObserver().listener("workers/connect", (data) => {
     } else {
       response.wsMsgWindow(data.ws, "连接失败")
     }
-    response.wsSend(data.ws, "workers/connect", {});
+    response.wsResponse(data, {});
   });
 });
 WebSocketObserver().listener("workers/disconnect", (data) => {
@@ -87,7 +87,7 @@ WebSocketObserver().listener("workers/disconnect", (data) => {
   let ro = data.body //RequestObject
   let worker = WorkerCenter.get(ro.workername.trim());
   worker.disconnect();
-  response.wsSend(data.ws, "workers/disconnect", {});
+  response.wsResponse(data, null);
 });
 WebSocketObserver().listener("workers/add", (data) => {
   //Object {ws: WebSocket, req: IncomingMessage, user: undefined, header: Object, body: "[body 开始]
@@ -102,7 +102,7 @@ WebSocketObserver().listener("workers/add", (data) => {
     return false;
   }
   WorkerCenter.createWorker(ro.workername.trim(), ro.MasterKey, ro.RemoteDescription);
-  response.wsSend(data.ws, "workers/add", null);
+  response.wsResponse(data, null);
 });
 WebSocketObserver().listener("workers/delete", (data) => {
   //Object {ws: WebSocket, req: IncomingMessage, user: undefined, header: Object, body: "[body 开始]
@@ -112,7 +112,7 @@ WebSocketObserver().listener("workers/delete", (data) => {
   let worker = WorkerCenter.get(ro.workername);
   if (worker.connected) worker.disconnect();
   WorkerCenter.deleteWorker(ro.workername.trim());
-  response.wsSend(data.ws, "workers/delete", null)
+  response.wsResponse(data, null)
 });
 WebSocketObserver().listener("workers/center", async (data) => {
   if (!permssion.hasRights(data.WsSession.username, "workers:viewWorkerCenter")) return;
@@ -125,9 +125,9 @@ WebSocketObserver().listener("workers/center", async (data) => {
     let worker = WorkerCenter.get(workerName);
     let [{ ResponseKey, ResponseValue }, body] = await worker.call("center/show", data.body);
     if (ResponseKey !== "center/show") return false;
-    response.wsSend(data.ws, "workers/center", ResponseValue, body);
+    response.wsResponse(data, ResponseValue, body);
   } catch (e) {
-    response.wsSend(data.ws, "workers/center", null);
+    response.wsResponse(data, null);
     response.wsMsgWindow(data.ws, "访问Worker失败" + e);
   }
 });
@@ -142,9 +142,9 @@ WebSocketObserver().listener("workers/restart", async (data) => {
     let worker = WorkerCenter.get(workerName);
     let [{ ResponseKey, ResponseValue }, body] = await worker.call("center/restart", data.body);
     if (ResponseKey !== "center/restart") return false;
-    response.wsSend(data.ws, "workers/restart", ResponseValue, body);
+    response.wsResponse(data, ResponseValue, body);
   } catch (e) {
-    response.wsSend(data.ws, "workers/restart", null);
+    response.wsResponse(data, null);
     response.wsMsgWindow(data.ws, "访问Worker失败" + e);
   }
 });

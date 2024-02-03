@@ -7,10 +7,10 @@
   //ws 链接事件
   MI.listener("ws/open", function () {
     VIEW_MODEL["websocketStatus"] = {};
-    var webscoketStatus = VIEW_MODEL["websocketStatus"];
-    webscoketStatus["status"] = "服务器连接正常";
-    webscoketStatus["is"] = true;
-    webscoketStatus["tcolor"] = "#ffffff";
+    var websocketStatus = VIEW_MODEL["websocketStatus"];
+    websocketStatus["status"] = "服务器连接正常";
+    websocketStatus["is"] = true;
+    websocketStatus["tcolor"] = "#ffffff";
     VIEW_MODEL.newVue("websocketStatus", {
       el: "#websocket"
     });
@@ -25,17 +25,17 @@
 
   MI.listener("ws/close", function () {
     TOOLS.setHeaderTitle("离线 | 当前与服务器断开..");
-    var webscoketStatus = VIEW_MODEL["websocketStatus"];
-    webscoketStatus["status"] = "!!! 连接断开 !!!";
-    webscoketStatus["is"] = false;
-    webscoketStatus["tcolor"] = "#ffffff";
+    var websocketStatus = VIEW_MODEL["websocketStatus"];
+    websocketStatus["status"] = "!!! 连接断开 !!!";
+    websocketStatus["is"] = false;
+    websocketStatus["tcolor"] = "#ffffff";
   });
 
   MI.listener("ws/error", function () {
-    var webscoketStatus = VIEW_MODEL["websocketStatus"];
-    webscoketStatus["status"] = "!!! 连接错误 !!!";
-    webscoketStatus["is"] = false;
-    webscoketStatus["tcolor"] = "#ffffff";
+    var websocketStatus = VIEW_MODEL["websocketStatus"];
+    websocketStatus["status"] = "!!! 连接错误 !!!";
+    websocketStatus["is"] = false;
+    websocketStatus["tcolor"] = "#ffffff";
   });
 
   //单页生命周期替换事件
@@ -45,7 +45,7 @@
   });
 
   //菜单获取
-  MI.routeListener("ws/muem", function (data) {
+  MI.fillSideBar = function (data) {
     //菜单选项选择
     MI.listener("SideMeumClick", function () {
       DEBUG && console.log("--- 菜单选项被选择 ---");
@@ -54,20 +54,20 @@
 
     DEBUG && console.log("--- 系统菜单获取成功 ---");
 
-    MCSERVER.username = data.obj.username;
-    MCSERVER.group = data.obj.group;
+    MCSERVER.username = data.username;
+    MCSERVER.group = data.group;
     //虚拟的数据接受，让前端数据得到，菜单在前端建筑
     if (MCSERVER.group === "master") {
-      data.obj.items = MCSERVER.meumObject.masterMeum;
+      data.items = MCSERVER.meumObject.masterMeum;
     } else if (MCSERVER.group === "user") {
-      data.obj.items = data.obj.customMenu ?? MCSERVER.meumObject.masterMeum;
+      data.items = data.customMenu ?? MCSERVER.meumObject.masterMeum;
     } else if (MCSERVER.group === "banned") {
-      data.obj.items = MCSERVER.meumObject.bannedMeum;
+      data.items = MCSERVER.meumObject.bannedMeum;
     } else {
-      data.obj.items = MCSERVER.meumObject.bannedMeum;
+      data.items = MCSERVER.meumObject.bannedMeum;
     }
     //copy
-    MI.routeCopy("col-muem", data.obj);
+    MI.routeCopy("col-muem", data);
     VIEW_MODEL.newVueOnce("col-muem", {
       el: "#SideColFor",
       data: {
@@ -85,38 +85,13 @@
           // 触发菜单选项点击事件
           MI.on("SideMeumClick", null);
           // 跳转
-          RES.redirectPage(link, api, "update_page");
+          RES.redirectPage(link);
         }
       }
     });
-  });
+  };
 
-  MI.routeListener("index/update", function (data) {
-    MI.routeCopy("SystemUp", data.obj);
-    MI.routeCopy("VersionShow", data.obj);
-  });
-
-  MI.routeListener("center/show", function (data) {
-    MI.routeCopy("centerShow", data.obj);
-  });
-
-  MI.routeListener("server/view", function (data) {
-    MI.routeCopy("ServerList", data.obj);
-  });
-
-  //UsersetList
-  MI.routeListener("userset/update", function (data) {
-    MI.routeCopy("UsersetList", data.obj);
-  });
-  MI.routeListener("userset/2fa/getAuthURL", function (data) {
-    MI.routeCopy("TwoFA", data.obj);
-  });
-
-  //单个服务器的资料显示
-  MI.routeListener("server/get", function (data) {
-    MI.routeCopy("ServerPanel", data.obj);
-  });
-
+  /*
   //服务器控制台
   MI.routeListener("server/console", function (data) {
     if (data.obj == null) {
@@ -124,11 +99,7 @@
       VIEW_MODEL["ConsolePanel"].serverData.name = null;
     }
     MI.routeCopy("ConsolePanel", data.obj);
-  });
-
-  MI.routeListener("userset/view", function (data) {
-    MI.routeCopy("OneUserView", data.obj);
-  });
+  });*/
 
   // Minecraft 服务器终端换行替换符
   var terminalEncode = function (text) {

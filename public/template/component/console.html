@@ -93,7 +93,8 @@
         <div class="PanelTitle">服务端控制组</div>
         <div class="PanelBody">
           <div class="row">
-            <div class="col-md-3 col-sm-6" v-on:click="RES.redirectPage('./template/component/terminal.html', null, '')">
+            <div class="col-md-3 col-sm-6"
+              v-on:click="RES.redirectPage('./template/component/terminal.html', null, '')">
               <div class="PanelItemBlock">
                 <div class="LogV">
                   <span class="glyphicon glyphicon-console" aria-hidden="true"> </span>
@@ -163,9 +164,9 @@
 </div>
 
 <script>
-  MI.rListener("onload", function () {
+  MI.rListener("onload", async function () {
     // 定义页面地址
-    TOOLS.definePage("template/component/console", "server/console", MCSERVER.listenServername);
+    await TOOLS.definePage("template/component/console", "server/console", MCSERVER.listenServername, "ConsolePanel");
 
     var serverName = MCSERVER.listenServername;
 
@@ -173,7 +174,7 @@
       el: "#ConsolePanel",
       methods: {
         toAutoRestart: function () {
-          WS.sendMsg("server/console/autorestart", serverName);
+          WS.call("server/console/autorestart", serverName);
         },
         toOnlineFs: function () {
           var path = MCSERVER.URL("fs_auth/auth/" + encodeURIComponent(serverName));
@@ -181,7 +182,7 @@
         },
         toOpenServer: function () {
           this.allowedStart = !this.allowedStart;
-          WS.sendMsg("server/console/open", serverName);
+          WS.call("server/console/open", serverName);
         },
         toCommand: function (parCommand) {
           if (parCommand && typeof parCommand == "string") this.command = parCommand;
@@ -190,7 +191,7 @@
             serverName: serverName
           };
           if (this.command.length >= 1 || typeof parCommand == "string") {
-            WS.sendMsg("server/console/command", data);
+            WS.call("server/console/command", data);
           }
           this.command = "";
         },
@@ -232,13 +233,13 @@
         username: MCSERVER.listenServername
       },
       watch: {
-        run: function (cur, old) {}
+        run: function (cur, old) { }
       }
     });
-    
+
     // 服务器状态请求
     PAGE.timerR = setInterval(function () {
-      WS.sendMsg("server/console", MCSERVER.listenServername);
+      WS.call("server/console", MCSERVER.listenServername);
     }, 3000);
 
     //CPU

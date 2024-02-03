@@ -39,7 +39,8 @@
                             <th>验证码</th>
                             <th>
                               <div class="input-group input-group-sm">
-                                <input type="password" class="form-control" aria-describedby="basic-addon1" v-model="TwoFACode" />
+                                <input type="password" class="form-control" aria-describedby="basic-addon1"
+                                  v-model="TwoFACode" />
                               </div>
                             </th>
                           </tr>
@@ -62,50 +63,51 @@
         </div>
       </div>
     </div>
-    </div>
   </div>
+</div>
 </div>
 
 <script>
-  MI.rListener("onload", function () {
+  MI.rListener("onload", async function () {
     // 定义页面地址
-    TOOLS.definePage("template/2fa", "userset/2fa/getAuthURL", null);
-    VIEW_MODEL.newVue("TwoFA",{
+    await TOOLS.definePage("template/2FA", "userset/2fa/getAuthURL", null, "TwoFA");
+    VIEW_MODEL.newVue("TwoFA", {
       el: "#TwoFA",
       data: {
         TwoFACode: "",
       },
       methods: {
-        toUpdate: function () {
-          WS.sendMsg("userset/2fa/updateKey","{}");
+        async toUpdate() {
+          await WS.call("userset/2fa/updateKey", "{}");
           PAGE.refresh();
         },
-        toEnableTwoFA: function () {
+        async toEnableTwoFA() {
           var obj = {
             TwoFACode: Number(this.TwoFACode)
           };
-          WS.sendMsg("userset/2fa/set", obj);
+          await WS.call("userset/2fa/set", obj);
         },
-        toRePassword: function () {
-          let username=MCSERVER.username;
-          if(MCSERVER.group==="master"){
-            RES.redirectPage("./template/component/user.html","userset/view",username);
-          }else{
-            RES.redirectPage("./template/component/gen_repassword.html","genuser/view","");
+        async toRePassword() {
+          let username = MCSERVER.username;
+          if (MCSERVER.group === "master") {
+            await TOOLS.fetchData("userset/view", username, "OneUserView");
+            RES.redirectPage("./template/component/user.html", "userset/view", username);
+          } else {
+            RES.redirectPage("./template/component/gen_repassword.html", "genuser/view", "");
           }
         },
-        toDisableTwoFA: function(){
+        async toDisableTwoFA() {
           var obj = {
             TwoFACode: Number(this.TwoFACode)
           };
-          WS.sendMsg("userset/2fa/disable", obj);
+          await WS.call("userset/2fa/disable", obj);
         }
       }
     });
-    setTimeout(()=>{
-      new QRCode(document.querySelector("#qrc"),{text:VIEW_MODEL["TwoFA"].authURL,width:180,height:180});
-    },700);
+    setTimeout(() => {
+      new QRCode(document.querySelector("#qrc"), { text: VIEW_MODEL["TwoFA"].authURL, width: 180, height: 180 });
+    }, 700);
   });
 
-  MI.rListener("onend", function () {});
+  MI.rListener("onend", function () { });
 </script>

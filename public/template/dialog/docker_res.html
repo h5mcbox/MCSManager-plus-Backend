@@ -5,9 +5,7 @@
   <small>这里您将可以看见程序运行期间的所有 Docker 镜像构建之后结果。</small>
   <br />
   <div style="margin-top: 4px; display: inline-block; text-align: center">
-    <div
-      v-for="(val, key) in DockerRes"
-      style="
+    <div v-for="(val, key) in DockerRes" style="
         margin: 2px;
         display: inline-block;
         padding: 4px 8px;
@@ -22,8 +20,7 @@
         margin-left: 8px;
         margin-bottom: 8px;
         margin-top: 0px;
-      "
-    >
+      ">
       <span v-text=" val.time "></span> | <span v-text="val.name "></span> |
       <span v-text="val.res "></span>
     </div>
@@ -35,11 +32,11 @@
   <button class="btn btn-danger" v-on:click="ok()">关 闭</button>
 </div>
 <script>
-  WS.sendMsg("docker/res", "", function (obj) {
+  WS.call("docker/res", "").then(([DockerRes]) => {
     new Vue({
       el: "#DialogDockerRes",
       data: {
-        DockerRes: obj.ResponseValue
+        DockerRes
       },
       methods: {
         ok: function () {

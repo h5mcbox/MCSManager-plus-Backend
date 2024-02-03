@@ -22,10 +22,10 @@
 </div>
 
 <script>
-  MI.rListener("onload", function () {
+  MI.rListener("onload", async function () {
     // 定义页面地址
-    TOOLS.definePage("template/gen_about", "genuser/home", "");
+    await TOOLS.definePage("template/gen_about", "genuser/home", "");
   });
 
-  MI.rListener("onend", function () {});
+  MI.rListener("onend", function () { });
 </script>
