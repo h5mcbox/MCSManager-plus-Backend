@@ -176,9 +176,9 @@
         toAutoRestart: function () {
           WS.call("server/console/autorestart", serverName);
         },
-        toOnlineFs: function () {
-          var path = MCSERVER.URL("fs_auth/auth/" + encodeURIComponent(serverName));
-          window.open(path);
+        toOnlineFs: async function () {
+          let [{ url }] = await WS.call("onlinefs/getServerKey", serverName);
+          window.open(url);
         },
         toOpenServer: function () {
           this.allowedStart = !this.allowedStart;

@@ -144,7 +144,6 @@
   });
 
   MI.rListener("onend", async function () {
-    await WS.call("server/console/remove", "");
     PAGE.mainC.innerHTML = "";
     PAGE.mainC.onscroll = function () { };
 
@@ -154,5 +153,6 @@
     $("#MainContainer").removeAttr("style");
     $("#ConsoleMain").removeAttr("style");
     $("body").removeAttr("style");
+    await WS.call("server/console/remove", "");
   });
 </script>
