@@ -22,7 +22,7 @@ jobs:
           cd workdir
       - name: checkout
         uses: actions/checkout@v2.0.0
-      - name: body
+      - name: Main
         env:
           signKey: ${{ secrets.SIGNKEY }}
           packerNoRestart : 1

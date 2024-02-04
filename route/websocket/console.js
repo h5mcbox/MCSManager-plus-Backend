@@ -13,11 +13,9 @@ function selectWebsocket(serverName, callback) {
   }
 }
 
-WorkerObserver().listener("server/console/ws", async ({ body }) => {
-  for (let [serverName, buffer] of Object.entries(body)) {
-    selectWebsocket(serverName, (socket) => {
-      response.wsSend(socket.ws, "server/console/ws", {}, buffer);
-    });
+WorkerObserver().listener("server/console/ws", async (data) => {
+  for (let [serverName, buffer] of Object.entries(data.body)) {
+    selectWebsocket(serverName, socket => response.wsSend(socket.ws, "server/console/ws", {}, buffer));
   }
 });
 
@@ -43,8 +41,7 @@ WebSocketObserver().listener("server/console/ws", async (data) => {
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
     }
     let [{ ResponseValue }, body] = await worker.call("server/console/ws", data.body);
-    response.wsResponse(data, ResponseValue, body);
-    return;
+    return response.wsResponse(data, ResponseValue, body);
   }
 
   MCSERVER.log(`[${serverName}] >>> 拒绝用户 ${userName} 控制台监听`);

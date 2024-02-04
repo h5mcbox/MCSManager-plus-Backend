@@ -356,7 +356,7 @@
     }
     console.log(parameters);
     */
-    pageDebounce=false;
+    pageDebounce = false;
     if (page) {
       RES.redirectPage(`./${page}.html`);
       return true;
@@ -394,18 +394,18 @@
   };
 
   // 开始监听并打开终端窗口
-  TOOLS.listenTerminal = function (serverName) {
+  TOOLS.listenTerminal = async function (serverName) {
     PAGE.methods = 0;
     console.log("模拟终端监听:", serverName);
     MCSERVER.listenServername = PAGE.serverName = serverName;
-    WS.sendMsg("server/console/ws", serverName);
+    await WS.call("server/console/ws", serverName);
     MCSERVER.term.simpleLoadHistory();
     $("#WebTerminalScreenWapper").removeAttr("style");
   };
 
   // 退出监听实例，停止接受控制台信息
-  TOOLS.CloseTerminal = function () {
-    WS.sendMsg("server/console/remove", "");
+  TOOLS.CloseTerminal = async function () {
+    await WS.call("server/console/remove", "");
     $("#WebTerminalScreenWapper").css("display", "none");
     MCSERVER.term.clear();
     MCSERVER.term.prompt();

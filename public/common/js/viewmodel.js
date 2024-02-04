@@ -91,7 +91,7 @@
     });
   };
 
-  /*
+
   //服务器控制台
   MI.routeListener("server/console", function (data) {
     if (data.obj == null) {
@@ -99,7 +99,7 @@
       VIEW_MODEL["ConsolePanel"].serverData.name = null;
     }
     MI.routeCopy("ConsolePanel", data.obj);
-  });*/
+  });
 
   // Minecraft 服务器终端换行替换符
   var terminalEncode = function (text) {
@@ -145,39 +145,6 @@
       eleTerminal.innerHTML = text + eleTerminal.innerHTML;
     }
   });
-
-  // 普通用户主页
-  MI.routeListener("genuser/home", function (data) {
-    MI.routeCopy("GenHome", data.obj);
-  });
-  MI.routeListener("genuser/view", function (data) {
-    MI.routeCopy("GenRePassword", data.obj);
-  });
-  MI.routeListener("genuser/banned", function (data) {
-    MI.routeCopy("BannedPanel", data.obj);
-  });
-
-  //分布式服务路由
-  MI.routeListener("workers", function (data) {
-    MI.routeCopy("Workers", data.obj);
-  });
-  MI.routeListener("workers/view", function (data) {
-    MI.routeCopy("WorkerView", data.obj);
-  });
-  MI.routeListener("workers/center", function (data) {
-    MI.routeCopy("centerShow", data.obj);
-  });
-
-  // 配置项试图
-  MI.routeListener("server/properties", function (data) {
-    MI.routeCopy("ServerProperties", data.obj);
-  });
-
-  // 计划任务列表
-  MI.routeListener("schedule/list", function (data) {
-    MI.routeCopy("ServerSchedule", data.obj);
-  });
-
   // 初始化终端
   function initTerminal() {
     // 若终端未初始化则初始化终端与其方法
@@ -214,13 +181,8 @@
         // MCSERVER.term.prompt();
       };
 
-      term.simpleLoadHistory = function () {
-        WS.sendMsg(
-          "server/console/history",
-          JSON.stringify({
-            serverName: PAGE.serverName
-          })
-        );
+      term.simpleLoadHistory = async function () {
+        await WS.call("server/console/history", { serverName: PAGE.serverName });
       };
     }
     // 清空屏幕并输出基本欢迎语
@@ -233,10 +195,10 @@
         command: ""
       },
       methods: {
-        toOpenServer: function () {
-          WS.sendMsg("server/console/open", PAGE.serverName);
+        toOpenServer: async function () {
+          await WS.call("server/console/open", PAGE.serverName);
         },
-        toCommand: function (parCommand) {
+        toCommand: async function (parCommand) {
           if (parCommand && typeof parCommand == "string") this.command = parCommand;
           MCSERVER.term.prompt(this.command);
           console.log("发送命令:", this.command);
@@ -246,15 +208,15 @@
           };
           if (this.command.length >= 1 || typeof parCommand == "string") {
             //压入命令栈 并 发送
-            WS.sendMsg("server/console/command", data);
+            await WS.call("server/console/command", data);
           }
           this.command = "";
         },
         stopServer: function () {
           this.toCommand("__stop__");
         },
-        simpleLoadHistory: function () {
-          WS.sendMsg(
+        simpleLoadHistory: async function () {
+          await WS.call(
             "server/console/history",
             JSON.stringify({
               serverName: PAGE.serverName

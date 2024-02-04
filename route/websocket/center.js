@@ -98,10 +98,13 @@ setInterval(async function () {
 
 //重启逻辑
 WebSocketObserver().listener("center/restart", (data) => {
-  if (!permssion.hasRights(data.WsSession.username, "restart")) return;
+  if (!permssion.hasRights(data.WsSession.username, "restart")) return response.wsResponse(data, false);
   MCSERVER.log("面板重启...");
-  process.send({ restart: "./app.js" });
-  process.emit("SIGINT");
+  response.wsResponse(data, true);
+  process.nextTick(()=>{
+    process.send({ restart: "./app.js" });
+    process.emit("SIGINT");
+  });
 });
 
 //数据中心

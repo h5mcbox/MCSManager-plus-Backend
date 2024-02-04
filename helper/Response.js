@@ -14,7 +14,7 @@ function send(res, info, value) {
   // res.end();
 }
 
-function wsSend(ws, info, value, body = "", RequestID) {
+function wsSend(ws, info, value, body = "", RequestID = null) {
   let header = {
     ResponseKey: info,
     ResponseValue: value,

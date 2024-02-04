@@ -5,7 +5,7 @@ const { hash } = require("../../core/User/CryptoMine")
 const serverCenter = require("../../model/ServerModel").ServerManager();
 const workerCenter = require("../../model/WorkerModel");
 WebSocketObserver().listener("onlinefs/getWorkerKey", (data) => {
-  if (!permssion.hasRights(data.WsSession.username,"workers:onlinefs")) return;
+  if (!permssion.hasRights(data.WsSession.username, "workers:onlinefs")) return;
   let now = Math.floor(Date.now() / 1000);
   var params = data.body.trim().split(":");
   let workerName = params[0];
@@ -16,9 +16,7 @@ WebSocketObserver().listener("onlinefs/getWorkerKey", (data) => {
   let u = new URL(worker.dataModel.RemoteDescription.endpoint);
   u.pathname = "/fs_auth/auth_master/pwd";
   u.searchParams.set("key", timeKey);
-  response.wsResponse(data, {
-    url: u.href
-  });
+  response.wsResponse(data, { url: u.href });
 });
 WebSocketObserver().listener("onlinefs/getServerKey", (data) => {
   let now = Math.floor(Date.now() / 1000);
@@ -34,8 +32,6 @@ WebSocketObserver().listener("onlinefs/getServerKey", (data) => {
   let u = new URL(worker.dataModel.RemoteDescription.endpoint);
   u.pathname = "/fs_auth/auth/" + serverName;
   u.searchParams.set("key", timeKey);
-  response.wsResponse(data, {
-    url: u.href
-  });
+  response.wsResponse(data, { url: u.href });
 });
-MCSERVER.addProbablyPermissions("workers:onlinefs","允许访问Worker程序所在的目录");
+MCSERVER.addProbablyPermissions("workers:onlinefs", "允许访问Worker程序所在的目录");

@@ -18,5 +18,5 @@ WebSocketObserver().listener("server/console/command", async (data) => {
     let [{ ResponseValue }, body] = await worker.call("server/console/command", data.body);
     response.wsResponse(data, ResponseValue, body);
   }
-  response.wsSend(data.ws, "server/console/command", null);
+  response.wsResponse(data, null);
 });

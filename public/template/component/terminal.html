@@ -144,7 +144,7 @@
   });
 
   MI.rListener("onend", async function () {
-    WS.await("server/console/remove", "");
+    await WS.call("server/console/remove", "");
     PAGE.mainC.innerHTML = "";
     PAGE.mainC.onscroll = function () { };
 

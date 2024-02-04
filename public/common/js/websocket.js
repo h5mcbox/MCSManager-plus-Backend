@@ -41,16 +41,16 @@
           console.log("Body:" + body);
           console.log("=== Websocket 收到结束 ===");
         }
-        //header.body = body;
-        let RequestMap = this.#RequestMap;
-        if (!RequestMap.has(RequestID)) return;
-        const [resolve, reject] = RequestMap.get(RequestID);
-        RequestMap.delete(RequestID);
-        resolve([header.ResponseValue, body]);
-
-        MI.on("ws/response", header, body);
-        //产生当时数据接受事件
-        this.tmp_callback && this.tmp_callback(header);
+        header.body = body;
+        if(typeof RequestID==="number"){
+          let RequestMap = this.#RequestMap;
+          if (!RequestMap.has(RequestID)) return;
+          const [resolve, reject] = RequestMap.get(RequestID);
+          RequestMap.delete(RequestID);
+          resolve([header.ResponseValue, body]);
+        }else{
+          MI.on("ws/response", header);
+        }
       } catch (e) {
         console.log("Websocket 数据到达时逻辑异常:");
         console.log(e);

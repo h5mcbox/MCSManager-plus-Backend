@@ -238,8 +238,8 @@
     });
 
     // 服务器状态请求
-    PAGE.timerR = setInterval(function () {
-      WS.call("server/console", MCSERVER.listenServername);
+    PAGE.timerR = setInterval(async function () {
+      await TOOLS.fetchData("server/console", MCSERVER.listenServername, "ConsolePanel");
     }, 3000);
 
     //CPU

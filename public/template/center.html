@@ -230,9 +230,9 @@
   //创建
   MI.rListener("onload", async function () {
     // 定义页面地址
-    var isPanel = VIEW_MODEL["centerShow"]?.isPanel ?? !MCSERVER.workername;
+    var isPanel = !MCSERVER.workername ?? VIEW_MODEL["centerShow"]?.isPanel;
     if (isPanel) {
-      await TOOLS.definePage("template/center", "center/show", "", "centerShow");
+      await TOOLS.definePage("template/center", "center/show", null, "centerShow");
     } else {
       await TOOLS.fetchData("workers/center", MCSERVER.workername, "centerShow");
     }
@@ -290,7 +290,7 @@
           }
         },
         toRestart: async function (itemWorkername) {
-          await WS.call(itemWorkername ? "workers/restart" : "center/restart", itemWorkername || "", resolve);
+          await WS.call(itemWorkername ? "workers/restart" : "center/restart", itemWorkername || "");
           if (!itemWorkername) {
             TOOLS.pushMsgWindow("面板重启");
           } else {
@@ -302,7 +302,7 @@
     });
 
     PAGE.time = setInterval(async function () {
-      var isPanel = VIEW_MODEL["centerShow"]?.isPanel ?? MCSERVER.workername;
+      var isPanel = !MCSERVER.workername ?? VIEW_MODEL["centerShow"]?.isPanel;
       var onRefresh = WS.call(isPanel ? "center/show" : "workers/center", isPanel ? "" : MCSERVER.workername);
       var onTimeout = new Promise(_ => setTimeout(_, 5000, false));
       var result = await Promise.race([onRefresh, onTimeout]);
@@ -315,7 +315,7 @@
   //关闭
   MI.rListener("onend", function () {
     clearInterval(PAGE.time);
-    var isPanel = VIEW_MODEL["centerShow"]?.isPanel ?? MCSERVER.workername;
+    var isPanel = !MCSERVER.workername ?? VIEW_MODEL["centerShow"]?.isPanel;
     if (!isPanel) {
       delete MCSERVER.workername;
     }
