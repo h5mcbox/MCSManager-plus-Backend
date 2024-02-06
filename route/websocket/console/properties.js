@@ -11,7 +11,7 @@ WebSocketObserver().listener("server/properties", async (data) => {
     if (!worker) {
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
     }
-    let [{ ResponseValue }, body] = await worker.send("server/properties", data.body);
+    let [{ ResponseValue }, body] = await worker.call("server/properties", data.body);
     response.wsResponse(data, ResponseValue, body);
   }
 });
@@ -26,7 +26,7 @@ WebSocketObserver().listener("server/properties_update", async (data) => {
     if (!worker) {
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
     }
-    let [{ ResponseValue }, body] = await worker.send("server/properties_update", data.body);
+    let [{ ResponseValue }, body] = await worker.call("server/properties_update", data.body);
     response.wsResponse(data, ResponseValue, body);
   }
 });
@@ -40,7 +40,7 @@ WebSocketObserver().listener("server/properties_update_reload", async (data) => 
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
       response.wsResponse(data, false);
     }
-    let [{ ResponseValue }, body] = await worker.send("server/properties_update_reload", data.body);
+    let [{ ResponseValue }, body] = await worker.call("server/properties_update_reload", data.body);
     response.wsResponse(data, ResponseValue, body);
   }
 });

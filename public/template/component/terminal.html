@@ -46,7 +46,7 @@
 <script>
   MI.rListener("onload", async function () {
     // 定义页面地址
-    await TOOLS.definePage("template/component/terminal", "server/console", MCSERVER.listenServername);
+    await TOOLS.definePage("template/component/terminal", "server/console", MCSERVER.listenServername, "Terminal");
 
     PAGE.nowPage = 0; //当前最低页
     PAGE.serverName = MCSERVER.listenServername;

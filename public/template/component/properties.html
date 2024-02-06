@@ -81,7 +81,7 @@
     // MCSERVER.autoColmDo();
 
     // 定义页面地址
-    await TOOLS.definePage("template/component/properties", "server/properties", MCSERVER.listenServername);
+    await TOOLS.definePage("template/component/properties", "server/properties", MCSERVER.listenServername, "ServerProperties");
 
     VIEW_MODEL.newVue("ServerProperties", {
       el: "#ServerProperties",

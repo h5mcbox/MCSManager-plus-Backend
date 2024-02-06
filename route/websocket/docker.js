@@ -23,7 +23,7 @@ WebSocketObserver().listener("docker/new", async (data) => {
   if (!worker) {
     response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
   }
-  let [{ResponseValue }, body] = await worker.call("docker/new", data.body);
+  let [{ ResponseValue }, body] = await worker.call("docker/new", data.body);
   response.wsResponse(data, ResponseValue, body);
   /*
   let dockerImageName = dockerConfig.dockerImageName;
@@ -106,7 +106,7 @@ WebSocketObserver().listener("docker/config", async (data) => {
     if (!worker) {
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
     }
-    let [{ ResponseValue }, body] = await worker.send("docker/config", data.body);
+    let [{ ResponseValue }, body] = await worker.call("docker/config", data.body);
     response.wsResponse(data, ResponseValue, body);
   }
 });
@@ -128,7 +128,7 @@ WebSocketObserver().listener("docker/setconfig", async (data) => {
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
     }
     //serverModel.deleteServer(serverName);
-    let [{ ResponseValue }, body] = await worker.send("docker/setconfig", data.body);
+    let [{ ResponseValue }, body] = await worker.call("docker/setconfig", data.body);
     response.wsResponse(data, ResponseValue, body);
   }
 });

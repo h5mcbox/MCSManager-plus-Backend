@@ -196,13 +196,13 @@
           this.command = "";
         },
         toProperties: function () {
-          RES.redirectPage("./template/component/properties.html", "server/properties", serverName);
+          RES.redirectPage("./template/component/properties.html");
         },
         toTerminal: function () {
-          RES.redirectPage("./template/component/terminal.html", "server/console", serverName);
+          RES.redirectPage("./template/component/terminal.html");
         },
         toSchedule: function () {
-          RES.redirectPage("./template/component/schedule.html", "schedule/list", serverName);
+          RES.redirectPage("./template/component/schedule.html");
         },
         toAPI_JSON: function () {
           window.open("/api/status/" + serverName);
