@@ -303,10 +303,10 @@
 
     PAGE.time = setInterval(async function () {
       var isPanel = !MCSERVER.workername ?? VIEW_MODEL["centerShow"]?.isPanel;
-      var onRefresh = WS.call(isPanel ? "center/show" : "workers/center", isPanel ? "" : MCSERVER.workername);
+      var onRefresh = TOOLS.fetchData(isPanel ? "center/show" : "workers/center", isPanel ? "" : MCSERVER.workername, "centerShow");
       var onTimeout = new Promise(_ => setTimeout(_, 5000, false));
       var result = await Promise.race([onRefresh, onTimeout]);
-      if (result === false) {
+      if (result === false && !isPanel) {
         RES.redirectPage("./template/workers.html");
       }
     }, 2100);

@@ -112,7 +112,7 @@ WebSocketObserver().listener("genuser/re_password", (data) => {
   };
   if ((view.randomPassword && view.LoginPublicKey) && !(config.oldPassword.length == 0 && config.loginParams.length != 0)) {
     response.wsMsgWindow(data.ws, "很抱歉，只使用公钥登录的用户还需填写登录参数");
-    return false;
+    return response.wsResponse(data, false);
   }
   if (config.loginParams) {
     try {
@@ -120,6 +120,7 @@ WebSocketObserver().listener("genuser/re_password", (data) => {
       config.oldPassword = paramsReader.get("password");
       config.ChallengeID = paramsReader.get("ChallengeID");
     } catch {
+      return response.wsResponse(data, false);
     }
   }
   if (config.oldPassword) {
@@ -132,14 +133,16 @@ WebSocketObserver().listener("genuser/re_password", (data) => {
     if (verified) {
       if ((config.newPassword.length > 100 || config.newPassword.length < 6) && !(config.newPassword.length == 0 && userCenter().get(username).dataModel.LoginPublicKey)) {
         response.wsMsgWindow(data.ws, "新的密码长度不正确，需要 6~100 位长度");
-        return;
+        return response.wsResponse(data, false);
       }
       userCenter().rePassword(username, config.newPassword);
       userCenter().reLoginPublicKey(username, config.newLoginPublicKey);
       userCenter().initUser();
       response.wsMsgWindow(data.ws, "密码修改完成!");
+      return response.wsResponse(data, true);
     } else {
       response.wsMsgWindow(data.ws, "很抱歉，原密码错误，无法修改");
+      return response.wsResponse(data, false);
     }
   }
 });

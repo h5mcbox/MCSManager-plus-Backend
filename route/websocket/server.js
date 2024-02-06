@@ -25,11 +25,12 @@ WebSocketObserver().listener("server/get", async (data) => {
   let mcserver = serverModel.ServerManager().getServer(serverName);
   if (mcserver == null) {
     response.wsMsgWindow(data.ws, "服务端 " + serverName + " 不存在！请刷新或自行检查。");
-    return;
+    return response.wsResponse(data, false);
   }
 
   if (!mcserver.worker) {
     response.wsMsgWindow(data.ws, "获取出错:" + "Worker不存在");
+    return response.wsResponse(data, false);
   }
   let worker = mcserver.worker;
   let [{ ResponseKey, ResponseValue },body] = await worker.call("server/get", data.body);
@@ -46,7 +47,7 @@ WebSocketObserver().listener("server/create", async (data) => {
   let serverLocation = ServerConfig.location.trim();
   if (serverName.indexOf(".") != -1) {
     response.wsMsgWindow(data.ws, '不可包含 "." 字符');
-    return;
+    return response.wsResponse(data, false);
   }
   try {
     let worker = workerModel.get(serverLocation);
@@ -54,11 +55,11 @@ WebSocketObserver().listener("server/create", async (data) => {
       response.wsMsgWindow(data.ws, "创建出错:" + "Worker不存在");
     }
     serverModel.createServer(serverName, ServerConfig);
-    await worker.call("server/create", data.body);
+    return response.wsResponse(data, await worker.call("server/create", data.body));
   } catch (err) {
     response.wsMsgWindow(data.ws, "创建出错:" + err);
     MCSERVER.error("创建服务器时出错", err);
-    return;
+    return response.wsResponse(data, false);
   }
 });
 
@@ -69,12 +70,14 @@ WebSocketObserver().listener("server/create_dir", async (data) => {
   const { worker } = serverModel.ServerManager().getServer(ServerConfig.serverName);
   if (!worker) {
     response.wsMsgWindow(data.ws, "创建出错:" + "Worker不存在");
+    return response.wsResponse(data, false);
   }
   try {
     let [{ ResponseValue }, body] = await worker.call("server/create_dir", data.body);
     response.wsResponse(data, ResponseValue, body);
   } catch (e) {
     response.wsMsgWindow(data.ws, "创建目录" + ServerConfig.cwd + "出错");
+    return response.wsResponse(data, false);
   }
 });
 
@@ -85,6 +88,7 @@ WebSocketObserver().listener("server/rebuilder", async (data) => {
   const { worker } = serverModel.ServerManager().getServer(oldServerName);
   if (!worker) {
     response.wsMsgWindow(data.ws, "修改出错:" + "Worker不存在");
+    return response.wsResponse(data, false);
   }
   let [{ ResponseValue }, body] = await worker.call("server/rebuilder", data.body);
   response.wsResponse(data, ResponseValue, body);
@@ -98,9 +102,10 @@ WebSocketObserver().listener("server/delete", async (data) => {
     const { worker } = serverModel.ServerManager().getServer(serverName);
     if (!worker) {
       response.wsMsgWindow(data.ws, "删除出错:" + "Worker不存在");
+      return response.wsResponse(data, false);
     }
     serverModel.deleteServer(serverName);
-    worker.call("server/delete", data.body)
+    return response.wsResponse(data, await worker.call("server/delete", data.body));
   } catch (e) {
     response.wsResponse(data, null);
     response.wsMsgWindow(data.ws, "删除服务器失败" + e);
@@ -115,8 +120,10 @@ WebSocketObserver().listener("server/opt_all", async (data) => {
     for (let item of workerModel.getOnlineWorkers()) {
       await item.call("server/opt_all");
     }
+    return response.wsResponse(data, true);
   } catch (err) {
     response.wsMsgWindow(data.ws, "执行失败:" + err);
+    return response.wsResponse(data, false);
   }
 });
 MCSERVER.addProbablyPermissions("server:overview", "获取服务器列表");

@@ -39,6 +39,7 @@ WebSocketObserver().listener("server/console/ws", async (data) => {
     const { worker } = serverModel.ServerManager().getServer(serverName);
     if (!worker) {
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
+      return response.wsResponse(data, false);
     }
     let [{ ResponseValue }, body] = await worker.call("server/console/ws", data.body);
     return response.wsResponse(data, ResponseValue, body);
@@ -58,7 +59,8 @@ WebSocketObserver().listener("server/console/remove", async (data) => {
       if (!MCSERVER.allSockets[k].console) return false;
       const { worker } = serverModel.ServerManager().getServer(MCSERVER.allSockets[k]["console"]);
       if (!worker) {
-        response.wsMsgWindow(data.ws, "创建出错:" + "Worker不存在");
+        response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
+        return response.wsResponse(data, false);
       }
       let [{ ResponseValue }, body] = await worker.call("server/console/remove", MCSERVER.allSockets[k]["console"]);
       response.wsResponse(data, ResponseValue, body);

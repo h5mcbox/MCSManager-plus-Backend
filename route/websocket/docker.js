@@ -114,10 +114,6 @@ WebSocketObserver().listener("docker/config", async (data) => {
 //设置配置
 WebSocketObserver().listener("docker/setconfig", async (data) => {
   if (!permission.hasRights(data.WsSession.username, "docker:setConfig")) return;
-  // {
-  //     serverName: "xxxx",
-  //     dockerConfig: { ... }
-  // }
   let newConfig = data.body;
   if (newConfig.serverName) {
     let serverName = newConfig.serverName;

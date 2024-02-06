@@ -38,6 +38,7 @@ WebSocketObserver().listener("server/properties_update_reload", async (data) => 
     const { worker } = serverModel.ServerManager().getServer(serverName);
     if (!worker) {
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
+      response.wsResponse(data, false);
     }
     let [{ ResponseValue }, body] = await worker.send("server/properties_update_reload", data.body);
     response.wsResponse(data, ResponseValue, body);

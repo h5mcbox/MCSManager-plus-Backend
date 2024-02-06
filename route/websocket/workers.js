@@ -4,8 +4,6 @@ const permssion = require("../../helper/Permission");
 const WorkerCenter = require("../../model/WorkerModel");
 
 WebSocketObserver().listener("workers", (data) => {
-  //Object {ws: WebSocket, req: IncomingMessage, user: undefined, header: Object, body: "[body 开始]
-  //Object {RequestKey: "req", RequestValue: "some"}
   if (!permssion.hasRights(data.WsSession.username, "workers:overview")) return;
 
   response.wsResponse(data, { items: WorkerCenter.getWorkerList() });
@@ -63,24 +61,25 @@ WebSocketObserver().listener("workers/upinfo", (data) => {
 
     //其数据模型保存
     response.wsMsgWindow(data.ws, "更新Worker数据完成√");
+    response.wsResponse(data, true);
     return;
   } catch (e) {
     response.wsMsgWindow(data.ws, "错误：更新Worker数据错误：" + e);
+    response.wsResponse(data, false);
     MCSERVER.error(e);
   }
 });
-WebSocketObserver().listener("workers/connect", (data) => {
+WebSocketObserver().listener("workers/connect", async data => {
   if (!permssion.hasRights(data.WsSession.username, "workers:connect")) return;
   let ro = data.body //RequestObject
   let worker = WorkerCenter.get(ro.workername.trim());
-  worker.connect(data.ws).then(function (success) {
-    if (success) {
-      response.wsMsgWindow(data.ws, "连接成功")
-    } else {
-      response.wsMsgWindow(data.ws, "连接失败")
-    }
-    response.wsResponse(data, {});
-  });
+  let success = worker.connect(data.ws);
+  if (success) {
+    response.wsMsgWindow(data.ws, "连接成功")
+  } else {
+    response.wsMsgWindow(data.ws, "连接失败")
+  }
+  response.wsResponse(data, success);
 });
 WebSocketObserver().listener("workers/disconnect", (data) => {
   if (!permssion.hasRights(data.WsSession.username, "workers:disconnect")) return;
@@ -90,8 +89,6 @@ WebSocketObserver().listener("workers/disconnect", (data) => {
   response.wsResponse(data, null);
 });
 WebSocketObserver().listener("workers/add", (data) => {
-  //Object {ws: WebSocket, req: IncomingMessage, user: undefined, header: Object, body: "[body 开始]
-  //Object {RequestKey: "req", RequestValue: "some"}
   if (!permssion.hasRights(data.WsSession.username, "workers:addWorker")) return;
   let ro = data.body //RequestObject
   let newEndpoint = ro.RemoteDescription.endpoint.trim()
@@ -99,10 +96,10 @@ WebSocketObserver().listener("workers/add", (data) => {
   try { new URL(newEndpoint); vaildURL = true; } catch { }
   if (!vaildURL) {
     response.wsMsgWindow(data.ws, "新的地址格式不正确");
-    return false;
+    return response.wsResponse(data, false);
   }
   WorkerCenter.createWorker(ro.workername.trim(), ro.MasterKey, ro.RemoteDescription);
-  response.wsResponse(data, null);
+  return response.wsResponse(data, true);
 });
 WebSocketObserver().listener("workers/delete", (data) => {
   //Object {ws: WebSocket, req: IncomingMessage, user: undefined, header: Object, body: "[body 开始]

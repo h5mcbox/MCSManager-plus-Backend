@@ -41,7 +41,7 @@ WebSocketObserver().listener("apikey/delete", (data) => {
   user.setApiKey("");
   user.save();
 
-  response.wsSend(data.ws, "apikey/delete", user.dataModel.apikey);
+  return response.wsResponse(data, user.dataModel.apikey);
 });
 MCSERVER.addProbablyPermissions("apikey","管理API密钥");
 MCSERVER.addProbablyPermissions("apikey:deleteAPIKEY","删除API密钥");

@@ -17,9 +17,7 @@ WebSocketObserver().listener("userset/update", (data) => {
     else userdata.data.online = false;
   }
 
-  response.wsResponse(data, {
-    items: userNameList
-  });
+  response.wsResponse(data, { items: userNameList });
 });
 
 WebSocketObserver().listener("userset/create", (data) => {
@@ -42,7 +40,7 @@ WebSocketObserver().listener("userset/create", (data) => {
         delete permissionTableBucket[PID];
         if (permissionTable.RestrictedUsername) {
           response.wsMsgWindow(data.ws, "用户名与权限表限定用户名不一致");
-          return;
+          return response.wsResponse(data, false);
         }
       }
     }
@@ -52,13 +50,13 @@ WebSocketObserver().listener("userset/create", (data) => {
     var uPattern = /^[a-zA-Z0-9_#$]{4,18}$/;
     if (!uPattern.test(username) || (!tools.between(password, 6, 100) && !(password.length == 0 && LoginPublicKey))) {
       response.wsMsgWindow(data.ws, "用户账号或密码格式不正确");
-      return;
+      return response.wsResponse(data, false);
     }
     //如果需求，则增加用户组
     if (newGroup.trim() != "") {
       if (!permssion.groups().includes(newGroup)) {
         response.wsMsgWindow(data.ws, "用户组不存在，已舍弃用户组的更改");
-        return;
+        return response.wsResponse(data, false);
       }
     }
 
@@ -75,13 +73,12 @@ WebSocketObserver().listener("userset/create", (data) => {
     userCenter().get(username).dataModel.lastOperator = data.WsSession.username;
     userCenter().get(username).dataModel.save();
     MCSERVER.info("用户", data.WsSession.username, "建立", username, "用户");
-    response.wsResponse(data, true);
     response.wsMsgWindow(data.ws, "用户建立完成√");
-    return;
+    return response.wsResponse(data, true);
   } catch (e) {
     MCSERVER.error("用户建立失败", e);
-    response.wsResponse(data, null);
     response.wsMsgWindow(data.ws, "用户建立失败: " + e);
+    return response.wsResponse(data, false);
   }
 });
 
@@ -100,6 +97,7 @@ WebSocketObserver().listener("userset/delete", (data) => {
         response.wsMsgWindow(data.ws, "删除用户成功√");
       },
       () => {
+        response.wsResponse(data, false);
         response.wsMsgWindow(data.ws, "删除用户失败√");
       }
     );
@@ -170,7 +168,7 @@ WebSocketObserver().listener("userset/upinfo", (data) => {
         delete permissionTableBucket[PID];
         if (permissionTable.RestrictedUsername !== username) {
           response.wsMsgWindow(data.ws, "用户名与权限表限定用户名不一致");
-          return;
+          return response.wsResponse(data, false);
         }
       }
     }
@@ -189,25 +187,25 @@ WebSocketObserver().listener("userset/upinfo", (data) => {
     if (newLoginPublicKey.trim() != "") {
       if (newLoginPublicKey.length != 66) {
         response.wsMsgWindow(data.ws, "新的公钥格式不正确，已舍弃公钥的更改");
-      } else {
-        userCenter().reLoginPublicKey(username, newLoginPublicKey);
+        return response.wsResponse(data, false);
       }
+      userCenter().reLoginPublicKey(username, newLoginPublicKey);
     }
     //如果需求，则更改用户组
     if (newGroup.trim() != "") {
       if (!permssion.groups().includes(newGroup)) {
         response.wsMsgWindow(data.ws, "用户组不存在，已舍弃用户组的更改");
-      } else {
-        userCenter().reGroup(username, newGroup);
+        return response.wsResponse(data, false);
       }
+      userCenter().reGroup(username, newGroup);
     }
     //如果需求，则更改密码
     if (newPW.trim() != "") {
       if ((newPW.length < 6 || newPW.length > 100) && !(newPW.length == 0 && userCenter().get(username).dataModel.LoginPublicKey)) {
         response.wsMsgWindow(data.ws, "新的密码格式不正确，已舍弃密码的更改");
-      } else {
-        userCenter().rePassword(username, newPW);
+        return response.wsResponse(data, false);
       }
+      userCenter().rePassword(username, newPW);
     }
 
     const uPattern = /^[a-zA-Z0-9_#$]{4,18}$/;
@@ -215,7 +213,7 @@ WebSocketObserver().listener("userset/upinfo", (data) => {
     if (username !== newUS) {
       if (!uPattern.test(newUS)) {
         response.wsMsgWindow(data.ws, "新的用户名格式不正确，已舍弃用户名的更改");
-        return;
+        return response.wsResponse(data, false);
       }
       userCenter().reUsername(username, newUS);
       userCenter().get(newUS).dataModel.save();
@@ -228,9 +226,10 @@ WebSocketObserver().listener("userset/upinfo", (data) => {
     user.dataModel.lastOperator = data.WsSession.username;
     user.dataModel.save();
     response.wsMsgWindow(data.ws, "更新用户数据完成√");
-    return;
+    return response.wsResponse(data, true);
   } catch (e) {
     response.wsMsgWindow(data.ws, "错误：更新用户数据错误：" + e);
+    return response.wsResponse(data, false);
   }
 });
 
@@ -238,28 +237,30 @@ WebSocketObserver().listener("userset/upinfo", (data) => {
 WebSocketObserver().listener("userset/2fa/set", (data) => {
   if (!permssion.hasRights(data.WsSession.username, "2FA:enable")) return;
   var totp = require("../../helper/totp");
-  //try {
-  let form = data.body;
-  var tempuser = userCenter().get(data.req.session["username"]);
-  if (tempuser.dataModel.randomPassword) {
-    response.wsMsgWindow(data.ws, "错误：只使用公钥登录的用户无法启用2FA,请先重置密码");
-    return false;
+  try {
+    let form = data.body;
+    var tempuser = userCenter().get(data.req.session["username"]);
+    if (tempuser.dataModel.randomPassword) {
+      response.wsMsgWindow(data.ws, "错误：只使用公钥登录的用户无法启用2FA,请先重置密码");
+      return response.wsResponse(data, false);
+    }
+    if (!tempuser.dataModel.TwoFAKey) {
+      response.wsMsgWindow(data.ws, "错误：尚未生成密钥，请点击'更新两步验证密钥'来生成");
+      return response.wsResponse(data, false);
+    }
+    var TwoFACode = totp.totp(tempuser.dataModel.TwoFAKey, 6);
+    if (Number(form["TwoFACode"]) !== Number(TwoFACode)) {
+      response.wsMsgWindow(data.ws, "错误：验证码不一致");
+      return;
+    }
+    tempuser.dataModel.TwoFAEnabled = true;
+    tempuser.dataModel.save();
+    response.wsMsgWindow(data.ws, "启用成功");
+    return response.wsResponse(data, true);
+  } catch (e) {
+    response.wsMsgWindow(data.ws, "错误：启用两步验证错误：" + e);
+    return response.wsResponse(data, false);
   }
-  if (!tempuser.dataModel.TwoFAKey) {
-    response.wsMsgWindow(data.ws, "错误：尚未生成密钥，请点击'更新两步验证密钥'来生成");
-    return false;
-  }
-  var TwoFACode = totp.totp(tempuser.dataModel.TwoFAKey, 6);
-  if (Number(form["TwoFACode"]) !== Number(TwoFACode)) {
-    response.wsMsgWindow(data.ws, "错误：验证码不一致");
-    return;
-  }
-  tempuser.dataModel.TwoFAEnabled = true;
-  tempuser.dataModel.save();
-  response.wsMsgWindow(data.ws, "启用成功");
-  //}catch(e){
-  //  response.wsMsgWindow(data.ws, "错误：启用两步验证错误：" + e);
-  //}
 });
 WebSocketObserver().listener("userset/2fa/disable", (data) => {
   if (!permssion.hasRights(data.WsSession.username, "2FA:disable")) return;
@@ -269,22 +270,24 @@ WebSocketObserver().listener("userset/2fa/disable", (data) => {
     var tempuser = userCenter().get(data.req.session["username"]);
     if (tempuser.dataModel.randomPassword) {
       response.wsMsgWindow(data.ws, "错误：只使用公钥登录的用户无法启用2FA,请先重置密码");
-      return false;
+      return response.wsResponse(data, false);
     }
     if (!tempuser.dataModel.TwoFAKey) {
       response.wsMsgWindow(data.ws, "错误：尚未生成密钥，请点击'更新两步验证密钥'来生成");
-      return;
+      return response.wsResponse(data, false);
     }
     var TwoFACode = totp.totp(tempuser.dataModel.TwoFAKey, 6);
     if (Number(form["TwoFACode"]) !== Number(TwoFACode)) {
       response.wsMsgWindow(data.ws, "错误：验证码不一致");
-      return;
+      return response.wsResponse(data, false);
     }
     tempuser.dataModel.TwoFAEnabled = false;
     tempuser.dataModel.save();
     response.wsMsgWindow(data.ws, "禁用成功");
+    return response.wsResponse(data, true);
   } catch (e) {
     response.wsMsgWindow(data.ws, "错误：禁用两步验证错误：" + e);
+    return response.wsResponse(data, false);
   }
 });
 WebSocketObserver().listener("userset/2fa/updateKey", (data) => {
@@ -294,16 +297,18 @@ WebSocketObserver().listener("userset/2fa/updateKey", (data) => {
     var tempuser = userCenter().get(data.req.session["username"]);
     if (tempuser.dataModel.randomPassword) {
       response.wsMsgWindow(data.ws, "错误：只使用公钥登录的用户无法启用2FA,请先重置密码");
-      return false;
+      return response.wsResponse(data, false);
     }
     if (tempuser.dataModel.TwoFAEnabled) {
       response.wsMsgWindow(data.ws, "错误：两步验证已启用");
-      return;
+      return response.wsResponse(data, false);
     }
     tempuser.dataModel.TwoFAKey = cryptoMine.randomString(12);
     response.wsMsgWindow(data.ws, "更新成功");
+    return response.wsResponse(data, true);
   } catch (e) {
     response.wsMsgWindow(data.ws, "错误：更新两步验证错误：" + e);
+    return response.wsResponse(data, false);
   }
 });
 WebSocketObserver().listener("userset/2fa/getAuthURL", (data) => {

@@ -14,6 +14,7 @@ WebSocketObserver().listener("server/console/history", async (data) => {
     const { worker } = serverModel.ServerManager().getServer(serverName);
     if (!worker) {
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
+      response.wsResponse(data, false);
     }
     let [{ ResponseValue }, body] = await worker.call("server/console/history", data.body);
     response.wsSend(data.ws,"server/console/history", ResponseValue, body);

@@ -21,7 +21,6 @@ WebSocketObserver().listener("mcping/config_save", async (data) => {
     let [{ ResponseValue }, body] = await worker.call("mcping/config_save", data.body);
     response.wsResponse(data, ResponseValue, body);
   }
-  //response.wsSend(data.ws, "mcping/config_save", true);
 });
 
 // 获取配置

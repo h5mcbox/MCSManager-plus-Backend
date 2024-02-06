@@ -12,10 +12,11 @@ WebSocketObserver().listener("server/console/open", async (data) => {
   if (permission.isCanServer(userName, serverName)) {
     const { worker } = serverModel.ServerManager().getServer(serverName);
     if (!worker) {
-      response.wsMsgWindow(data.ws, "启动出错:" + "Worker不存在");
+      response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
+      response.wsResponse(data, false);
     }
     let [{ ResponseValue }, body] = await worker.call("server/console/open", data.body);
     response.wsResponse(data, ResponseValue, body);
   }
-  response.wsSend(data.ws, "server/console/open", null);
+  response.wsResponse(data, null);
 });
