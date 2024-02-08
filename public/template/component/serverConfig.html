@@ -1,0 +1,172 @@
+<div id="ServerConfigList" class="OneContainer">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="Panel PanelBlack" style="margin-bottom: 8px">
+        <div class="PanelTitle">服务端配置文件管理</div>
+        <div class="PanelBody">
+          <div class="row">
+            <div class="col-sm-12 PanelItemF">
+              <div class="PanelItem" v-on:click="toBackConsole()">
+                <span class="glyphicon glyphicon-backward" aria-hidden="true"></span>
+                返回到控制台
+              </div>
+              <p style="color: #969292; line-height: 35px; float: right">可以使用 Ctrl+F 来查询指定配置文件</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 新的应用列表 -->
+  <div class="container-fluid" style="padding: 0px">
+    <div class="row">
+      <div class="col-md-6 col-lg-4" v-for="configName of list">
+        <a href="javascript:void(0);" class="FontBlack" v-on:click="toProperties(configName);">
+          <div class="Panel AppInlineBlockList">
+            <div class="PanelBody">
+              <div class="AppInlineBlockListTitle">
+                <h4>
+                  <span v-text="configName"></span>
+                </h4>
+              </div>
+              <div class="AppInlineBlockListBody">
+                <div class="row">
+                  <div class="col-xs-9">
+                    <hr style="margin-top: 8px; margin-bottom: 10px" />
+                    <p>
+                      <span v-text="findDescription(configName)"></span>
+                    </p>
+                  </div>
+                  <div class="col-xs-3" style="text-align: center">
+                    <a href="javascript:void(0);" class="mbuttonWhite" v-on:click="toProperties(configName);"> <span
+                        class="glyphicon glyphicon-console" aria-hidden="true"> </span>&nbsp; 浏览 </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+<style>
+  .FontBlack {
+    color: #141414;
+  }
+
+  .FontGray {
+    color: #797676;
+  }
+
+  .mbuttonWhite {
+    display: block;
+    margin-bottom: 2px;
+    color: #292929;
+    border: 1px solid #797676;
+    padding: 2px 2px;
+    text-align: center;
+    font-size: 11px;
+    max-width: 90px;
+  }
+
+  .AppInlineBlockListTitle {
+    position: relative;
+  }
+
+  .AppInlineBlockListTitlePlayer {
+    font-size: 13px;
+    float: right;
+  }
+
+  .AppInlineBlockListTitleMuem {
+    position: absolute;
+    right: 12px;
+    top: 0px;
+    font-size: 14px;
+    color: rgb(26, 26, 26);
+  }
+
+  .AppInlineBlockListTitleMuem>a {
+    color: #2e2e2e;
+    display: inline-block;
+    margin-left: 6px;
+    border-radius: 1px;
+  }
+
+  .AppInlineBlockListBorderRed {
+    border-top: 3px solid rgb(196, 46, 46);
+  }
+
+  .AppInlineBlockListBorderBlack {
+    border-top: 3px solid #2e2e2e;
+  }
+
+  .AppInlineBlockListBorderGreen {
+    border-top: 3px solid rgb(37, 146, 37);
+  }
+
+  .AppInlineBlockList {
+    display: inline-block;
+    width: 100%;
+    margin: 6px 8px 8px 0px;
+    transition: all 0.4s;
+
+    height: 200px;
+    min-height: 200px;
+    max-height: 200px;
+    /* border-top: 3px solid rgb(255, 255, 255); */
+  }
+
+  .AppInlineBlockList p,
+  .AppInlineBlockList span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .AppInlineBlockList:hover {
+    border: 1px solid rgb(0, 139, 222);
+  }
+
+  .AppInlineBlockListTitleTip {
+    border: 1px solid rgb(63, 216, 63);
+    border-radius: 3px;
+    padding: 2px 3px;
+    font-weight: 400;
+    letter-spacing: 1px;
+    font-size: 10px;
+  }
+
+  .AppInlineBlockListBody p,
+  .AppInlineBlockListBody span {
+    /* display: block; */
+    margin-bottom: 1px;
+  }
+</style>
+
+<script src="./common/js/properties.js"></script>
+<script>
+  MI.rListener("onload", async function () {
+    // 定义页面地址
+    //await TOOLS.definePage("template/server", "server/view", null, "ServerList");
+
+    VIEW_MODEL.newVue("ServerConfigList", {
+      el: "#ServerConfigList",
+      methods: {
+        async toProperties(configName) {
+          await TOOLS.fetchData("server/properties", [MCSERVER.listenServername, configName], "ServerProperties");
+          RES.redirectPage("./template/component/properties.html");
+        },
+        findDescription(key) {
+          return MCSERVER.propertiesFileDescription[key] ?? "";
+        },
+        toBackConsole() {
+          RES.redirectPage("./template/component/console.html");
+        }
+      }
+    });
+  });
+
+  MI.rListener("onend", function () { });
+</script>

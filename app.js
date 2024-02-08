@@ -470,19 +470,21 @@ function moduleEntry(returnMethod) {
       return result;
     };
     ["stat", "lstat", "fstat", "readdir", "exists"].forEach(function (fn) {
-      fs[fn] = function (path, callback) {
-        let result;
+      fs[fn] = function (path, optArg, callback) {
         try {
-          result = fs[`${fn}Sync`](path);
+          if (!callback) {
+            callback = optArg;
+            optArg = undefined;
+          }
+          let result = fs[`${fn}Sync`](path);
+          setImmediate(function () {
+            callback && callback(null, result);
+          });
         } catch (e) {
           setImmediate(function () {
-            callback(e);
+            callback && callback(e, null);
           });
-          return;
         }
-        setImmediate(function () {
-          callback(null, result);
-        });
       };
     });
     ["readFile"].forEach(function (fn) {

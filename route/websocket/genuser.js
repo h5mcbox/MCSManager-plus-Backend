@@ -40,6 +40,7 @@ WebSocketObserver().listener("genuser/home", async (data) => {
       let serverLoc = userHaveServer.dataModel.location;
       if (!workerCenter.get(serverLoc)) {
         response.wsMsgWindow(data.ws, "创建出错:" + "Worker不存在");
+        return response.wsResponse(data, false);
       }
       var worker = workerCenter.get(serverLoc);
       var [header] = await worker.call("server/get", allowedServerList[k]);

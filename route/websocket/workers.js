@@ -118,6 +118,7 @@ WebSocketObserver().listener("workers/center", async (data) => {
   try {
     if (!WorkerCenter.get(workerName)) {
       response.wsMsgWindow(data.ws, "访问出错:" + "Worker不存在");
+      return response.wsResponse(data, false);
     }
     let worker = WorkerCenter.get(workerName);
     let [{ ResponseValue }, body] = await worker.call("center/show", data.body);
@@ -134,6 +135,7 @@ WebSocketObserver().listener("workers/restart", async (data) => {
   try {
     if (!WorkerCenter.get(workerName)) {
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
+      return response.wsResponse(data, false);
     }
     let worker = WorkerCenter.get(workerName);
     let [{ ResponseValue }, body] = await worker.call("center/restart", data.body);

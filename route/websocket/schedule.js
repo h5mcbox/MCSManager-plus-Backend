@@ -72,8 +72,10 @@ WebSocketObserver().listener("schedule/delete", (data) => {
     try {
       schedulejob.deleteScheduleJob(obj.id || "");
       response.wsMsgWindow(data.ws, "删除序号:" + obj.id + "计划任务");
+      return response.wsResponse(data, true);
     } catch (err) {
       response.wsMsgWindow(data.ws, "删除失败！" + err);
+      return response.wsResponse(data, false);
     }
   }
 });

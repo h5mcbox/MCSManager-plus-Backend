@@ -1,6 +1,12 @@
 (function () {
-  MCSERVER.findPropertiesShow = function (key) {
-    var Descriptions = {
+  MCSERVER.propertiesFileDescription = {
+    "server.properties": "Minecraft 原版服务器的配置文件",
+    "eula.txt": "Minecraft 最终用户许可协议",
+    "spigot.yml": "Spigot 服务器配置文件",
+    "bukkit.yml":"Bukkit 服务器配置文件"
+  }
+  MCSERVER.propertiesDescription = {
+    "server.properties": {
       "generator-settings": "用于自定义超平坦世界的生成，不生成超平坦世界请留空",
       "allow-nether": "是否允许下界（包括地狱）",
       "level-name": "世界（地图）名称 不要使用中文",
@@ -48,13 +54,79 @@
       "broadcast-console-to-ops": "向OP广播服务器控制台信息",
       "enforce-whitelist": "在服务器上强制使用白名单",
       "spawn-protection": "通过将该值进行 2x+1 的运算来决定出生点的保护半径，设置为0将只保护出生点下方那一个方块。"
-    };
-
-    if (Descriptions.hasOwnProperty(key)) {
-      return Descriptions[key];
-    } else {
-      //Not find, Return space
-      return " ";
+    },
+    "eula.txt":{
+      "eula":"同意Minecraft最终用户许可协议(https://www.minecraft.net/zh-hans/eula),不允许则无法开启服务器"
+    },
+    "spigot.yml":{
+      "settings/debug":"调试模式",
+      "settings/moved-too-quickly-multiplier":"判断移动过快的倍数",
+      "settings/moved-wrongly-threshold":"判断错误移动的阈值",
+      "settings/save-user-cache-on-stop-only":"是否只在停止时保存用户缓存",
+      "settings/sample-count":"提供给玩家的服务器客户端列表采样次数",
+      "settings/bungeecord":"启用Bungeecord支持",
+      "settings/timeout-time":"连接超时时间",
+      "settings/restart-on-crash":"崩溃时自动重启",
+      "settings/restart-script":"重启时执行脚本",
+      "settings/player-shuffle":"更新玩家遍历顺序的时间间隔(单位:tick)",
+      "settings/netty-threads":"Netty 通信线程数",
+      "settings/user-cache-size":"用户缓存大小",
+      "settings/attribute/maxHealth/max":"服务器生命值上限",
+      "settings/attribute/movementSpeed/max":"服务器移动速度上限",
+      "settings/attribute/attackDamage/max":"服务器伤害上限",
+      "settings/log-villager-deaths":"记载村民死亡",
+      "commands/silent-commandblock-console":"是否在控制台输出命令方块内容",
+      "commands/spam-exclusions":"垃圾排除(以英文逗号,分隔)",
+      "commands/tab-complete":"允许Tab自动补全命令(-1关闭,0无限,>0则补全对应字符数)",
+      "commands/send-namespaced":"发送命令命令空间",
+      "commands/log":"启用日志",
+      "commands/replace-commands":"禁用命令实现替换(以英文逗号,分隔)",
+      "world-settings/default/ticks-per/hopper-transfer":"漏斗运输物品的时间间隔(单位:tick)",
+      "world-settings/default/ticks-per/hopper-check":"漏斗检测物品时间间隔(单位:tick)",
+      "world-settings/default/hopper-amount":"漏斗运输周期内运输物品最大数量",
+      "world-settings/default/hopper-can-load-chunks":"允许漏斗加载区块",
+      "world-settings/default/entity-tracking-range/players":"实体追踪玩家的最大范围",
+      "world-settings/default/entity-tracking-range/animals":"实体追踪动物的最大范围",
+      "world-settings/default/entity-tracking-range/monsters":"实体追踪怪物的最大范围",
+      "world-settings/default/entity-tracking-range/misc":"实体追踪物品的最大范围",
+      "world-settings/default/entity-tracking-range/other":"实体追踪其他的最大范围",
+      "world-settings/default/entity-activation-range/tick-inactive-villagers":"激活不活跃的村民",
+      "world-settings/default/entity-activation-range/ignore-spectators":"实体激活无视观察者",
+      "world-settings/default/hunger/jump-walk-exhaustion":"跳跃跑步动作时消耗的饥饿度",
+      "world-settings/default/hunger/jump-walk-exhaustion":"跳跃跑步动作时消耗的饥饿度",
+      "world-settings/default/hunger/jump-sprint-exhaustion":"跳跃冲刺动作时消耗的饥饿度",
+      "world-settings/default/hunger/combat-exhaustion":"战斗时消耗的饥饿度",
+      "world-settings/default/hunger/regen-exhaustion":"回复时消耗的饥饿度",
+      "world-settings/default/hunger/swim-multiplier":"游泳时消耗的饥饿度倍率",
+      "world-settings/default/hunger/sprint-multiplier":"仅冲刺时消耗的饥饿度倍率",
+      "world-settings/default/hunger/other-multiplier":"其他动作消耗的饥饿度倍率",
+      "world-settings/default/max-tnt-per-tick":"每Tick更新的最大TNT数量",
+      "world-settings/default/max-tick-time/entity":"分配给实体的最大 Tick 时间",
+      "world-settings/default/zombie-aggressive-towards-villager":"允许生成僵尸村民",
+      "world-settings/default/end-portal-sound-radius":"下界传送门声音半径",
+      "world-settings/default/enable-zombie-pigmen-portal-spawns":"是否启用僵尸猪人入口生成",
+      "world-settings/default/wither-spawn-sound-radius":"生成凋灵的声音半径",
+      "world-settings/default/dragon-death-sound-radius":"末地龙死亡声音半径",
+      "world-settings/default/merge-radius/item":"物品合并半径",
+      "world-settings/default/merge-radius/exp":"经验球合并半径",
+      "world-settings/default/item-despawn-rate":"掉落物清除时间间隔",
+      "world-settings/default/simulation-distance":"模拟距离",
+      "world-settings/default/view-distance":"视距(1-15)",
+      "world-settings/default/mob-spawn-range":"刷怪范围",
+      "world-settings/default/arrow-despawn-rate":"箭清除时间间隔",
+      "world-settings/default/trident-despawn-rate":"三叉戟清除时间间隔",
+      "world-settings/default/nerf-spawner-mobs":"不启用怪物生成的新怪物的AI",
+      "world-settings/default/verbose":"是否在启动服务器进程时展示世界维度详细报告",
+      "messages/whitelist":"被白名单拦截时的文本提示",
+      "messages/unknown-command":"执行未知命令时的文本提示",
+      "messages/server-full":"服务器满载时的文本提示",
+      "messages/outdated-client":"客户端版本过时的文本地址({0}为服务器版本)",
+      "messages/outdated-server":"服务端版本过时的文本地址({0}为客户端版本)",
+      "messages/restart":"服务器重启时的文本提示",
+      "advancements/disable-saving":"禁用成就保存",
+      "advancements/disabled":"禁用成就",
+      "config-version":"配置版本号",
+      "stats/disable-saving":"不保存统计数据"
     }
   };
 })();

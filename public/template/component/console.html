@@ -58,9 +58,9 @@
       <div class="Panel" :class="serverData.autoRestart?'PanelGreen':'PanelGray'">
         <div class="PanelTitle">崩溃监视与配置</div>
         <div class="PanelBody">
-          <div class="PanelItem" v-on:click="toProperties()">
+          <div class="PanelItem" v-on:click="toServerConfig()">
             <span class="glyphicon glyphicon-cog" aria-hidden="true"> </span>
-            Server.properties 配置文件
+            服务端配置文件
           </div>
           <transition name="slide-fade">
             <div class="PanelItem" v-on:click="toAutoRestart(false)" v-show="serverData.autoRestart">
@@ -195,8 +195,9 @@
           }
           this.command = "";
         },
-        toProperties: function () {
-          RES.redirectPage("./template/component/properties.html");
+        toServerConfig: function () {
+          TOOLS.fetchData("server/propertiesList",MCSERVER.listenServername,"ServerConfigList");
+          RES.redirectPage("./template/component/serverConfig.html");
         },
         toTerminal: function () {
           RES.redirectPage("./template/component/terminal.html");

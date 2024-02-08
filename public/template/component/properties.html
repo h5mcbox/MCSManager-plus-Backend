@@ -2,7 +2,7 @@
   <div class="row">
     <div class="col-md-12">
       <div class="Panel PanelBlack">
-        <div class="PanelTitle">服务端 server.properties 配置文件</div>
+        <div class="PanelTitle">服务端 {{ configName }} 配置文件</div>
         <div class="PanelBody">
           <div class="row">
             <div class="col-sm-12 PanelItemF">
@@ -10,6 +10,10 @@
               <div class="PanelItem" v-on:click="toBackConsole()">
                 <span class="glyphicon glyphicon-backward" aria-hidden="true"></span>
                 返回到控制台
+              </div>
+              <div class="PanelItem" v-on:click="toBackServerConfig()">
+                <span class="glyphicon glyphicon-backward" aria-hidden="true"></span>
+                返回到配置文件列表
               </div>
               <div class="PanelItem" v-on:click="toUpdateProperties()">
                 <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
@@ -27,21 +31,29 @@
           </div>
           <div class="row">
             <div class="col-lg-12">
-              <p>{{ serverName }} 服务器 Properties 配置文件更改</p>
-              <p>解释: true 代表开, false 代表关,空白代表无值，请注意格式修改，确认无误保存即可，重启服务端生效</p>
+              <p>{{ serverName }} 服务器 {{ configName }} 配置文件更改</p>
+              <p>请注意格式修改，确认无误保存即可，重启服务端生效</p>
               <table class="PropertiesList" width="100%">
                 <tr>
                   <th>原字段键值</th>
-                  <th>第三方解释</th>
+                  <th v-if="MCSERVER.propertiesDescription[this.configName]">第三方解释</th>
                   <th>存在的值</th>
                 </tr>
-                <tr v-for="(val, key) in properties">
-                  <th v-text="key"></th>
-                  <th v-text="findProperties(key)"></th>
+                <tr v-for="property of properties">
+                  <th v-text="property[0]"></th>
+                  <th v-if="MCSERVER.propertiesDescription[this.configName]" v-text="findProperties(property[0])"></th>
                   <th>
-                    <div class="input-group input-group-sm">
-                      <input type="text" class="form-control" aria-describedby="basic-addon1"
-                        v-model="properties[key]" />
+                    <div class="input-group input-group-sm"
+                      v-if="typeof property[1]==='number'||isNumeric(property[1])">
+                      <input type="number" class="form-control" aria-describedby="basic-addon1" v-model="property[1]" />
+                    </div>
+                    <div class="input-group input-group-sm"
+                      v-else-if="typeof property[1]==='string' || property[1]===null">
+                      <input type="text" class="form-control" aria-describedby="basic-addon1" v-model="property[1]" />
+                    </div>
+                    <div class="input-group input-group-sm" v-else-if="typeof property[1]==='boolean'">
+                      <button class="btn btn-success" v-if="property[1]" v-on:click="flipBoolean(property)">是</button>
+                      <button class="btn btn-danger" v-else v-on:click="flipBoolean(property)">否</button>
                     </div>
                   </th>
                 </tr>
@@ -78,11 +90,6 @@
 <script>
 
   MI.rListener("onload", async function () {
-    // MCSERVER.autoColmDo();
-
-    // 定义页面地址
-    await TOOLS.definePage("template/component/properties", "server/properties", MCSERVER.listenServername, "ServerProperties");
-
     VIEW_MODEL.newVue("ServerProperties", {
       el: "#ServerProperties",
       methods: {
@@ -90,9 +97,13 @@
           if (!this.properties) return;
           var obj = {
             serverName: this.serverName,
+            configName: this.configName,
             properties: this.properties
           };
-          WS.call("server/properties_update", obj);
+          await WS.call("server/properties_update", obj);
+        },
+        toBackServerConfig() {
+          RES.redirectPage("./template/component/serverConfig.html");
         },
         toBackConsole() {
           RES.redirectPage("./template/component/console.html");
@@ -101,16 +112,26 @@
           RES.redirectPage("./template/component/properties.html");
         },
         async toUpdatePropertiesFormFile() {
-          await WS.call("server/properties_update_reload", this.serverName);
+          await WS.call("server/properties_update_reload", [this.serverName, this.configName]);
+          this.$forceUpdate();
         },
         findProperties(key) {
-          return MCSERVER.findPropertiesShow(key);
+          return MCSERVER.propertiesDescription?.[this.configName]?.[key] ?? "";
+        },
+        flipBoolean(property) {
+          property[1] = !property[1];
+          this.$forceUpdate();
+        },
+        isNumeric(str) {
+          if (typeof str != "string") return false;
+          return !isNaN(str) &&
+            !isNaN(parseFloat(str))
         }
       }
     });
   });
 
   MI.rListener("onend", function () {
-    VIEW_MODEL["ServerProperties"] = null;
+    //VIEW_MODEL["ServerProperties"] = null;
   });
 </script>
