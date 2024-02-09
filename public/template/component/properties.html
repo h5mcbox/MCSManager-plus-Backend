@@ -36,12 +36,12 @@
               <table class="PropertiesList" width="100%">
                 <tr>
                   <th>原字段键值</th>
-                  <th v-if="MCSERVER.propertiesDescription[this.configName]">第三方解释</th>
+                  <th v-if="findProperties()">第三方解释</th>
                   <th>存在的值</th>
                 </tr>
                 <tr v-for="property of properties">
                   <th v-text="property[0]"></th>
-                  <th v-if="MCSERVER.propertiesDescription[this.configName]" v-text="findProperties(property[0])"></th>
+                  <th v-if="findProperties()" v-text="findProperties(property[0])"></th>
                   <th>
                     <div class="input-group input-group-sm"
                       v-if="typeof property[1]==='number'||isNumeric(property[1])">
@@ -51,9 +51,9 @@
                       v-else-if="typeof property[1]==='string' || property[1]===null">
                       <input type="text" class="form-control" aria-describedby="basic-addon1" v-model="property[1]" />
                     </div>
-                    <div class="input-group input-group-sm" v-else-if="typeof property[1]==='boolean'">
-                      <button class="btn btn-success" v-if="property[1]" v-on:click="flipBoolean(property)">是</button>
-                      <button class="btn btn-danger" v-else v-on:click="flipBoolean(property)">否</button>
+                    <div class="input-group input-group-sm" v-else-if="typeof property[1]==='boolean'" v-on:click="flipBoolean(property)">
+                      <button class="btn btn-success" v-if="property[1]" >是</button>
+                      <button class="btn btn-danger" v-else>否</button>
                     </div>
                   </th>
                 </tr>
@@ -116,6 +116,7 @@
           this.$forceUpdate();
         },
         findProperties(key) {
+          if(!key)return MCSERVER.propertiesDescription?.[this.configName];
           return MCSERVER.propertiesDescription?.[this.configName]?.[key] ?? "";
         },
         flipBoolean(property) {

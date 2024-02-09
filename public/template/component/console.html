@@ -173,18 +173,18 @@
     VIEW_MODEL.newVue("ConsolePanel", {
       el: "#ConsolePanel",
       methods: {
-        toAutoRestart: function () {
+        toAutoRestart() {
           WS.call("server/console/autorestart", serverName);
         },
-        toOnlineFs: async function () {
+        async toOnlineFs() {
           let [{ url }] = await WS.call("onlinefs/getServerKey", serverName);
           window.open(url);
         },
-        toOpenServer: function () {
+        toOpenServer() {
           this.allowedStart = !this.allowedStart;
           WS.call("server/console/open", serverName);
         },
-        toCommand: function (parCommand) {
+        toCommand(parCommand) {
           if (parCommand && typeof parCommand == "string") this.command = parCommand;
           var data = {
             command: this.command,
@@ -195,23 +195,23 @@
           }
           this.command = "";
         },
-        toServerConfig: function () {
-          TOOLS.fetchData("server/propertiesList",MCSERVER.listenServername,"ServerConfigList");
+        async toServerConfig() {
+          await TOOLS.fetchData("server/propertiesList", MCSERVER.listenServername, "ServerConfigList");
           RES.redirectPage("./template/component/serverConfig.html");
         },
-        toTerminal: function () {
+        toTerminal() {
           RES.redirectPage("./template/component/terminal.html");
         },
-        toSchedule: function () {
+        toSchedule() {
           RES.redirectPage("./template/component/schedule.html");
         },
-        toAPI_JSON: function () {
+        toAPI_JSON() {
           window.open("/api/status/" + serverName);
         },
-        toAPI_PAGE: function () {
+        toAPI_PAGE() {
           window.open("/api/status/" + serverName);
         },
-        toPingMCProtocol: function () {
+        toPingMCProtocol() {
           PAGE.listenServername = MCSERVER.listenServername;
           TOOLS.popWind({
             style: {
@@ -222,7 +222,7 @@
             template: "template/dialog/pingmc_config.html"
           });
         },
-        toTerminal: function () {
+        toTerminal() {
           // 打开弹窗型终端
           TOOLS.listenTerminal(serverName);
         }
@@ -234,7 +234,7 @@
         username: MCSERVER.listenServername
       },
       watch: {
-        run: function (cur, old) { }
+        run(cur, old) { }
       }
     });
 
