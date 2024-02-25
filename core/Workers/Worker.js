@@ -9,9 +9,9 @@ const fs = require("fs");
 
 const WORKER_SAVE_PATH = "workers/";
 class Worker {
-  #RequestMap=new Map;
-  #RequestID=0;
-  #HeartbeatTimer=0;
+  #RequestMap = new Map;
+  #RequestID = 0;
+  #HeartbeatTimer = 0;
   constructor(name, MasterKey, RemoteDescription) {
     let now = new Date().toLocaleString();
     if (name.startsWith("_")) {
@@ -94,22 +94,22 @@ class Worker {
     let wsClient = require("ws");
     let wsC = new wsClient(u.href);
     wsC.on("close", () => this.disconnect());
-    this.#HeartbeatTimer=setInterval(()=>this.call("HBPackage",null),10000);
+    this.#HeartbeatTimer = setInterval(() => this.call("HBPackage", null), 10000);
     wsC.on("message", data => {
       const [header, ResponseValue] = msgpack.decode(data);
-      const {RequestID}=header;
+      const { RequestID } = header;
 
-      if(RequestID===null){
+      if (RequestID === null) {
         return WorkerObserver().emit("worker/res", {
           wsC,
-          Worker:this,
+          Worker: this,
           header,
           ResponseValue
         });
       }
-      let RequestMap=this.#RequestMap;
-      if(!RequestMap.has(RequestID))return;
-      const [resolve]=RequestMap.get(RequestID);
+      let RequestMap = this.#RequestMap;
+      if (!RequestMap.has(RequestID)) return;
+      const [resolve] = RequestMap.get(RequestID);
       RequestMap.delete(RequestID);
       resolve(ResponseValue);
     });
@@ -127,14 +127,13 @@ class Worker {
    */
   async call(path, data) {
     if (!this.connected) await this.connect();
-    const RequestID=this.#RequestID++;
+    const RequestID = this.#RequestID++;
     let header = {
-      RequestKey: "req",
-      RequestValue: path,
+      RequestKey: path,
       RequestID
     };
-    this.wsClient.send(msgpack.encode([header,data]));
-    let onReply = new Promise((resolve, reject) => this.#RequestMap.set(RequestID,[resolve,reject]));
+    this.wsClient.send(msgpack.encode([header, data]));
+    let onReply = new Promise((resolve, reject) => this.#RequestMap.set(RequestID, [resolve, reject]));
     return await onReply;
   }
 

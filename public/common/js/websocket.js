@@ -9,12 +9,10 @@
    * @param {WebSocketClient} ws 
    */
   function wsHeartBeatPackage(ws) {
-    setInterval(function () {
-      ws.call("HBPackage", "");
-    }, 1000 * 10);
+    setInterval(() => ws.call("HBPackage", ""), 1000 * 10);
   }
 
-  class WebSocketClient{
+  class WebSocketClient {
     #RequestMap = new Map;
     #RequestID = 0;
     /** @type {WebSocket}*/
@@ -24,16 +22,16 @@
       this.openCallback = openCallback;
       var wsURL = "websocket/ws?" + RES.TOKEN_NAME + "=" + RES.TOKEN;
       this.socket = new WebSocket(MCSERVER.URL(wsURL, MCSERVER.WS_PROTOCOL));
-      this.socket.onopen=()=>this.onopen();
-      this.socket.onmessage=e=>this.onmessage(e);
-      this.socket.onerror=err=>this.onerror(err);
-      this.socket.onclose=()=>this.onclose()
+      this.socket.onopen = () => this.onopen();
+      this.socket.onmessage = e => this.onmessage(e);
+      this.socket.onerror = err => this.onerror(err);
+      this.socket.onclose = () => this.onclose()
       this.socket.binaryType = "arraybuffer";
       wsHeartBeatPackage(this); //心跳包定时器开启
     }
     onmessage(e) {
       const [header, ResponseValue] = msgpack.decode(new Uint8Array(e.data));
-      const {RequestID}=header;
+      const { RequestID } = header;
       try {
         if (DEBUG) {
           console.log("=== Websocket 收到触发 ===");
@@ -41,14 +39,14 @@
           console.log("ResponseValue:" + ResponseValue);
           console.log("=== Websocket 收到结束 ===");
         }
-        if(typeof RequestID==="number"){
+        if (typeof RequestID === "number") {
           let RequestMap = this.#RequestMap;
           if (!RequestMap.has(RequestID)) return;
           const [resolve, reject] = RequestMap.get(RequestID);
           RequestMap.delete(RequestID);
           resolve(ResponseValue);
-        }else{
-          header.ResponseValue=ResponseValue;
+        } else {
+          header.ResponseValue = ResponseValue;
           MI.on("ws/response", header);
         }
       } catch (e) {
@@ -67,29 +65,28 @@
       this.openCallback && this.openCallback();
       MI.on("ws/open", this);
     }
-    async call(path, body) {
+    async call(path, RequestValue) {
       let socket = this.socket;
       const RequestID = this.#RequestID++;
       let header = {
-        RequestKey: "req",
-        RequestValue: path,
+        RequestKey: path,
         RequestID
       };
-      body = body ?? "";
+      RequestValue = RequestValue ?? "";
       if (DEBUG) {
         console.log("=== Websocket 发送触发 ===");
         console.log(header);
-        console.log(body);
+        console.log(RequestValue);
         console.log("=== Websocket 发送结束 ===");
       }
       if (socket.readyState != socket.OPEN) {
         return TOOLS.pushMsgWindow("与服务器链接中断，数据发送失败，请刷新或登陆重试");
       }
-      socket.send(msgpack.encode([header, body]));
+      socket.send(msgpack.encode([header, RequestValue]));
       let onReply = new Promise((resolve, reject) => this.#RequestMap.set(RequestID, [resolve, reject]));
       return await onReply;
     }
-    close(){
+    close() {
       this.socket.close();
     }
   };

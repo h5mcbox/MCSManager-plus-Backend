@@ -1,4 +1,4 @@
-const {Router} = require("express");
+const { Router } = require("express");
 
 const TokenManager = require("../helper/TokenManager");
 const { WebSocketObserver } = require("../model/WebSocketModel");
@@ -9,7 +9,7 @@ const response = require("../helper/Response");
 const loginedContainer = require("../helper/LoginedContainer");
 const counter = require("../core/counter");
 
-const router=Router();
+const router = Router();
 
 //WebSocket 会话类
 class WebsocketSession {
@@ -151,8 +151,8 @@ router.ws("/ws", function (ws, req) {
 
       //检查完毕 | 开始解析数据
       //解码Message Pack数据包
-      let [header,body]=msgpack.decode(data);
-      const {RequestID}=header;
+      let [header, RequestValue] = msgpack.decode(data);
+      const { RequestID } = header;
 
       if (!header) return;
 
@@ -171,8 +171,7 @@ router.ws("/ws", function (ws, req) {
         user: username,
         header,
         RequestID,
-        body,
-        RequestValue: header.RequestValue,
+        body: RequestValue,
         token,
         WsSession
       });
