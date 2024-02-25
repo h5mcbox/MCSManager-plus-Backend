@@ -5,7 +5,7 @@ const permssion = require("../../helper/Permission");
 const response = require("../../helper/Response");
 
 // 保存配置
-WebSocketObserver().listener("mcping/config_save", async (data) => {
+WebSocketObserver().listener("mcping/config_save", async data => {
   const { body } = data;
   const serverName = body.mcpingServerName;
   const userName = data.WsSession.username;
@@ -25,7 +25,7 @@ WebSocketObserver().listener("mcping/config_save", async (data) => {
 
 // 获取配置
 // 获取配置是公开的，任何人可以获取到你填写的配置，无权限控制
-WebSocketObserver().listener("mcping/config", async (data) => {
+WebSocketObserver().listener("mcping/config", async data => {
   const serverName = data.body || "";
   if (serverName) {
     const { worker } = serverModel.ServerManager().getServer(serverName);
@@ -33,7 +33,6 @@ WebSocketObserver().listener("mcping/config", async (data) => {
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
       return response.wsResponse(data, false);
     }
-    let [{ ResponseValue }, body] = await worker.call("mcping/config", data.body);
-    response.wsResponse(data, ResponseValue, body);
+    response.wsResponse(data, await worker.call("mcping/config", data.body));
   }
 });

@@ -5,7 +5,7 @@ const response = require("../../helper/Response");
 const workerCenter = require("../../model/WorkerModel");
 const permission = require("../../helper/Permission");
 
-WebSocketObserver().listener("genuser/home", async (data) => {
+WebSocketObserver().listener("genuser/home", async data => {
   if (!permission.hasRights(data.WsSession.username, "genuser")) return;
   try {
     let username = data.WsSession.username.trim();
@@ -18,12 +18,11 @@ WebSocketObserver().listener("genuser/home", async (data) => {
     }
     let allowedServerList = user.allowedServer();
     // 判断是否为管理员，若是的话则返回所有服务端的数据
-    var allServersNames = [], workerNames = [];
+    let allServersNames = [], workerNames = [];
     for (let item of workerCenter.getOnlineWorkers()) {
-      var [header] = await item.call("server/view");
+      let ResponseValue = await item.call("server/view");
       workerNames.push(item.dataModel.workername);
-      if (header.ResponseKey !== "server/view") return false;
-      header.ResponseValue.items.forEach(e => allServersNames.push(e.serverName));
+      ResponseValue.items.forEach(e => allServersNames.push(e.serverName));
     }
     if (permission.hasRights(data.WsSession.username, "server")) {
       allowedServerList = [];
@@ -42,22 +41,21 @@ WebSocketObserver().listener("genuser/home", async (data) => {
         response.wsMsgWindow(data.ws, "创建出错:" + "Worker不存在");
         return response.wsResponse(data, false);
       }
-      var worker = workerCenter.get(serverLoc);
-      var [header] = await worker.call("server/get", allowedServerList[k]);
-      if (header.ResponseKey !== "server/get") continue;
+      let worker = workerCenter.get(serverLoc);
+      let ResponseValue = await worker.call("server/get", allowedServerList[k]);
       //有些用户就是喜欢取不存在的
       if (userHaveServer == undefined) continue;
       //有些数据不应该是用户可以收到的
       userServerList.push({
-        serverName: header.ResponseValue.name,
-        lastDate: header.ResponseValue.lastDate,
-        createDate: header.ResponseValue.createDate,
-        run: header.ResponseValue.run,
-        jarName: header.ResponseValue.jarName,
-        timeLimitDate: header.ResponseValue.timeLimitDate
+        serverName: ResponseValue.name,
+        lastDate: ResponseValue.lastDate,
+        createDate: ResponseValue.createDate,
+        run: ResponseValue.run,
+        jarName: ResponseValue.jarName,
+        timeLimitDate: ResponseValue.timeLimitDate
       });
-      if (header.ResponseValue.run) {
-        OnlineServerList.push(header.ResponseValue.name);
+      if (ResponseValue.run) {
+        OnlineServerList.push(ResponseValue.name);
       }
     }
     var resObj = {
@@ -82,7 +80,7 @@ WebSocketObserver().listener("genuser/home", async (data) => {
   }
 });
 
-WebSocketObserver().listener("genuser/banned", (data) => {
+WebSocketObserver().listener("genuser/banned", data => {
   if (!permission.hasRights(data.WsSession.username, "banned")) return;
   let user = userCenter().get(data.WsSession.username.trim());
   response.wsResponse(data, {
@@ -92,7 +90,7 @@ WebSocketObserver().listener("genuser/banned", (data) => {
     createDate: user.dataModel.createDate
   });
 });
-WebSocketObserver().listener("genuser/view", (data) => {
+WebSocketObserver().listener("genuser/view", data => {
   let user = userCenter().get(data.WsSession.username.trim());
   response.wsResponse(data, {
     username: user.dataModel.username,
@@ -103,7 +101,7 @@ WebSocketObserver().listener("genuser/view", (data) => {
     allowedServer: user.dataModel.allowedServer || []
   });
 });
-WebSocketObserver().listener("genuser/re_password", (data) => {
+WebSocketObserver().listener("genuser/re_password", data => {
   let username = data.WsSession.username.trim();
   let user = userCenter().get(username);
   let config = data.body;

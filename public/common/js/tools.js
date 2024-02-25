@@ -42,7 +42,7 @@
 
   //后端要求打开信息框
   MI.routeListener("window/msg", function (data) {
-    TOOLS.pushMsgWindow(data.body);
+    TOOLS.pushMsgWindow(data.ResponseValue);
   });
 
   // XSS 攻击防御函数
@@ -367,7 +367,7 @@
   //addEventListener("hashchange", () => TOOLS.page(true));
 
   TOOLS.fetchData = async function (v2, v3, copyData) {
-    let [obj] = await WS.call(v2, v3);
+    let obj = await WS.call(v2, v3);
     MI.routeCopy(copyData, obj);
   }
   TOOLS.definePage = async function (v1, v2, v3, copyData) {

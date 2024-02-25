@@ -32,23 +32,23 @@
       wsHeartBeatPackage(this); //心跳包定时器开启
     }
     onmessage(e) {
-      const [header, body] = msgpack.decode(new Uint8Array(e.data));
+      const [header, ResponseValue] = msgpack.decode(new Uint8Array(e.data));
       const {RequestID}=header;
       try {
         if (DEBUG) {
           console.log("=== Websocket 收到触发 ===");
           console.log(header);
-          console.log("Body:" + body);
+          console.log("ResponseValue:" + ResponseValue);
           console.log("=== Websocket 收到结束 ===");
         }
-        header.body = body;
         if(typeof RequestID==="number"){
           let RequestMap = this.#RequestMap;
           if (!RequestMap.has(RequestID)) return;
           const [resolve, reject] = RequestMap.get(RequestID);
           RequestMap.delete(RequestID);
-          resolve([header.ResponseValue, body]);
+          resolve(ResponseValue);
         }else{
+          header.ResponseValue=ResponseValue;
           MI.on("ws/response", header);
         }
       } catch (e) {
@@ -67,21 +67,21 @@
       this.openCallback && this.openCallback();
       MI.on("ws/open", this);
     }
-    async call(value, body) {
+    async call(path, body) {
       let socket = this.socket;
       const RequestID = this.#RequestID++;
       let header = {
         RequestKey: "req",
-        RequestValue: value,
+        RequestValue: path,
         RequestID
       };
+      body = body ?? "";
       if (DEBUG) {
         console.log("=== Websocket 发送触发 ===");
         console.log(header);
         console.log(body);
         console.log("=== Websocket 发送结束 ===");
       }
-      body = body ?? "";
       if (socket.readyState != socket.OPEN) {
         return TOOLS.pushMsgWindow("与服务器链接中断，数据发送失败，请刷新或登陆重试");
       }

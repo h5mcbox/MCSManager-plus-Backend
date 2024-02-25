@@ -4,7 +4,7 @@ const permssion = require("../../helper/Permission");
 const { hash } = require("../../core/User/CryptoMine")
 const serverCenter = require("../../model/ServerModel").ServerManager();
 const workerCenter = require("../../model/WorkerModel");
-WebSocketObserver().listener("onlinefs/getWorkerKey", (data) => {
+WebSocketObserver().listener("onlinefs/getWorkerKey", data => {
   if (!permssion.hasRights(data.WsSession.username, "workers:onlinefs")) return;
   let now = Math.floor(Date.now() / 1000);
   var params = data.body.trim().split(":");
@@ -18,7 +18,7 @@ WebSocketObserver().listener("onlinefs/getWorkerKey", (data) => {
   u.searchParams.set("key", timeKey);
   response.wsResponse(data, { url: u.href });
 });
-WebSocketObserver().listener("onlinefs/getServerKey", (data) => {
+WebSocketObserver().listener("onlinefs/getServerKey", data => {
   let now = Math.floor(Date.now() / 1000);
   let serverName = data.body.trim();
   if (!permssion.isCanServer(data.WsSession.username, serverName)) return;

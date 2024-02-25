@@ -159,14 +159,10 @@
           await onChanged;
           input.oninput = null;
           blob = input.files[0];
-          if (!blob) {
-            return;
-          }
-          var urlo = new URL(location.href);
-          urlo.pathname = "/update/worker/" + itemWorkername;
-          await fetch(urlo.href, {
-            method: "POST",
-            body: blob
+          if (!blob) return;
+          await WS.call("center/updateWorker",{
+            name:itemWorkername,
+            buffer:new Uint8Array(await blob.arrayBuffer())
           });
           TOOLS.pushMsgWindow("Worker开始更新");
         },

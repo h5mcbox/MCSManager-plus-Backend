@@ -3,13 +3,13 @@ const permssion = require("../../helper/Permission");
 const response = require("../../helper/Response");
 
 //获取信息
-WebSocketObserver().listener("soft/view", (data) => {
+WebSocketObserver().listener("soft/view", data => {
   if (!permssion.hasRights(data.WsSession.username, "soft")) return;
   response.wsResponse(data, { softConfig: MCSERVER.softConfig });
 });
 
 //更新配置
-WebSocketObserver().listener("soft/update", (data) => {
+WebSocketObserver().listener("soft/update", data => {
   if (!permssion.hasRights(data.WsSession.username, "soft")) return;
   let newConfig = data.body;
   if (newConfig) {

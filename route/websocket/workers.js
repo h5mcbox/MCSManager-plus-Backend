@@ -121,8 +121,7 @@ WebSocketObserver().listener("workers/center", async (data) => {
       return response.wsResponse(data, false);
     }
     let worker = WorkerCenter.get(workerName);
-    let [{ ResponseValue }, body] = await worker.call("center/show", data.body);
-    response.wsResponse(data, ResponseValue, body);
+    response.wsResponse(data, await worker.call("center/show", data.body));
   } catch (e) {
     response.wsResponse(data, null);
     response.wsMsgWindow(data.ws, "访问Worker失败" + e);
@@ -138,8 +137,7 @@ WebSocketObserver().listener("workers/restart", async (data) => {
       return response.wsResponse(data, false);
     }
     let worker = WorkerCenter.get(workerName);
-    let [{ ResponseValue }, body] = await worker.call("center/restart", data.body);
-    response.wsResponse(data, ResponseValue, body);
+    response.wsResponse(data, await worker.call("center/restart", data.body));
   } catch (e) {
     response.wsResponse(data, null);
     response.wsMsgWindow(data.ws, "访问Worker失败" + e);

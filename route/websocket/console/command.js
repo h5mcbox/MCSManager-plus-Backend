@@ -6,7 +6,7 @@ const permission = require("../../../helper/Permission");
 //const mcPingProtocol = require("../../../helper/MCPingProtocol");
 
 //发送指令
-WebSocketObserver().listener("server/console/command", async (data) => {
+WebSocketObserver().listener("server/console/command", async data => {
   let serverName = data.body.serverName.trim();
   //let command = par.command;
   let userName = data.WsSession.username;
@@ -16,8 +16,7 @@ WebSocketObserver().listener("server/console/command", async (data) => {
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
       return response.wsResponse(data, false);
     }
-    let [{ ResponseValue }, body] = await worker.call("server/console/command", data.body);
-    response.wsResponse(data, ResponseValue, body);
+    response.wsResponse(data, await worker.call("server/console/command", data.body));
   }
   response.wsResponse(data, null);
 });

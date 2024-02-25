@@ -272,16 +272,14 @@
           input.click();
           await onChanged;
           input.oninput = null;
-          blob = input.files[0];
-          if (!blob) {
-            return;
-          }
-          var urlo = new URL(location.href);
-          urlo.pathname = itemWorkername ? "/update/worker/" + itemWorkername : "/update";
-          await fetch(urlo.href, {
-            method: "POST",
-            body: blob
-          })
+          let blob = input.files[0];
+          if (!blob) return;
+          let method = itemWorkername ? `center/updateWorker` : "center/update";
+          await WS.call(method,{
+            name:itemWorkername,
+            buffer:new Uint8Array(await blob.arrayBuffer())
+          });
+          
           if (!itemWorkername) {
             TOOLS.pushMsgWindow("面板开始更新");
           } else {

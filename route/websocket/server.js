@@ -4,20 +4,18 @@ const workerModel = require("../../model/WorkerModel");
 const response = require("../../helper/Response");
 const permssion = require("../../helper/Permission");
 
-WebSocketObserver().listener("server/view", async (data) => {
+WebSocketObserver().listener("server/view", async data => {
   if (!permssion.hasRights(data.WsSession.username, "server:overview")) return;
   let allServers = [];
   for (let item of workerModel.getOnlineWorkers()) {
-    let [{ ResponseKey, ResponseValue }] = await item.call("server/view", data.body);
-    if (ResponseKey !== "server/view") return false;
-    ResponseValue.items.forEach(e => allServers.push(e));
+    (await item.call("server/view", data.body)).items.forEach(e => allServers.push(e));
   }
   response.wsResponse(data, {
     items: allServers
   });
 });
 
-WebSocketObserver().listener("server/get", async (data) => {
+WebSocketObserver().listener("server/get", async data => {
   //服务器名在 data.body 里面
   if (!permssion.hasRights(data.WsSession.username, "server:getServer")) return;
 
@@ -33,13 +31,12 @@ WebSocketObserver().listener("server/get", async (data) => {
     return response.wsResponse(data, false);
   }
   let worker = mcserver.worker;
-  let [{ ResponseKey, ResponseValue },body] = await worker.call("server/get", data.body);
-  if (ResponseKey !== "server/get") return false;
-  ResponseValue.location = mcserver.location;
-  response.wsResponse(data, ResponseValue, body);
+  let servInfo = await worker.call("server/get", data.body);
+  servInfo.location = mcserver.location;
+  response.wsResponse(data, servInfo, body);
 });
 
-WebSocketObserver().listener("server/create", async (data) => {
+WebSocketObserver().listener("server/create", async data => {
   if (!permssion.hasRights(data.WsSession.username, "server:createServer")) return;
 
   let ServerConfig = data.body;
@@ -63,7 +60,7 @@ WebSocketObserver().listener("server/create", async (data) => {
   }
 });
 
-WebSocketObserver().listener("server/create_dir", async (data) => {
+WebSocketObserver().listener("server/create_dir", async data => {
   if (!permssion.hasRights(data.WsSession.username, "server:create_dir")) return;
 
   let ServerConfig = data.body;
@@ -73,15 +70,14 @@ WebSocketObserver().listener("server/create_dir", async (data) => {
     return response.wsResponse(data, false);
   }
   try {
-    let [{ ResponseValue }, body] = await worker.call("server/create_dir", data.body);
-    response.wsResponse(data, ResponseValue, body);
+    response.wsResponse(data, await worker.call("server/create_dir", data.body));
   } catch (e) {
     response.wsMsgWindow(data.ws, "创建目录" + ServerConfig.cwd + "出错");
     return response.wsResponse(data, false);
   }
 });
 
-WebSocketObserver().listener("server/rebuilder", async (data) => {
+WebSocketObserver().listener("server/rebuilder", async data => {
   if (!permssion.hasRights(data.WsSession.username, "server:rebuilder")) return;
   let ServerConfig = data.body;
   let oldServerName = ServerConfig.oldServerName.trim();
@@ -90,11 +86,10 @@ WebSocketObserver().listener("server/rebuilder", async (data) => {
     response.wsMsgWindow(data.ws, "修改出错:" + "Worker不存在");
     return response.wsResponse(data, false);
   }
-  let [{ ResponseValue }, body] = await worker.call("server/rebuilder", data.body);
-  response.wsResponse(data, ResponseValue, body);
+  response.wsResponse(data, await worker.call("server/rebuilder", data.body));
 });
 
-WebSocketObserver().listener("server/delete", async (data) => {
+WebSocketObserver().listener("server/delete", async data => {
   if (!permssion.hasRights(data.WsSession.username, "server:deleteServer")) return;
 
   let serverName = data.body.trim();
@@ -113,13 +108,11 @@ WebSocketObserver().listener("server/delete", async (data) => {
 });
 
 //服务器批量启动与关闭
-WebSocketObserver().listener("server/opt_all", async (data) => {
+WebSocketObserver().listener("server/opt_all", async data => {
   if (!permssion.hasRights(data.WsSession.username, "server:operateAllServer")) return;
 
   try {
-    for (let item of workerModel.getOnlineWorkers()) {
-      await item.call("server/opt_all");
-    }
+    for (let item of workerModel.getOnlineWorkers()) await item.call("server/opt_all");
     return response.wsResponse(data, true);
   } catch (err) {
     response.wsMsgWindow(data.ws, "执行失败:" + err);

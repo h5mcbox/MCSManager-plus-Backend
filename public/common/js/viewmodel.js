@@ -94,11 +94,11 @@
 
   //服务器控制台
   MI.routeListener("server/console", function (data) {
-    if (data.obj == null) {
+    if (data.ResponseValue == null) {
       TOOLS.pushMsgWindow("您并不拥有这个服务器的所有权，需要管理员设定");
       VIEW_MODEL["ConsolePanel"].serverData.name = null;
     }
-    MI.routeCopy("ConsolePanel", data.obj);
+    MI.routeCopy("ConsolePanel", data.ResponseValue);
   });
 
   // Minecraft 服务器终端换行替换符
@@ -113,10 +113,10 @@
     // 一种针对弹窗终端，一种针对网页终端
     var text;
     if (PAGE.methods == 0) {
-      text = TOOLS.encodeConsoleColor(data.body);
+      text = TOOLS.encodeConsoleColor(data.ResponseValue);
       MCSERVER.term.write(text);
     } else {
-      text = TOOLS.encodeConsoleColorForHtml(terminalEncode(data.body));
+      text = TOOLS.encodeConsoleColorForHtml(terminalEncode(data.ResponseValue));
       var eleTerminal = document.getElementById("TerminalMinecraft");
       if (eleTerminal.innerHTML.length >= 100000) {
         eleTerminal.innerHTML =
@@ -133,11 +133,11 @@
   MI.routeListener("server/console/history", function (data) {
     var text;
     if (PAGE.methods == 0) {
-      text = TOOLS.encodeConsoleColor(data.body);
+      text = TOOLS.encodeConsoleColor(data.ResponseValue);
       MCSERVER.term.write(text);
     } else {
       var eleTerminal = document.getElementById("TerminalMinecraft");
-      text = TOOLS.encodeConsoleColorForHtml(terminalEncode(data.body));
+      text = TOOLS.encodeConsoleColorForHtml(terminalEncode(data.ResponseValue));
       if (eleTerminal.innerHTML.length >= 100000) {
         eleTerminal.innerHTML =
           "<br /><br />[ 控制面板 ]: 日志显示过长，为避免网页卡顿，现已自动清空。<br />[ 控制面板 ]: 若想回看历史日志，请点击右上角刷新按钮，再重新进入点击 [历史] 按钮即可。<br /><br />";

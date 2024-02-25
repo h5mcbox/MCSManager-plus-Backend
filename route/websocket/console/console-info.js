@@ -7,7 +7,7 @@ const { WebSocketObserver } = require("../../../model/WebSocketModel");
 const mcPingProtocol = require("../../../helper/MCPingProtocol");
 
 //控制台信息获取
-WebSocketObserver().listener("server/console", async (data) => {
+WebSocketObserver().listener("server/console", async data => {
   // permssion.needLogin(req, res);
   let userName = data.WsSession.username;
   let serverName = data.body.trim();
@@ -18,8 +18,7 @@ WebSocketObserver().listener("server/console", async (data) => {
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
       return response.wsResponse(data, false);
     }
-    let [{ ResponseValue }, body] = await worker.call("server/console", data.body);
-    response.wsResponse(data, ResponseValue, body);
+    response.wsResponse(data, await worker.call("server/console", data.body));
     // MCSERVER.log('准许用户 [' + userName + '] 获取控制台实时数据');
   }
 });

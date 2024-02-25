@@ -3,7 +3,7 @@ const response = require("../../helper/Response");
 const permission = require("../../helper/Permission");
 const allPermissions = new Set(Object.values(MCSERVER.localProperty.rights).map(e => e.rights).flat())
 
-WebSocketObserver().listener("menu", async (data) => {
+WebSocketObserver().listener("menu", async data => {
   //Object {ws: WebSocket, req: IncomingMessage, user: undefined, header: Object, body: "[body 开始]
   //Object {RequestKey: "req", RequestValue: "some"}
 
@@ -96,6 +96,6 @@ WebSocketObserver().listener("menu", async (data) => {
   });
 });
 
-WorkerObserver().listener("window/msg", ({ body }) => {
-  for (let client of Object.values(MCSERVER.allSockets)) response.wsMsgWindow(client.ws, body);
+WorkerObserver().listener("window/msg", ({ ResponseValue }) => {
+  for (let client of Object.values(MCSERVER.allSockets)) response.wsMsgWindow(client.ws, ResponseValue);
 })

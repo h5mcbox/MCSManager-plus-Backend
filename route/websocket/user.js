@@ -5,7 +5,7 @@ const permssion = require("../../helper/Permission");
 const tools = require("../../core/tools");
 const totp = require("../../helper/totp");
 
-WebSocketObserver().listener("userset/update", (data) => {
+WebSocketObserver().listener("userset/update", data => {
   if (!permssion.hasRights(data.WsSession.username, "userset:overview")) return;
 
   //添加是否在线
@@ -20,7 +20,7 @@ WebSocketObserver().listener("userset/update", (data) => {
   response.wsResponse(data, { items: userNameList });
 });
 
-WebSocketObserver().listener("userset/create", (data) => {
+WebSocketObserver().listener("userset/create", data => {
   if (!permssion.hasRights(data.WsSession.username, "userset:createUser")) return;
 
   try {
@@ -82,7 +82,7 @@ WebSocketObserver().listener("userset/create", (data) => {
   }
 });
 
-WebSocketObserver().listener("userset/delete", (data) => {
+WebSocketObserver().listener("userset/delete", data => {
   if (!permssion.hasRights(data.WsSession.username, "userset:deleteUser")) return;
 
   try {
@@ -109,7 +109,7 @@ WebSocketObserver().listener("userset/delete", (data) => {
   }
 });
 
-WebSocketObserver().listener("userset/reload", (data) => {
+WebSocketObserver().listener("userset/reload", data => {
   if (!permssion.hasRights(data.WsSession.username, "userset:reloadFromFile")) return;
 
   try {
@@ -125,7 +125,7 @@ WebSocketObserver().listener("userset/reload", (data) => {
 });
 
 //查看某个用戶信息
-WebSocketObserver().listener("userset/view", (data) => {
+WebSocketObserver().listener("userset/view", data => {
   if (!permssion.hasRights(data.WsSession.username, "userset:view")) return;
 
   let user = userCenter().get(data.body.trim());
@@ -141,7 +141,7 @@ WebSocketObserver().listener("userset/view", (data) => {
 });
 
 //更新用户配置
-WebSocketObserver().listener("userset/upinfo", (data) => {
+WebSocketObserver().listener("userset/upinfo", data => {
   if (!permssion.hasRights(data.WsSession.username, "userset:uploadInfomation")) return;
 
   try {
@@ -234,7 +234,7 @@ WebSocketObserver().listener("userset/upinfo", (data) => {
 });
 
 //更新用户配置
-WebSocketObserver().listener("userset/2fa/set", (data) => {
+WebSocketObserver().listener("userset/2fa/set", data => {
   if (!permssion.hasRights(data.WsSession.username, "2FA:enable")) return;
   var totp = require("../../helper/totp");
   try {
@@ -262,7 +262,7 @@ WebSocketObserver().listener("userset/2fa/set", (data) => {
     return response.wsResponse(data, false);
   }
 });
-WebSocketObserver().listener("userset/2fa/disable", (data) => {
+WebSocketObserver().listener("userset/2fa/disable", data => {
   if (!permssion.hasRights(data.WsSession.username, "2FA:disable")) return;
   var totp = require("../../helper/totp");
   try {
@@ -290,7 +290,7 @@ WebSocketObserver().listener("userset/2fa/disable", (data) => {
     return response.wsResponse(data, false);
   }
 });
-WebSocketObserver().listener("userset/2fa/updateKey", (data) => {
+WebSocketObserver().listener("userset/2fa/updateKey", data => {
   if (!permssion.hasRights(data.WsSession.username, "2FA:update")) return;
   var cryptoMine = require("../../core/User/CryptoMine");
   try {
@@ -311,7 +311,7 @@ WebSocketObserver().listener("userset/2fa/updateKey", (data) => {
     return response.wsResponse(data, false);
   }
 });
-WebSocketObserver().listener("userset/2fa/getAuthURL", (data) => {
+WebSocketObserver().listener("userset/2fa/getAuthURL", data => {
   if (!permssion.hasRights(data.WsSession.username, "2FA:getAuthURL")) return;
   var tempuser = userCenter().get(data.req.session["username"]);
   var auth = {

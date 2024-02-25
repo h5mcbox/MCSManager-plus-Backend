@@ -6,7 +6,7 @@ const response = require("../../../helper/Response");
 const HISTORY_SIZE_LINE = 1024;
 
 // 正序历史记录路由
-WebSocketObserver().listener("server/console/history", async (data) => {
+WebSocketObserver().listener("server/console/history", async data => {
   let { WsSession: { username: userName }, body: reqBody } = data;
   let serverName = reqBody["serverName"] || "";
 
@@ -16,14 +16,14 @@ WebSocketObserver().listener("server/console/history", async (data) => {
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
       return response.wsResponse(data, false);
     }
-    let [{ ResponseValue }, body] = await worker.call("server/console/history", data.body);
-    response.wsSend(data.ws,"server/console/history", ResponseValue, body);
+    let ResponseValue = await worker.call("server/console/history", data.body);
+    response.wsSend(data.ws,"server/console/history", ResponseValue);
     response.wsResponse(data,null);
   }
 });
 /*
 // 首次进入终端使用,倒序历史记录路由
-WebSocketObserver().listener("server/console/history_reverse", (data) => {
+WebSocketObserver().listener("server/console/history_reverse", data => {
   let {WsSession:{userName},body:reqBody} = data;
   let serverName = reqBody["serverName"] || "";
 
@@ -38,7 +38,7 @@ WebSocketObserver().listener("server/console/history_reverse", (data) => {
 */
 // 历史指针重置路由
 /*
-WebSocketObserver().listener("server/console/history_reset", (data) => {
+WebSocketObserver().listener("server/console/history_reset", data => {
   let {WsSession:{userName},body:reqBody} = data;
   let serverName = reqBody["serverName"] || "";
 

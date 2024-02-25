@@ -108,10 +108,9 @@
     }
   };
   //事件转接
-  MI.listener("ws/response", function (obj) {
-    MI.routeOn(obj["ResponseKey"], {
-      obj: obj["ResponseValue"],
-      body: obj.body
+  MI.listener("ws/response", function (header) {
+    MI.routeOn(header.ResponseKey, {
+      ResponseValue: header.ResponseValue
     });
   });
 })();

@@ -13,16 +13,14 @@ function selectWebsocket(serverName, callback) {
   }
 }
 
-WorkerObserver().listener("server/console/ws", async (data) => {
-  for (let [serverName, buffer] of Object.entries(data.body)) {
-    selectWebsocket(serverName, socket => response.wsSend(socket.ws, "server/console/ws", {}, buffer));
-  }
+WorkerObserver().listener("server/console/ws", async data => {
+  for (let [serverName, buffer] of Object.entries(data.ResponseValue)) selectWebsocket(serverName, socket => response.wsSend(socket.ws, "server/console/ws", buffer));
 });
 
 //日志缓存记录器
 MCSERVER.consoleLog = {};
 //控制请求监听控制台实例
-WebSocketObserver().listener("server/console/ws", async (data) => {
+WebSocketObserver().listener("server/console/ws", async data => {
   let userName = data.WsSession.username;
   let serverName = data.body.trim();
 
@@ -41,8 +39,7 @@ WebSocketObserver().listener("server/console/ws", async (data) => {
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
       return response.wsResponse(data, false);
     }
-    let [{ ResponseValue }, body] = await worker.call("server/console/ws", data.body);
-    return response.wsResponse(data, ResponseValue, body);
+    return response.wsResponse(data, await worker.call("server/console/ws", data.body));
   }
 
   MCSERVER.log(`[${serverName}] >>> 拒绝用户 ${userName} 控制台监听`);
@@ -50,7 +47,7 @@ WebSocketObserver().listener("server/console/ws", async (data) => {
 });
 
 //前端退出控制台界面
-WebSocketObserver().listener("server/console/remove", async (data) => {
+WebSocketObserver().listener("server/console/remove", async data => {
   //单页退出时触发
 
   for (let k in MCSERVER.allSockets) {
@@ -62,8 +59,7 @@ WebSocketObserver().listener("server/console/remove", async (data) => {
         response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
         return response.wsResponse(data, false);
       }
-      let [{ ResponseValue }, body] = await worker.call("server/console/remove", MCSERVER.allSockets[k]["console"]);
-      response.wsResponse(data, ResponseValue, body);
+      response.wsResponse(data, worker.call("server/console/remove", MCSERVER.allSockets[k]["console"]));
       MCSERVER.allSockets[k]["console"] = undefined;
       return;
     }

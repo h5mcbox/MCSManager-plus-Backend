@@ -3,7 +3,7 @@ const { userCenter } = require("../../model/UserModel");
 const permission = require("../../helper/Permission");
 const uuid = require("uuid");
 const response = require("../../helper/Response");
-WebSocketObserver().listener("permission/getPermissionID", (data) => {
+WebSocketObserver().listener("permission/getPermissionID", data => {
   if (!permission.hasRights(data.WsSession.username, "permission:getPermissionID")) return;
   let permissionTableBucket = data.WsSession.PIDs;
   if (!permissionTableBucket) data.WsSession.PIDs = permissionTableBucket = {};
@@ -40,7 +40,7 @@ WebSocketObserver().listener("permission/getPermissionID", (data) => {
 
   response.wsResponse(data, PermissionTable);
 });
-WebSocketObserver().listener("permission/savePID", (data) => {
+WebSocketObserver().listener("permission/savePID", data => {
   if (!permission.hasRights(data.WsSession.username, "permission:setPermissionID")) return;
   let PermissionTable = data.body;
   let permissionTableBucket = data.WsSession.PIDs;

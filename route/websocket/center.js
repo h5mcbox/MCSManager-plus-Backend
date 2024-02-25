@@ -5,6 +5,8 @@ const response = require("../../helper/Response");
 const serverModel = require("../../model/ServerModel");
 const permssion = require("../../helper/Permission");
 const userModel = require("../../model/UserModel");
+const { hash } = require("../../core/User/CryptoMine");
+const fs = require("fs");
 const os = require("os");
 const mversion = require("../../helper/version");
 const workerModel = require("../../model/WorkerModel");
@@ -57,7 +59,7 @@ setInterval(async function () {
   //获取正在运行服务器的数量
   let allOnlineServers = 0;
   for (let item of workerModel.getOnlineWorkers()) {
-    let [{ ResponseValue }] = await item.call("server/view");
+    let ResponseValue = await item.call("server/view");
     ResponseValue.items.forEach(e => { if (e.data.run) allOnlineServers++ });
   }
   //缓存值
@@ -96,14 +98,53 @@ setInterval(async function () {
 }, MCSERVER.localProperty.data_center_times);
 
 //重启逻辑
-WebSocketObserver().listener("center/restart", (data) => {
+WebSocketObserver().listener("center/restart", data => {
   if (!permssion.hasRights(data.WsSession.username, "restart")) return response.wsResponse(data, false);
   MCSERVER.log("面板重启...");
   response.wsResponse(data, true);
-  process.nextTick(()=>{
+  process.nextTick(() => {
     process.send({ restart: "./app.js" });
     process.emit("SIGINT");
   });
+});
+
+//更新逻辑
+WebSocketObserver().listener("center/update", data => {
+  if (!permssion.hasRights(data.WsSession.username, "update")) return response.wsResponse(data, false);
+  let userName = data.WsSession.username;
+  let { buffer } = data.body;
+
+  const target_path = "./app.apkg";
+  fs.writeFileSync("./app.backup.apkg", fs.readFileSync(target_path))
+  fs.writeFileSync(target_path, buffer);
+  MCSERVER.log(`[ 软件更新 ] 用户 ${userName} 执行Backend软件更新`);
+
+  MCSERVER.log("面板重启...");
+  response.wsResponse(data, true);
+  process.nextTick(() => {
+    process.send({ restart: "./app.js" });
+    process.emit("SIGINT");
+  });
+});
+
+//更新逻辑
+WebSocketObserver().listener("center/updateWorker", async data => {
+  if (!permssion.hasRights(data.WsSession.username, "update")) return response.wsResponse(data, false);
+  let userName = data.WsSession.username;
+  let { name, buffer } = data.body;
+
+  let worker = workerModel.get(name);
+  if (!worker) return res.status(500).send("访问出错:Worker不存在");
+
+  let now = Math.floor(Date.now() / 1000);
+  let timeWindow = Math.floor(now / 120);
+  let timeKey = hash.hmac(worker.dataModel.MasterKey, timeWindow.toString());
+  let sign = hash.hmac(timeKey, buffer);
+  let ResponseValue = await worker.call("center/update", { buffer, sign });
+  response.wsResponse(data, ResponseValue);
+
+  MCSERVER.log(`[ 软件更新 ] 用户 ${userName} 执行Worker ${name} 软件更新`);
+
 });
 
 //数据中心

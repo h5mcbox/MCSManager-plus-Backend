@@ -96,22 +96,22 @@ class Worker {
     wsC.on("close", () => this.disconnect());
     this.#HeartbeatTimer=setInterval(()=>this.call("HBPackage",null),10000);
     wsC.on("message", data => {
-      const [header, body] = msgpack.decode(data);
+      const [header, ResponseValue] = msgpack.decode(data);
       const {RequestID}=header;
 
       if(RequestID===null){
-        WorkerObserver().emit("worker/res", {
+        return WorkerObserver().emit("worker/res", {
           wsC,
           Worker:this,
           header,
-          body
+          ResponseValue
         });
       }
       let RequestMap=this.#RequestMap;
       if(!RequestMap.has(RequestID))return;
-      const [resolve,reject]=RequestMap.get(RequestID);
+      const [resolve]=RequestMap.get(RequestID);
       RequestMap.delete(RequestID);
-      resolve([header,body]);
+      resolve(ResponseValue);
     });
     try {
       await new Promise((resolve, reject) => { wsC.on("open", resolve); wsC.on("error", reject) });
@@ -126,11 +126,7 @@ class Worker {
    * @returns {Promise<any[]>}
    */
   async call(path, data) {
-    if (!this.connected) {
-      //MCSERVER.error(`Worker ${this.dataModel.workername}未连接,已忽略消息`);
-      //return false;
-      await this.connect();
-    };
+    if (!this.connected) await this.connect();
     const RequestID=this.#RequestID++;
     let header = {
       RequestKey: "req",
