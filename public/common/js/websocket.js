@@ -84,6 +84,7 @@
       }
       socket.send(msgpack.encode([header, RequestValue]));
       let onReply = new Promise((resolve, reject) => this.#RequestMap.set(RequestID, [resolve, reject]));
+      setTimeout(([, reject]) => reject("RPC timeout"), 300 * 1000, this.#RequestMap.get(RequestID));
       return await onReply;
     }
     close() {

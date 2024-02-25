@@ -43,8 +43,8 @@ module.exports.wsSend = (ws, info, value) => {
   wsSend(ws, info, value);
 };
 
-module.exports.wsResponse = ({ ws, RequestID, RequestValue: info }, value) => {
-  wsSend(ws, info, value, RequestID);
+module.exports.wsResponse = ({ ws, RequestID, RequestKey }, value) => {
+  wsSend(ws, RequestKey, value, RequestID);
 }
 
 module.exports.wsMsgWindow = (ws, msg = "") => {

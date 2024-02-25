@@ -33,7 +33,7 @@ WebSocketObserver().listener("server/get", async data => {
   let worker = mcserver.worker;
   let servInfo = await worker.call("server/get", data.body);
   servInfo.location = mcserver.location;
-  response.wsResponse(data, servInfo, body);
+  response.wsResponse(data, servInfo);
 });
 
 WebSocketObserver().listener("server/create", async data => {

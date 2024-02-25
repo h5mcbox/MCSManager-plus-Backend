@@ -158,11 +158,11 @@ router.ws("/ws", function (ws, req) {
 
       //Websocket 心跳包 | 前端 10 秒递增链接健康指数
       //当网络延迟特别高时，也能很好的降低指数. 将来指数够低时，将自动优化数据的发送
-      if (header["RequestValue"] == "HBPackage") {
+      if (header.RequestKey == "HBPackage") {
         status = true;
         // 最高心跳包健康数
         wsAliveHBCount < MAX_ALIVE_COUNT && wsAliveHBCount++;
-        return;
+        return response.wsResponse({ws,RequestID,RequestKey:""},null);
       }
 
       WebSocketObserver().emit("ws/req", {
