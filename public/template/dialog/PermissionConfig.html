@@ -50,7 +50,7 @@
   } else {
     PAGE.data = `PID:`;
   }
-  WS.call("permission/getPermissionID", PAGE.data).then(([PermissionConfig]) => {
+  WS.call("permission/getPermissionID", PAGE.data).then(PermissionConfig => {
     new Vue({
       el: "#PermissionConfig",
       data: {

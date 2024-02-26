@@ -31,7 +31,6 @@ WebSocketObserver().listener("permission/getPermissionID", data => {
     PermissionTable.permissions = userRights ?? [];
     PermissionTable.PID = newPID;
     PermissionTable.RestrictedUsername = username;
-    return response.wsResponse(data, true);
   } else {
     response.wsMsgWindow(data.ws, "数据格式不正确");
     return response.wsResponse(data, false);

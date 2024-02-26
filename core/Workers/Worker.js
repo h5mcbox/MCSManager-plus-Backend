@@ -6,6 +6,7 @@ const { WorkerObserver } = require("../../model/WebSocketModel");
 const { hash } = require("../User/CryptoMine");
 const fetch = require("node-fetch");
 const fs = require("fs");
+const RemoteError = require("../../helper/RemoteError");
 
 const WORKER_SAVE_PATH = "workers/";
 class Worker {
@@ -109,9 +110,10 @@ class Worker {
       }
       let RequestMap = this.#RequestMap;
       if (!RequestMap.has(RequestID)) return;
-      const [resolve] = RequestMap.get(RequestID);
+      const [resolve, reject] = RequestMap.get(RequestID);
       RequestMap.delete(RequestID);
-      resolve(ResponseValue);
+      if (!Reflect.has(header, "message")) resolve(ResponseValue);
+      else reject(new RemoteError(header.message));
     });
     try {
       await new Promise((resolve, reject) => { wsC.on("open", resolve); wsC.on("error", reject) });

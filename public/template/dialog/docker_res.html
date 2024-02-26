@@ -32,7 +32,7 @@
   <button class="btn btn-danger" v-on:click="ok()">关 闭</button>
 </div>
 <script>
-  WS.call("docker/res", "").then(([DockerRes]) => {
+  WS.call("docker/res", "").then(DockerRes => {
     new Vue({
       el: "#DialogDockerRes",
       data: {

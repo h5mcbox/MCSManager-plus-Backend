@@ -173,16 +173,16 @@
     VIEW_MODEL.newVue("ConsolePanel", {
       el: "#ConsolePanel",
       methods: {
-        toAutoRestart() {
-          WS.call("server/console/autorestart", serverName);
+        async toAutoRestart() {
+          await WS.call("server/console/autorestart", serverName);
         },
         async toOnlineFs() {
-          let [{ url }] = await WS.call("onlinefs/getServerKey", serverName);
+          let url = await WS.call("onlinefs/getServerKey", serverName);
           window.open(url);
         },
-        toOpenServer() {
+        async toOpenServer() {
           this.allowedStart = !this.allowedStart;
-          WS.call("server/console/open", serverName);
+          await WS.call("server/console/open", serverName);
         },
         toCommand(parCommand) {
           if (parCommand && typeof parCommand == "string") this.command = parCommand;

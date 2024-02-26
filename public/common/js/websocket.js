@@ -12,6 +12,8 @@
     setInterval(() => ws.call("HBPackage", ""), 1000 * 10);
   }
 
+  class RemoteError extends Error { name = "RemoteError" }
+
   class WebSocketClient {
     #RequestMap = new Map;
     #RequestID = 0;
@@ -44,7 +46,8 @@
           if (!RequestMap.has(RequestID)) return;
           const [resolve, reject] = RequestMap.get(RequestID);
           RequestMap.delete(RequestID);
-          resolve(ResponseValue);
+          if (!Reflect.has(header, "message")) resolve(ResponseValue);
+          else reject(new RemoteError(header.message));
         } else {
           header.ResponseValue = ResponseValue;
           MI.on("ws/response", header);

@@ -16,7 +16,7 @@ WebSocketObserver().listener("onlinefs/getWorkerKey", data => {
   let u = new URL(worker.dataModel.RemoteDescription.endpoint);
   u.pathname = "/fs_auth/auth_master/pwd";
   u.searchParams.set("key", timeKey);
-  response.wsResponse(data, { url: u.href });
+  response.wsResponse(data, u.href);
 });
 WebSocketObserver().listener("onlinefs/getServerKey", data => {
   let now = Math.floor(Date.now() / 1000);
@@ -32,6 +32,6 @@ WebSocketObserver().listener("onlinefs/getServerKey", data => {
   let u = new URL(worker.dataModel.RemoteDescription.endpoint);
   u.pathname = "/fs_auth/auth/" + serverName;
   u.searchParams.set("key", timeKey);
-  response.wsResponse(data, { url: u.href });
+  response.wsResponse(data, u.href);
 });
 MCSERVER.addProbablyPermissions("workers:onlinefs", "允许访问Worker程序所在的目录");

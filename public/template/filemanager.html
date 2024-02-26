@@ -71,7 +71,7 @@
       el: "#QuickOperation",
       methods: {
         toOnlineFs: async function (serverName) {
-          let [{url}] = await WS.call("onlinefs/getServerKey", serverName);
+          let url = await WS.call("onlinefs/getServerKey", serverName);
           window.open(url);
         },
         toServersDir: async function (type = 0, workername) {
@@ -79,8 +79,8 @@
             var path = MCSERVER.URL("fs_auth/auth_master/pwd");
             window.open(path);
           } else if (type == 1) {
-            let [{url}] = await WS.call("onlinefs/getWorkerKey", workername);
-            window.open(data.ResponseValue.url);
+            let url = await WS.call("onlinefs/getWorkerKey", workername);
+            window.open(url);
           }
         }
       }
