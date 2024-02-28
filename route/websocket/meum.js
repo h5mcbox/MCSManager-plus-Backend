@@ -3,13 +3,13 @@ const response = require("../../helper/Response");
 const permission = require("../../helper/Permission");
 const allPermissions = new Set(Object.values(MCSERVER.localProperty.rights).map(e => e.rights).flat())
 
-WebSocketObserver().listener("menu", async data => {
+WebSocketObserver().define("menu", async data => {
   //Object {ws: WebSocket, req: IncomingMessage, user: undefined, header: Object, body: "[body 开始]
   //Object {RequestKey: "req", RequestValue: "some"}
 
   if (data.WsSession.login == false) {
     response.wsMsgWindow(data.ws, "身份信息丢失，请重新登陆补全身份信息");
-    return response.wsResponse(data, null);
+    return null;
   }
 
   let options = {
@@ -70,7 +70,7 @@ WebSocketObserver().listener("menu", async data => {
     }]
   }
 
-  let username=data.WsSession.username;
+  let username = data.WsSession.username;
   let group = permission.getUserGroup(username), returnMenu = [];
   let userAllRights = [];
   for (let name of allPermissions) {
@@ -89,13 +89,13 @@ WebSocketObserver().listener("menu", async data => {
     }
   }
 
-  response.wsResponse(data, {
+  return {
     username,
     group,
     customMenu: group === "user" ? returnMenu : null
-  });
+  };
 });
 
-WorkerObserver().listener("window/msg", ({ ResponseValue }) => {
+WorkerObserver().define("window/msg", ({ ResponseValue }) => {
   for (let client of Object.values(MCSERVER.allSockets)) response.wsMsgWindow(client.ws, ResponseValue);
 })

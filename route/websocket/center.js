@@ -1,7 +1,6 @@
 const { WebSocketObserver } = require("../../model/WebSocketModel");
 const counter = require("../../core/counter");
 const tools = require("../../core/tools");
-const response = require("../../helper/Response");
 const serverModel = require("../../model/ServerModel");
 const permssion = require("../../helper/Permission");
 const userModel = require("../../model/UserModel");
@@ -98,19 +97,18 @@ setInterval(async function () {
 }, MCSERVER.localProperty.data_center_times);
 
 //重启逻辑
-WebSocketObserver().listener("center/restart", data => {
-  if (!permssion.hasRights(data.WsSession.username, "restart")) return response.wsResponse(data, false);
+WebSocketObserver().define("center/restart", data => {
+  if (!permssion.hasRights(data.WsSession.username, "restart")) return false;
   MCSERVER.log("面板重启...");
-  response.wsResponse(data, true);
-  process.nextTick(() => {
+  return process.nextTick(() => {
     process.send({ restart: "./app.js" });
     process.emit("SIGINT");
   });
 });
 
 //更新逻辑
-WebSocketObserver().listener("center/update", data => {
-  if (!permssion.hasRights(data.WsSession.username, "update")) return response.wsResponse(data, false);
+WebSocketObserver().define("center/update", data => {
+  if (!permssion.hasRights(data.WsSession.username, "update")) return false;
   let userName = data.WsSession.username;
   let { buffer } = data.body;
 
@@ -120,16 +118,15 @@ WebSocketObserver().listener("center/update", data => {
   MCSERVER.log(`[ 软件更新 ] 用户 ${userName} 执行Backend软件更新`);
 
   MCSERVER.log("面板重启...");
-  response.wsResponse(data, true);
-  process.nextTick(() => {
+  return process.nextTick(() => {
     process.send({ restart: "./app.js" });
     process.emit("SIGINT");
   });
 });
 
 //更新逻辑
-WebSocketObserver().listener("center/updateWorker", async data => {
-  if (!permssion.hasRights(data.WsSession.username, "update")) return response.wsResponse(data, false);
+WebSocketObserver().define("center/updateWorker", async data => {
+  if (!permssion.hasRights(data.WsSession.username, "update")) return false;
   let userName = data.WsSession.username;
   let { name, buffer } = data.body;
 
@@ -141,16 +138,14 @@ WebSocketObserver().listener("center/updateWorker", async data => {
   let timeKey = hash.hmac(worker.dataModel.MasterKey, timeWindow.toString());
   let sign = hash.hmac(timeKey, buffer);
   let ResponseValue = await worker.call("center/update", { buffer, sign });
-  response.wsResponse(data, ResponseValue);
-
   MCSERVER.log(`[ 软件更新 ] 用户 ${userName} 执行Worker ${name} 软件更新`);
-
+  return ResponseValue;
 });
 
 //数据中心
-WebSocketObserver().listener("center/show", data => {
+WebSocketObserver().define("center/show", data => {
   if (!permssion.hasRights(data.WsSession.username, "center")) return;
-  response.wsResponse(data, cacheSystemInfo);
+  return cacheSystemInfo;
 });
 
 MCSERVER.addProbablyPermissions("center", "查看面板中心数据");

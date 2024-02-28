@@ -1,14 +1,15 @@
-const { wsResponseError } = require("../helper/Response");
-const Observer = require("./Observer");
+const { wsResponseError, wsResponse } = require("../helper/Response");
+const RPCHandler = require("./RPCHandler");
 
-const WebSocketModel = new Observer;
-const WorkerModel = new Observer;
+const WebSocketModel = new RPCHandler;
+const WorkerModel = new RPCHandler;
 
 //事件二次转发  监听ws/req即可监听所有Websocket请求
-WebSocketModel.listener("ws/req", "", data => {
+WebSocketModel.define("ws/req", "", async data => {
   try {
-    let result=WebSocketModel.emit(data.header.RequestKey, data);
-    if(!result)throw "Method not found";
+    let [success, result] = await WebSocketModel.emit(data.header.RequestKey, data);
+    wsResponse(data, result);
+    if (!success) throw "Method not found";
   } catch (err) {
     wsResponseError(data, err);
     throw err;
@@ -16,15 +17,11 @@ WebSocketModel.listener("ws/req", "", data => {
 });
 
 //事件二次转发  监听worker/req即可监听所有Websocket推送消息
-WorkerModel.listener("worker/res", "", data => {
+WorkerModel.define("worker/res", "", data => {
   WorkerModel.emit(data.header.ResponseKey, data);
 });
 
 module.exports = {
-  WebSocketObserver() {
-    return WebSocketModel;
-  },
-  WorkerObserver() {
-    return WorkerModel;
-  }
+  WebSocketObserver() { return WebSocketModel; },
+  WorkerObserver() { return WorkerModel; }
 }

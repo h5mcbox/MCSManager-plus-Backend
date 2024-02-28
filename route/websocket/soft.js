@@ -3,13 +3,13 @@ const permssion = require("../../helper/Permission");
 const response = require("../../helper/Response");
 
 //获取信息
-WebSocketObserver().listener("soft/view", data => {
+WebSocketObserver().define("soft/view", data => {
   if (!permssion.hasRights(data.WsSession.username, "soft")) return;
-  response.wsResponse(data, { softConfig: MCSERVER.softConfig });
+  return { softConfig: MCSERVER.softConfig };
 });
 
 //更新配置
-WebSocketObserver().listener("soft/update", data => {
+WebSocketObserver().define("soft/update", data => {
   if (!permssion.hasRights(data.WsSession.username, "soft")) return;
   let newConfig = data.body;
   if (newConfig) {
@@ -20,6 +20,6 @@ WebSocketObserver().listener("soft/update", data => {
   }
   MCSERVER.softConfig.save();
   response.wsMsgWindow(data.ws, "修改完成，部分内容重启控制面板生效 √");
-  return response.wsResponse(data, true);
+  return true;
 });
 MCSERVER.addProbablyPermissions("soft", "更新配置");

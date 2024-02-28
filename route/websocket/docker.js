@@ -13,7 +13,7 @@ const WorkerCenter = require("../../model/WorkerModel");
 //MCSERVER.PAGE.DockerRes = [];
 
 //Docker 容器创建路由
-WebSocketObserver().listener("docker/new", async (data) => {
+WebSocketObserver().define("docker/new", async (data) => {
   if (!permission.hasRights(data.WsSession.username, "docker:new")) return;
   let dockerConfig = data.body;
   //{dockerImageName: "",
@@ -23,7 +23,7 @@ WebSocketObserver().listener("docker/new", async (data) => {
   if (!worker) {
     response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
   }
-  response.wsResponse(data, await worker.call("docker/new", data.body));
+  return await worker.call("docker/new", data.body);
   /*
   let dockerImageName = dockerConfig.dockerImageName;
   let dockerfileData = dockerConfig.dockerfile;
@@ -80,7 +80,7 @@ WebSocketObserver().listener("docker/new", async (data) => {
 
 //结果列表获取
 //路由
-WebSocketObserver().listener("docker/res", async (data) => {
+WebSocketObserver().define("docker/res", async (data) => {
   if (!permission.hasRights(data.WsSession.username, "docker:res")) return;
   let result = [];
   for (let item of WorkerCenter.getOnlineWorkers()) {
@@ -90,7 +90,7 @@ WebSocketObserver().listener("docker/res", async (data) => {
 });
 
 //获取配置
-WebSocketObserver().listener("docker/config", async (data) => {
+WebSocketObserver().define("docker/config", async (data) => {
   if (!permission.hasRights(data.WsSession.username, "docker:config")) return;
   let serverName = data.body || "";
   if (serverName) {
@@ -102,14 +102,14 @@ WebSocketObserver().listener("docker/config", async (data) => {
     const { worker } = serverModel.ServerManager().getServer(serverName);
     if (!worker) {
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
-      return response.wsResponse(data, false);
+      return false;
     }
-    response.wsResponse(data, await worker.call("docker/config", data.body));
+    return await worker.call("docker/config", data.body);
   }
 });
 
 //设置配置
-WebSocketObserver().listener("docker/setconfig", async (data) => {
+WebSocketObserver().define("docker/setconfig", async (data) => {
   if (!permission.hasRights(data.WsSession.username, "docker:setConfig")) return;
   let newConfig = data.body;
   if (newConfig.serverName) {
@@ -125,7 +125,7 @@ WebSocketObserver().listener("docker/setconfig", async (data) => {
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
     }
     //serverModel.deleteServer(serverName);
-    response.wsResponse(data, await worker.call("docker/setconfig", data.body));
+    return await worker.call("docker/setconfig", data.body);
   }
 });
 MCSERVER.addProbablyPermissions("docker", "使用Docker");

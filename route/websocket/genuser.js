@@ -1,11 +1,11 @@
 const { WebSocketObserver } = require("../../model/WebSocketModel");
-const { userCenter, believeLogin } = require("../../model/UserModel");
+const { userCenter } = require("../../model/UserModel");
 const serverModel = require("../../model/ServerModel");
 const response = require("../../helper/Response");
 const workerCenter = require("../../model/WorkerModel");
 const permission = require("../../helper/Permission");
 
-WebSocketObserver().listener("genuser/home", async data => {
+WebSocketObserver().define("genuser/home", async data => {
   if (!permission.hasRights(data.WsSession.username, "genuser")) return;
   try {
     let username = data.WsSession.username.trim();
@@ -39,7 +39,7 @@ WebSocketObserver().listener("genuser/home", async data => {
       let serverLoc = userHaveServer.dataModel.location;
       if (!workerCenter.get(serverLoc)) {
         response.wsMsgWindow(data.ws, "创建出错:" + "Worker不存在");
-        return response.wsResponse(data, false);
+        return false;
       }
       let worker = workerCenter.get(serverLoc);
       let ResponseValue = await worker.call("server/get", allowedServerList[k]);
@@ -74,34 +74,34 @@ WebSocketObserver().listener("genuser/home", async data => {
     } else {
       resObj.workerNames = [];
     }
-    response.wsResponse(data, resObj);
+    return resObj;
   } catch (err) {
     MCSERVER.error("普通用户访问异常", err);
   }
 });
 
-WebSocketObserver().listener("genuser/banned", data => {
+WebSocketObserver().define("genuser/banned", data => {
   if (!permission.hasRights(data.WsSession.username, "banned")) return;
   let user = userCenter().get(data.WsSession.username.trim());
-  response.wsResponse(data, {
+  return {
     bannedBy: user.dataModel.lastOperator,
     username: user.dataModel.username,
     lastDate: user.dataModel.lastDate,
     createDate: user.dataModel.createDate
-  });
+  };
 });
-WebSocketObserver().listener("genuser/view", data => {
+WebSocketObserver().define("genuser/view", data => {
   let user = userCenter().get(data.WsSession.username.trim());
-  response.wsResponse(data, {
+  return {
     username: user.dataModel.username,
     lastDate: user.dataModel.lastDate,
     createDate: user.dataModel.createDate,
     randomPassword: user.dataModel.randomPassword,
     LoginPublicKey: user.dataModel.LoginPublicKey || "",
     allowedServer: user.dataModel.allowedServer || []
-  });
+  };
 });
-WebSocketObserver().listener("genuser/re_password", data => {
+WebSocketObserver().define("genuser/re_password", data => {
   let username = data.WsSession.username.trim();
   let user = userCenter().get(username);
   let config = data.body;
@@ -111,7 +111,7 @@ WebSocketObserver().listener("genuser/re_password", data => {
   };
   if ((view.randomPassword && view.LoginPublicKey) && !(config.oldPassword.length == 0 && config.loginParams.length != 0)) {
     response.wsMsgWindow(data.ws, "很抱歉，只使用公钥登录的用户还需填写登录参数");
-    return response.wsResponse(data, false);
+    return false;
   }
   if (config.loginParams) {
     try {
@@ -119,7 +119,7 @@ WebSocketObserver().listener("genuser/re_password", data => {
       config.oldPassword = paramsReader.get("password");
       config.ChallengeID = paramsReader.get("ChallengeID");
     } catch {
-      return response.wsResponse(data, false);
+      return false;
     }
   }
   if (config.oldPassword) {
@@ -132,16 +132,16 @@ WebSocketObserver().listener("genuser/re_password", data => {
     if (verified) {
       if ((config.newPassword.length > 100 || config.newPassword.length < 6) && !(config.newPassword.length == 0 && userCenter().get(username).dataModel.LoginPublicKey)) {
         response.wsMsgWindow(data.ws, "新的密码长度不正确，需要 6~100 位长度");
-        return response.wsResponse(data, false);
+        return false;
       }
       userCenter().rePassword(username, config.newPassword);
       userCenter().reLoginPublicKey(username, config.newLoginPublicKey);
       userCenter().initUser();
       response.wsMsgWindow(data.ws, "密码修改完成!");
-      return response.wsResponse(data, true);
+      return true;
     } else {
       response.wsMsgWindow(data.ws, "很抱歉，原密码错误，无法修改");
-      return response.wsResponse(data, false);
+      return false;
     }
   }
 });

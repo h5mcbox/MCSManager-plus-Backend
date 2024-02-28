@@ -3,12 +3,12 @@ const { userCenter } = require("../../model/UserModel");
 const permission = require("../../helper/Permission");
 const uuid = require("uuid");
 const response = require("../../helper/Response");
-WebSocketObserver().listener("permission/getPermissionID", data => {
+WebSocketObserver().define("permission/getPermissionID", data => {
   if (!permission.hasRights(data.WsSession.username, "permission:getPermissionID")) return;
   let permissionTableBucket = data.WsSession.PIDs;
   if (!permissionTableBucket) data.WsSession.PIDs = permissionTableBucket = {};
   let PermissionTable;
-  let [type,param] = data.body.split(":");
+  let [type, param] = data.body.split(":");
   if (type === "PID") {
     if (!permissionTableBucket[param]) {
       let newPID = uuid.v4();
@@ -23,7 +23,7 @@ WebSocketObserver().listener("permission/getPermissionID", data => {
     let user = userCenter().get(username);
     if (!user) {
       response.wsMsgWindow(data.ws, "用户不存在");
-      return response.wsResponse(data, false);
+      return false;
     }
     let newPID = uuid.v4();
     let userRights = user.dataModel.userRights;
@@ -33,13 +33,13 @@ WebSocketObserver().listener("permission/getPermissionID", data => {
     PermissionTable.RestrictedUsername = username;
   } else {
     response.wsMsgWindow(data.ws, "数据格式不正确");
-    return response.wsResponse(data, false);
+    return false;
   }
   PermissionTable.probablyPermissions = MCSERVER.probablyPermissions || [];
 
-  response.wsResponse(data, PermissionTable);
+  return PermissionTable;
 });
-WebSocketObserver().listener("permission/savePID", data => {
+WebSocketObserver().define("permission/savePID", data => {
   if (!permission.hasRights(data.WsSession.username, "permission:setPermissionID")) return;
   let PermissionTable = data.body;
   let permissionTableBucket = data.WsSession.PIDs;
@@ -47,11 +47,11 @@ WebSocketObserver().listener("permission/savePID", data => {
   if (!permissionTableBucket) data.WsSession.PIDs = permissionTableBucket = {};
   if (!Array.isArray(PermissionTable.permissions)) {
     response.wsMsgWindow(data.ws, "数据格式不正确");
-    return response.wsResponse(data, false);
+    return false;
   }
   if (!permissionTableBucket[PermissionTable.PID]) {
     response.wsMsgWindow(data.ws, "错误:权限表不存在");
-    return response.wsResponse(data, false);
+    return false;
   }
   let hasAllRights = true;
   for (let e of PermissionTable.permissions) {
@@ -59,7 +59,7 @@ WebSocketObserver().listener("permission/savePID", data => {
   }
   if (!hasAllRights) {
     response.wsMsgWindow(data.ws, "错误:权限不足");
-    return response.wsResponse(data, false);
+    return false;
   }
   permissionTableBucket[PermissionTable.PID] = {
     PID: PermissionTable.PID,
@@ -67,8 +67,8 @@ WebSocketObserver().listener("permission/savePID", data => {
     RestrictedUsername: oldPermissionTable.RestrictedUsername
   };
   response.wsMsgWindow(data.ws, "保存成功√");
-  response.wsResponse(data, true);
+  return true;
 });
-MCSERVER.addProbablyPermissions("permission","管理子权限");
-MCSERVER.addProbablyPermissions("permission:getPermissionID","获取权限表");
-MCSERVER.addProbablyPermissions("permission:setPermissionID","保存权限表");
+MCSERVER.addProbablyPermissions("permission", "管理子权限");
+MCSERVER.addProbablyPermissions("permission:getPermissionID", "获取权限表");
+MCSERVER.addProbablyPermissions("permission:setPermissionID", "保存权限表");
