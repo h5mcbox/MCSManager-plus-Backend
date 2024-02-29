@@ -162,7 +162,7 @@ router.ws("/ws", function (ws, req) {
         status = true;
         // 最高心跳包健康数
         wsAliveHBCount < MAX_ALIVE_COUNT && wsAliveHBCount++;
-        return response.wsResponse({ws,RequestID,RequestKey:""},null);
+        return response.wsResponse({ ws, RequestID, RequestKey: "" }, null);
       }
 
       WebSocketObserver().emit("ws/req", {

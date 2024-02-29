@@ -1,4 +1,4 @@
-const {Router} = require("express");
+const { Router } = require("express");
 const serverModel = require("../model/ServerModel");
 const userModel = require("../model/UserModel");
 const mcPingProtocol = require("../helper/MCPingProtocol");
@@ -8,7 +8,7 @@ const requestLimit = require("../helper/RequestLimit");
 const WorkerCenter = require("../model/WorkerModel");
 const tools = require("../core/tools");
 
-const router=Router();
+const router = Router();
 
 // 服务端实例状态获取 | 公共性 API 接口
 // 无需任何权限判定
@@ -25,14 +25,14 @@ router.get("/status/:name", async function (req, res) {
     res.send("null");
     return;
   }
-  let serverLocation=mcserver.dataModel.location;
+  let serverLocation = mcserver.dataModel.location;
   let worker;
-  if(!(worker=WorkerCenter.get(serverLocation))){
+  if (!(worker = WorkerCenter.get(serverLocation))) {
     res.status(404).send("Worker不存在");
     res.end();
   }
   let sendStatus = null;
-  let [serverData]=await worker.call("server/get",serverName);
+  let serverData = await worker.call("server/get", serverName);
   // 取缓存资料
   const mcpingResult = serverData.mcpingResult;
   // 判断服务器启动状态发送不同的数据
@@ -59,16 +59,15 @@ router.get("/status/:name", async function (req, res) {
 });
 
 // 获取所有实例 | API
-router.get("/server",async function (req, res) {
+router.get("/server", async function (req, res) {
   // 仅仅准许管理员使用
-  if (!keyManager.hasRights(apiResponse.key(req),"server")) {
+  if (!keyManager.hasRights(apiResponse.key(req), "server")) {
     apiResponse.forbidden(res);
     return;
   }
-  var allServers=[];
-  for(let item of WorkerCenter.getOnlineWorkers()){
-    var [view]=await item.call("server/view");
-    view.items.forEach(e=>allServers.push(e));
+  var allServers = [];
+  for (let item of WorkerCenter.getOnlineWorkers()) {
+    for (let e of await item.call("server/view")) allServers.push(e);
   }
   //const list = serverModel.ServerManager().getServerList();
   apiResponse.send(res, allServers);
@@ -77,16 +76,16 @@ router.get("/server",async function (req, res) {
 // 创建服务器实例 | API
 router.post("/server", async function (req, res) {
   // 仅仅准许管理员使用
-  if (!keyManager.hasRights(apiResponse.key(req),"server")) {
+  if (!keyManager.hasRights(apiResponse.key(req), "server")) {
     apiResponse.forbidden(res);
     return;
   }
   // 解析请求参数
   try {
     const params = req.body;
-    const serverLocation=params.location;
+    const serverLocation = params.location;
     let worker;
-    if(!(worker=WorkerCenter.get(serverLocation))){
+    if (!(worker = WorkerCenter.get(serverLocation))) {
       res.status(404).send("Worker不存在");
       res.end();
     }
@@ -101,8 +100,8 @@ router.post("/server", async function (req, res) {
     // 工作目录确定
     params.cwd = params.cwd || "";
     // 创建
-    await worker.call("server/create",params);
-    const result=serverModel.createServer(params.serverName, params);
+    await worker.call("server/create", params);
+    const result = serverModel.createServer(params.serverName, params);
     // 返回状态码
     result ? apiResponse.ok(res) : apiResponse.error(res);
   } catch (err) {
@@ -113,21 +112,21 @@ router.post("/server", async function (req, res) {
 // 删除实例 API
 router.delete("/server/:name", async function (req, res) {
   // 仅仅准许管理员使用
-  if (!keyManager.hasRights(apiResponse.key(req),"server")) {
+  if (!keyManager.hasRights(apiResponse.key(req), "server")) {
     apiResponse.forbidden(res);
     return;
   }
   // 解析请求参数
   const params = req.params.name;
   try {
-    let server=serverModel.ServerManager().getServer(params);
-    const serverLocation=server.dataModel.location;
-    let worker=WorkerCenter.get(serverLocation);
-    if(!worker){
+    let server = serverModel.ServerManager().getServer(params);
+    const serverLocation = server.dataModel.location;
+    let worker = WorkerCenter.get(serverLocation);
+    if (!worker) {
       res.status(404).send("Worker不存在");
       res.end();
     }
-    await worker.call("server/delete",params);
+    await worker.call("server/delete", params);
     serverModel.deleteServer(params);
     apiResponse.ok(res);
   } catch (err) {
@@ -139,7 +138,7 @@ router.delete("/server/:name", async function (req, res) {
 // 获取所有用户 | API
 router.get("/user", function (req, res) {
   // 仅仅准许管理员使用
-  if (!keyManager.hasRights(apiResponse.key(req),"userset")) {
+  if (!keyManager.hasRights(apiResponse.key(req), "userset")) {
     apiResponse.forbidden(res);
     return;
   }
@@ -153,7 +152,7 @@ router.get("/user", function (req, res) {
 // params.serverList
 router.post("/user", function (req, res) {
   // 仅仅准许管理员使用
-  if (!keyManager.hasRights(apiResponse.key(req),"userset")) {
+  if (!keyManager.hasRights(apiResponse.key(req), "userset")) {
     apiResponse.forbidden(res);
     return;
   }
@@ -187,7 +186,7 @@ router.post("/user", function (req, res) {
 // 删除用户 API
 router.delete("/user/:name", function (req, res) {
   // 仅仅准许管理员使用
-  if (!keyManager.hasRights(apiResponse.key(req),"userset")) {
+  if (!keyManager.hasRights(apiResponse.key(req), "userset")) {
     apiResponse.forbidden(res);
     return;
   }
@@ -218,15 +217,15 @@ router.all("/start_server/:name", async function (req, res) {
   try {
     // 解析请求参数
     const name = req.params.name;
-    let server=serverModel.ServerManager().getServer(name);
-    const serverLocation=server.dataModel.location;
-    let worker=WorkerCenter.get(serverLocation);
-    if(!worker){
+    let server = serverModel.ServerManager().getServer(name);
+    const serverLocation = server.dataModel.location;
+    let worker = WorkerCenter.get(serverLocation);
+    if (!worker) {
       res.status(404).send("Worker不存在");
       res.end();
     }
     // 启动服务器
-    await worker.call("server/console/open",name);
+    await worker.call("server/console/open", name);
     // 返回状态码
     //result ? apiResponse.ok(res) : apiResponse.error(res);
     apiResponse.ok(res)
@@ -250,15 +249,15 @@ router.all("/restart_server/:name", async function (req, res) {
   try {
     // 解析请求参数
     const name = req.params.name;
-    let server=serverModel.ServerManager().getServer(name);
-    const serverLocation=server.dataModel.location;
-    let worker=WorkerCenter.get(serverLocation);
-    if(!worker){
+    let server = serverModel.ServerManager().getServer(name);
+    const serverLocation = server.dataModel.location;
+    let worker = WorkerCenter.get(serverLocation);
+    if (!worker) {
       res.status(404).send("Worker不存在");
       res.end();
     }
     // 重启服务器
-    await worker.call("server/console/command",{
+    await worker.call("server/console/command", {
       command: "__restart__",
       serverName: name
     });
@@ -284,15 +283,15 @@ router.all("/stop_server/:name", async function (req, res) {
   try {
     // 解析请求参数
     const name = req.params.name;
-    let server=serverModel.ServerManager().getServer(name);
-    const serverLocation=server.dataModel.location;
-    let worker=WorkerCenter.get(serverLocation);
-    if(!worker){
+    let server = serverModel.ServerManager().getServer(name);
+    const serverLocation = server.dataModel.location;
+    let worker = WorkerCenter.get(serverLocation);
+    if (!worker) {
       res.status(404).send("Worker不存在");
       res.end();
     }
     // 关闭服务器
-    await worker.call("server/console/command",{
+    await worker.call("server/console/command", {
       command: "__stop__",
       serverName: name
     });
@@ -319,14 +318,14 @@ router.post("/execute/", async function (req, res) {
   try {
     // 解析请求参数
     const params = req.body;
-    let server=serverModel.ServerManager().getServer(params.name);
-    const serverLocation=server.dataModel.location;
-    let worker=WorkerCenter.get(serverLocation);
-    if(!worker){
+    let server = serverModel.ServerManager().getServer(params.name);
+    const serverLocation = server.dataModel.location;
+    let worker = WorkerCenter.get(serverLocation);
+    if (!worker) {
       res.status(404).send("Worker不存在");
       res.end();
     }
-    let [serverData]=await worker.call("server/get",params.name);
+    let serverData = await worker.call("server/get", params.name);
     // 判定服务器是否运行
     if (!serverData) return;
     if (!serverData.run) {
@@ -334,7 +333,7 @@ router.post("/execute/", async function (req, res) {
       return;
     }
     // 发送指令
-    await worker.call("server/console/command",{
+    await worker.call("server/console/command", {
       command: "__stop__",
       serverName: params.name
     });
@@ -348,7 +347,7 @@ router.post("/execute/", async function (req, res) {
 // 创建服务器实例（JSON） | API
 router.post("/advanced_create_server", async function (req, res) {
   // 仅仅准许管理员使用
-  if (!keyManager.hasRights(apiResponse.key(req),"server")) {
+  if (!keyManager.hasRights(apiResponse.key(req), "server")) {
     apiResponse.forbidden(res);
     return;
   }
@@ -356,15 +355,15 @@ router.post("/advanced_create_server", async function (req, res) {
   try {
     const params = req.body;
     const config = JSON.parse(params.config);
-    const serverLocation=config.location;
-    let worker=WorkerCenter.get(serverLocation);
-    if(!worker){
+    const serverLocation = config.location;
+    let worker = WorkerCenter.get(serverLocation);
+    if (!worker) {
       res.status(404).send("Worker不存在");
       res.end();
     }
     // 创建
     //const result = serverModel.createServer(params.serverName, config);
-    await worker.call("server/create",config);
+    await worker.call("server/create", config);
     // 返回状态码
     apiResponse.ok(res);
   } catch (err) {
@@ -375,17 +374,17 @@ router.post("/advanced_create_server", async function (req, res) {
 // 修改服务器实例（JSON） | API
 router.post("/advanced_configure_server", async function (req, res) {
   // 仅仅准许管理员使用
-  if (!keyManager.hasRights(apiResponse.key(req),"server")) {
+  if (!keyManager.hasRights(apiResponse.key(req), "server")) {
     apiResponse.forbidden(res);
     return;
   }
   // 解析请求参数
   try {
     const params = req.body;
-    let server=serverModel.ServerManager().getServer(params.serverName);
-    const serverLocation=server.dataModel.location;
-    let worker=WorkerCenter.get(serverLocation);
-    if(!worker){
+    let server = serverModel.ServerManager().getServer(params.serverName);
+    const serverLocation = server.dataModel.location;
+    let worker = WorkerCenter.get(serverLocation);
+    if (!worker) {
       res.status(404).send("Worker不存在");
       res.end();
     }
@@ -398,7 +397,7 @@ router.post("/advanced_configure_server", async function (req, res) {
     }
     // 不更名的情况重新构建服务器实例
     //server.builder(config);
-    await worker.call("server/rebuilder",config);
+    await worker.call("server/rebuilder", config);
     apiResponse.ok(res);
   } catch (err) {
     apiResponse.error(res, err);

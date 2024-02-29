@@ -294,11 +294,10 @@ function moduleEntry(returnMethod) {
     function read(currentVersion = VERSION, package, _PublicKey = PUBLICKEY) {
       let Header;
       package = brotliDecompressSync(package);
-      let fileheaderPointer = package.length - 1 - (Buffer.from(package).reverse().indexOf(10) - 1);
-      let fileheaderBuf = package.subarray(fileheaderPointer);
-      let fileheader = (new TextDecoder).decode(fileheaderBuf);
+      let fileHeaderBuf = package.subarray(package.lastIndexOf(10));
+      let fileHeader = (new TextDecoder).decode(fileHeaderBuf);
       try {
-        Header = JSON.parse(fileheader);
+        Header = JSON.parse(fileHeader);
       } catch {
         throw new TypeError("错误:资源文件头无效");
       }

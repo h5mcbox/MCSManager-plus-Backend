@@ -131,7 +131,7 @@ WebSocketObserver().define("center/updateWorker", async data => {
   let { name, buffer } = data.body;
 
   let worker = workerModel.get(name);
-  if (!worker) return res.status(500).send("访问出错:Worker不存在");
+  if (!worker) return false;
 
   let now = Math.floor(Date.now() / 1000);
   let timeWindow = Math.floor(now / 120);

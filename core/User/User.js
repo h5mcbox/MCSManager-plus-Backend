@@ -11,12 +11,12 @@ const USER_SAVE_PATH = "users/";
 class User {
   constructor(username, password, salt) {
     let now = new Date().toLocaleString();
-    if(username.startsWith("#_")||username.startsWith("_")){
-      this.dataModel = new DataModel(USER_SAVE_PATH + username, true);  
-      this.dataModel.OnlyMemoryUser=true;
-    }else{
+    if (username.startsWith("#_") || username.startsWith("_")) {
+      this.dataModel = new DataModel(USER_SAVE_PATH + username, true);
+      this.dataModel.OnlyMemoryUser = true;
+    } else {
       this.dataModel = new DataModel(USER_SAVE_PATH + username);
-      this.dataModel.OnlyMemoryUser=false;
+      this.dataModel.OnlyMemoryUser = false;
     }
 
     this.dataModel.username = username;
@@ -25,32 +25,32 @@ class User {
     this.dataModel.createDate = now;
     this.dataModel.lastDate = now;
     this.dataModel.allowedServer = [];
-    this.dataModel.lastOperator="";
+    this.dataModel.lastOperator = "";
 
     // API KEYthis.dataModel.apikey
     this.dataModel.apikey = "";
   }
 
   load() {
-    if(this.dataModel.OnlyMemoryUser)return this;
+    if (this.dataModel.OnlyMemoryUser) return this;
     this.dataModel.load();
     return this;
   }
 
   save() {
-    if(this.dataModel.OnlyMemoryUser)return this;
+    if (this.dataModel.OnlyMemoryUser) return this;
     this.dataModel.save();
     return this;
   }
 
   delete() {
-    if(this.dataModel.OnlyMemoryUser)return undefined;
+    if (this.dataModel.OnlyMemoryUser) return undefined;
     let path = "./" + USER_SAVE_PATH + this.dataModel.username + ".json";
     fs.unlinkSync(path);
   }
 
   isPassword(password) {
-    let {_password} = createPassword(password, this.dataModel.salt);
+    let [_password] = createPassword(password, this.dataModel.salt);
     if (_password === this.dataModel.password) {
       this.updateLastDate();
       return true;
