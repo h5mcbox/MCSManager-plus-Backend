@@ -26,12 +26,6 @@ WebSocketObserver().define("server/console/ws", async data => {
 
   if (permission.isCanServer(userName, serverName)) {
     MCSERVER.log(`[${serverName}] >>> 准许用户 ${userName} 控制台监听`);
-    /*
-    // 重置用户历史指针
-    const instanceLogHistory = serverModel.ServerManager().getServer(serverName).logHistory;
-    if (instanceLogHistory) instanceLogHistory.setPoint(userName, 0);
-    return;
-    */
     // 设置监听终端
     data.WsSession["console"] = serverName;
     const { worker } = serverModel.ServerManager().getServer(serverName);
@@ -39,7 +33,7 @@ WebSocketObserver().define("server/console/ws", async data => {
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
       return false;
     }
-    return await worker.call("server/console/ws", data.body);
+    return await worker.call("server/console/ws", { serverName, userName });
   }
 
   MCSERVER.log(`[${serverName}] >>> 拒绝用户 ${userName} 控制台监听`);

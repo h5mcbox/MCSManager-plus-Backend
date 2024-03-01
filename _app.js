@@ -104,7 +104,6 @@ MCSERVER.info("控制面板正在启动中...");
   const USERS_PATH = "./users/";
   const WORKERS_PATH = "./workers/";
   const SERVER_PATH = "./server/";
-  const SERVER_PATH_SCH = "./server/schedule/";
   const CENTEN_LOG_JSON_PATH = "./core/info.json";
   const PUBLIC_URL_PATH = "./public/common/URL.js";
 
@@ -112,7 +111,6 @@ MCSERVER.info("控制面板正在启动中...");
     if (!fs.existsSync(USERS_PATH)) fs.mkdirSync(USERS_PATH);
     if (!fs.existsSync(WORKERS_PATH)) fs.mkdirSync(WORKERS_PATH);
     if (!fs.existsSync(SERVER_PATH)) fs.mkdirSync(SERVER_PATH);
-    if (!fs.existsSync(SERVER_PATH_SCH)) fs.mkdirSync(SERVER_PATH_SCH);
 
     // 生成不 git 同步的文件
     if (!fs.existsSync(CENTEN_LOG_JSON_PATH)) tools.mCopyFileSync(INIT_CONFIG_PATH + "info_reset.json", CENTEN_LOG_JSON_PATH);
@@ -127,7 +125,6 @@ const ServerModel = require("./model/ServerModel");
 const UserModel = require("./model/UserModel");
 const permission = require("./helper/Permission");
 const counter = require("./core/counter");
-const Schedule = require("./helper/Schedule");
 //const NewsCenter = require("./model/NewsCenter");
 
 //全局数据中心 记录 CPU 内存
@@ -362,9 +359,6 @@ app.use("/fs", require("./onlinefs/controller/function"));
 
   MCSERVER.infoLog("Module", "正在初始化服务端管理模块");
   ServerModel.ServerManager().loadALLMinecraftServer();
-
-  MCSERVER.infoLog("Module", "正在初始化计划任务模块");
-  Schedule.init();
 
   let host = MCSERVER.localProperty.http_ip;
   let port = MCSERVER.localProperty.http_port;

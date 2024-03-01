@@ -18,11 +18,11 @@ WebSocketObserver().define("genuser/home", async data => {
     }
     let allowedServerList = user.allowedServer();
     // 判断是否为管理员，若是的话则返回所有服务端的数据
-    let allServersNames = [], workerNames = [];
-    for (let item of workerCenter.getOnlineWorkers()) {
-      let ResponseValue = await item.call("server/view");
-      workerNames.push(item.dataModel.workername);
-      ResponseValue.items.forEach(e => allServersNames.push(e.serverName));
+    let allServersNames = [], workerNames = new Set;
+    for (let worker of workerCenter.getOnlineWorkers()) {
+      let servers = await worker.call("server/view");
+      workerNames.add(worker.dataModel.workername);
+      servers.items.forEach(e => allServersNames.push(e.serverName));
     }
     if (permission.hasRights(data.WsSession.username, "server")) {
       allowedServerList = [];
@@ -70,7 +70,7 @@ WebSocketObserver().define("genuser/home", async data => {
       OnlineServerList: OnlineServerList,
     }
     if (permission.hasRights(data.WsSession.username, "server")) {
-      resObj.workerNames = workerNames;
+      resObj.workerNames = [...workerNames];
     } else {
       resObj.workerNames = [];
     }

@@ -7,12 +7,11 @@ const permssion = require("../../helper/Permission");
 WebSocketObserver().define("server/view", async data => {
   if (!permssion.hasRights(data.WsSession.username, "server:overview")) return;
   let allServers = [];
-  for (let item of workerModel.getOnlineWorkers()) {
-    (await item.call("server/view", data.body)).items.forEach(e => allServers.push(e));
+
+  for (let { status, value } of await Promise.allSettled(workerModel.getOnlineWorkers().map(item => item.call("server/view")))) {
+    if (status === "fulfilled") allServers.push(...value.items);
   }
-  return {
-    items: allServers
-  };
+  return { items: allServers };
 });
 
 WebSocketObserver().define("server/get", async data => {
@@ -112,7 +111,8 @@ WebSocketObserver().define("server/opt_all", async data => {
   if (!permssion.hasRights(data.WsSession.username, "server:operateAllServer")) return;
 
   try {
-    for (let item of workerModel.getOnlineWorkers()) await item.call("server/opt_all");
+    await Promise.all(workerModel.getOnlineWorkers().map(async item => await item.call("server/opt_all", data.body)));
+    response.wsMsgWindow(data.ws, "操作执行发出！需要一定时间,具体结果请看服务端运行状态.");
     return true;
   } catch (err) {
     response.wsMsgWindow(data.ws, "执行失败:" + err);

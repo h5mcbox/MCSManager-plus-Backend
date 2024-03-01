@@ -125,7 +125,7 @@ class Worker {
   /**
    * @param {String} path
    * @param {String} data
-   * @returns {Promise<any[]>}
+   * @returns {Promise<*>}
    */
   async call(path, data) {
     if (!this.connected) await this.connect();

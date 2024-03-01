@@ -30,29 +30,3 @@ module.exports.createServer = (serverName, config) => {
 module.exports.deleteServer = (serverName) => {
   return onlyServerManager.delMinecraftServer(serverName);
 };
-//服务端中心 用于判断所有运行服务端是否到期 | 每2个小时检查一次
-//https://www.npmjs.com/package/node-schedule
-/*
-const schedule = require("node-schedule");
-schedule.scheduleJob("1 0 a/2 a a a", function () {
-  let serverCollect = onlyServerManager.getServerObjects();
-  try {
-    for (let k in serverCollect) {
-      let server = serverCollect[k];
-      if (server && server.isRun()) {
-        let res = server.isDealLineDate();
-        if (res) {
-          MCSERVER.log("[时间期限] 服务端 [", server.dataModel.name, "]", "于现在过期，正在执行关闭程序.");
-          //先进行标准流程关闭服务端，如果 45 秒后未关闭，则强制性结束进程
-          server.stopServer();
-          setTimeout(() => {
-            server.kill();
-          }, 45 * 1000);
-        }
-      }
-    }
-  } catch (err) {
-    MCSERVER.error("[时间期限] 关闭服务端时出现异常，某个服务端可能未能正确关闭:", err);
-  }
-});
-*/

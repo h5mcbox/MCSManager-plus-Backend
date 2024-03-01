@@ -57,9 +57,10 @@ setInterval(async function () {
   for (let k in MCSERVER.login) MCSERVER.login[k] > 10 ? banipc++ : banipc;
   //获取正在运行服务器的数量
   let allOnlineServers = 0;
-  for (let item of workerModel.getOnlineWorkers()) {
-    let ResponseValue = await item.call("server/view");
-    ResponseValue.items.forEach(e => { if (e.data.run) allOnlineServers++ });
+  for (let { status, value } of await Promise.allSettled(workerModel.getOnlineWorkers().map(worker => worker.call("server/view")))) {
+    if (status === "fulfilled")
+      for (let serverInfo of value.items)
+        if (serverInfo.data.run) allOnlineServers++;
   }
   //缓存值
   cacheSystemInfo = {

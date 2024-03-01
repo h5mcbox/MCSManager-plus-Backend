@@ -54,7 +54,7 @@
         }
       } catch (e) {
         console.log("Websocket 数据到达时逻辑异常:");
-        console.log(e);
+        console.error(e);
       }
     }
     onerror(err) {

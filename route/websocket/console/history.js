@@ -3,12 +3,10 @@ const permission = require("../../../helper/Permission");
 const serverModel = require("../../../model/ServerModel");
 const response = require("../../../helper/Response");
 
-const HISTORY_SIZE_LINE = 1024;
-
 // 正序历史记录路由
 WebSocketObserver().define("server/console/history", async data => {
   let { WsSession: { username: userName }, body: reqBody } = data;
-  let serverName = reqBody["serverName"] || "";
+  let serverName = reqBody["serverName"] ?? "";
 
   if (permission.isCanServer(userName, serverName)) {
     const { worker } = serverModel.ServerManager().getServer(serverName);
@@ -16,8 +14,8 @@ WebSocketObserver().define("server/console/history", async data => {
       response.wsMsgWindow(data.ws, "出错:" + "Worker不存在");
       return false;
     }
-    let ResponseValue = await worker.call("server/console/history", data.body);
-    response.wsSend(data.ws, "server/console/history", ResponseValue);
+    let history = await worker.call("server/console/history", { serverName, userName });
+    response.wsSend(data.ws, "server/console/history", history);
     return null;
   }
 });

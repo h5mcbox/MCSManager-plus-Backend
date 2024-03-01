@@ -78,12 +78,6 @@ MCSERVER.localProperty.customize_commande = true;
 //单位 分钟 | 默认 240 分钟
 MCSERVER.localProperty.session_max_age = 240
 
-
-//每个服务器拥有的最大计划任务数量
-//默认 10 个
-MCSERVER.localProperty.schedule_max = 10;
-
-
 //所有用户总数，最高解压缩任务上限
 //默认最大同时解压1个压缩文件，多余的会排队进行
 MCSERVER.localProperty.max_eac_task_limit = 1;

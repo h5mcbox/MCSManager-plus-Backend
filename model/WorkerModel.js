@@ -4,5 +4,5 @@ const Worker=require("../core/Workers/Worker")
 let OnlyWorkerCenters = new WorkerCenter();
 module.exports = OnlyWorkerCenters;
 (async () => {
-  for (let { workername } of OnlyWorkerCenters.getWorkerList()) await OnlyWorkerCenters.get(workername).connect();
+  for (let { workername } of OnlyWorkerCenters.getWorkerList()) OnlyWorkerCenters.get(workername).connect();
 })();

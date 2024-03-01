@@ -65,11 +65,10 @@ router.get("/server", async function (req, res) {
     apiResponse.forbidden(res);
     return;
   }
-  var allServers = [];
-  for (let item of WorkerCenter.getOnlineWorkers()) {
-    for (let e of await item.call("server/view")) allServers.push(e);
+  let allServers = [];
+  for (let { status, value } of await Promise.allSettled(workerModel.getOnlineWorkers().map(item => item.call("server/view")))) {
+    if (status === "fulfilled") allServers.push(...value.items);
   }
-  //const list = serverModel.ServerManager().getServerList();
   apiResponse.send(res, allServers);
 });
 
