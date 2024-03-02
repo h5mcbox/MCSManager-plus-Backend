@@ -225,8 +225,8 @@
         }
       }
     });
-    $("#WebTerminalScreenWapper").removeAttr("style");
-    $("#WebTerminalScreenWapper").css("display", "none");
+    document.querySelector("#WebTerminalScreenWapper").removeAttribute("style");
+    document.querySelector("#WebTerminalScreenWapper").style.display = "none";
   }
 
   initTerminal();

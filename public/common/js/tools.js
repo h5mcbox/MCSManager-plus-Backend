@@ -265,20 +265,34 @@
   // 弹窗
   var _popWindCallback = null;
   TOOLS.popWind = function (config) {
-    var popWinContext = $("#PopWinContext");
-    _popWindCallback = config.callback || function () { }; //全局的callback变量
-    var css = config.style || {
+    var popWinContext = document.querySelector("#PopWinContext");
+    _popWindCallback = config.callback ?? function () { }; //全局的callback变量
+    var css = config.style ?? {
       display: "block"
     };
-    popWinContext.html("<p>正在加载信息框,请稍等...</p>");
+    popWinContext.innerHTML="<p>正在加载信息框,请稍等...</p>";
 
-    $("#PopWinTitle").html(config.title || "信息对话框");
-    $(".PopWin").css(css).css({
+    document.querySelector("#PopWinTitle").innerHTML=config.title ?? "信息对话框";
+    Object.assign(document.querySelector(".PopWin").style,css,{display: "block"});
+    Object.assign(document.querySelector("#balckWarp").style,{
       display: "block"
     });
-    $("#balckWarp").css({
-      display: "block"
-    });
+    fetch(config.template).then(res=>{
+      if(res.ok)return res.text();
+      else {
+        popWinContext.innerHTML="信息框加载失败！请保持网络通畅！单击灰色区域关闭！";
+        return "";
+      }
+    }).then(text=>{
+      let elem = popWinContext;
+      elem.innerHTML = text;
+      for (let script of [...elem.querySelectorAll("script")]) {
+        let newScript = document.createElement("script");
+        for (let { name, value } of [...script.attributes]) newScript.setAttribute(name, value);
+        newScript.appendChild(document.createTextNode(script.innerHTML));
+        script.replaceWith(newScript);
+      }
+    })
     popWinContext.load(config.template, function (response, status, xhr) {
       if (status != "success") {
         popWinContext.html("信息框加载失败！请保持网络通畅！单击灰色区域关闭！");
@@ -288,8 +302,8 @@
   };
 
   TOOLS.popWindClose = function (res) {
-    $(".PopWin").removeAttr("style");
-    $("#balckWarp").removeAttr("style");
+    document.querySelector(".PopWin").removeAttribute("style");
+    document.querySelector("#balckWarp").removeAttribute("style");
     //返回结果
     _popWindCallback(res);
     _popWindCallback = null;
@@ -297,11 +311,9 @@
 
   TOOLS.blackJumbotron = function (boolean) {
     if (boolean) {
-      $("#balckWarp").css({
-        display: "block"
-      });
+      document.querySelector("#balckWarp").style.display="block";
     } else {
-      $("#balckWarp").removeAttr("style");
+      document.querySelector("#balckWarp").removeAttribute("style");
     }
   };
 
@@ -400,13 +412,13 @@
     MCSERVER.listenServername = PAGE.serverName = serverName;
     await WS.call("server/console/ws", serverName);
     MCSERVER.term.simpleLoadHistory();
-    $("#WebTerminalScreenWapper").removeAttr("style");
+    document.querySelector("#WebTerminalScreenWapper").removeAttribute("style");
   };
 
   // 退出监听实例，停止接受控制台信息
   TOOLS.CloseTerminal = async function () {
     await WS.call("server/console/remove", "");
-    $("#WebTerminalScreenWapper").css("display", "none");
+    document.querySelector("#WebTerminalScreenWapper").style.display="none";
     MCSERVER.term.clear();
     MCSERVER.term.prompt();
   };

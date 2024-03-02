@@ -116,12 +116,11 @@
 })();
 
 (function () {
-  var $SideCol = $("#SideCol");
-  // $Container = $('#Container');
+  var SideCol = document.querySelector("#SideCol");
 
   // 获取菜单栏状态
   MCSERVER.getColmStatus = function () {
-    if ($SideCol[0].style.display == "none") {
+    if (SideCol.style.display == "none") {
       return false;
     }
     return true;
@@ -130,11 +129,9 @@
   MCSERVER.colmSet = function (booleans) {
     MI.on("colmchange", null); //触发事件
     if (!booleans) {
-      $SideCol.css({
+      Object.assign(SideCol.style, {
+        display: "none",
         opacity: "0"
-      });
-      $SideCol.css({
-        display: "none"
       });
       // $Container.css({
       // 	'left': '0px'
@@ -147,7 +144,7 @@
       // $Container.css({
       // 	'left': '0px'
       // });
-      $SideCol.css({
+      Object.assign(SideCol.style, {
         display: "block",
         opacity: "1"
       });

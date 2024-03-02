@@ -7,9 +7,13 @@
     TOKEN: null,
     getToken(callback) {
       //同源策略可以防止其他域对这里发送一个Ajax请求.
-      var _url = MCSERVER.URL("./token?_LoveYouMaster_Time=" + Date.parse(new Date()));
-      $.get(_url, function (data) {
-        data = JSON.parse(data);
+      let _url = MCSERVER.URL("./token");
+      fetch(_url, {
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        cache: "no-cache"
+      }).then(res => res.json()).then(function (data) {
         if (data.hasOwnProperty("ResponseValue")) {
           MCSERVER.username = data["ResponseValue"].username;
           callback(data["ResponseValue"].token);
@@ -28,56 +32,69 @@
 
       var tokenV = parameter["token"] || RES.TOKEN;
       if (tokenV != null) parameter["url"] += "?" + TOKEN_NAME + "=" + tokenV;
+      AbortSignal.timeout ??= function timeout(ms) {
+        const ctrl = new AbortController;
+        setTimeout(() => ctrl.abort(), ms);
+        return ctrl.signal;
+      }
 
-      $.ajax({
-        type: parameter["type"] || "POST",
-        url: MCSERVER.URL(parameter["url"]),
-        data: parameter["data"], //具体实例化
-        timeout: parameter["timeout"] || 10000,
-        success: function (data, textStatus) {
-          try {
-            data = JSON.parse(data);
-            if (typeof data == "object") {
-              if (data["ResponseKey"]) {
-                window.MI.routeOn(data["ResponseKey"], data["ResponseValue"]);
-              }
+      fetch(MCSERVER.URL(parameter["url"]), {
+        method: parameter["type"] || "POST",
+        body: ["GET", "HEAD"].includes((parameter['type'] ?? "GET").toUpperCase()) ? undefined : JSON.stringify(parameter["data"]), //具体实例化
+        signal: AbortSignal.timeout(parameter["timeout"] || 10000),
+        //processData: parameter["processData"] == false || true,
+        //traditional: parameter["traditional"] == false || true,
+        cache: parameter["cache"] ? "force-cache" : "no-cache" ?? "no-cache"
+      }).then(res => {
+        if (res.ok) {
+          return res.text();
+        } else {
+          if (parameter["error"]) parameter["error"]();
+          DEBUG && console.log("Fetch ERROR 回调触发");
+          DEBUG && console.log(res.statusText);
+          //DEBUG && console.log(errorThrown);
+          DEBUG && console.log(res.text());
+          window.MI.routeOn("ajax/error", null);
+        }
+      }).then(function (data) {
+        try {
+          data = JSON.parse(data);
+          if (typeof data == "object") {
+            if (data["ResponseKey"]) {
+              window.MI.routeOn(data["ResponseKey"], data["ResponseValue"]);
             }
-          } catch (e) {
-            DEBUG && console.log("$.ajax 响应数据非一个JSON对象");
-          } finally {
-            if (parameter["success"]) parameter["success"](data, textStatus);
           }
-        },
-        error: function (XML, textStatus, errorThrown) {
-          if (parameter["error"]) parameter["error"](XML);
-          DEBUG && console.log("Ajax ERROR 回调触发");
-          DEBUG && console.log(XML);
-          DEBUG && console.log(textStatus);
-          DEBUG && console.log(errorThrown);
-          DEBUG && console.log(XML.responseText);
-          window.MI.routeOn("ajax/error", XML);
-        },
-        processData: parameter["processData"] == false || true,
-        traditional: parameter["traditional"] == false || true,
-        cache: parameter["cache"] || false
+        } catch (e) {
+          DEBUG && console.log("$.ajax 响应数据非一个JSON对象");
+        } finally {
+          if (parameter["success"]) parameter["success"](data);
+        }
       });
     },
-    redirectHTML(url,callback) {
+    redirectHTML(url, callback) {
       //静态文件均在 public 目录下，动态文件则在不同API接口
       var _url = MCSERVER.URL("./public/" + url);
 
-      //响应事件函数
-      function responseCallback(response, status) {
-        if (status != "success") TOOLS.pushMsgWindow("[ " + status + " ] 由于网络或权限问题,请求的网页无法成功！");
-        callback && callback();
-      }
-
       window.scrollTo(0, 0);
 
-      $("#ConsoleMain").load(_url, responseCallback);
+      fetch(_url).then(res => {
+        if (res.ok) return res.text();
+        else {
+          TOOLS.pushMsgWindow(`[ ${res.status} ] 由于网络或权限问题,请求的网页无法成功！`);
+        }
+      }).then(text => {
+        let elem = document.querySelector("#ConsoleMain");
+        elem.innerHTML = text;
+        for (let script of [...elem.querySelectorAll("script")]) {
+          let newScript = document.createElement("script");
+          for (let { name, value } of [...script.attributes]) newScript.setAttribute(name, value);
+          newScript.appendChild(document.createTextNode(script.innerHTML));
+          script.replaceWith(newScript);
+        }
+        callback && callback();
+      })
     },
     redirectPage(url, callback) {
-      var showUrl = url.replace(".", "");
       TOOLS.setHeaderTitle(["正在加载...."].join(" "));
       ToolsLoadingStart(function () {
         MI.rOn("onend");
@@ -107,39 +124,33 @@
   });
 
 
-  var PageMain = $("#ConsoleMain");
-  var ToolsLoading = $("#ToolsLoading"); //进度条
-  var ToolsPageLoading = $("#ToolsPageLoading"); //进度条容器
+  var PageMain = document.querySelector("#ConsoleMain");
+  var ToolsLoading = document.querySelector("#ToolsLoading"); //进度条
+  var ToolsPageLoading = document.querySelector("#ToolsPageLoading"); //进度条容器
 
   function ToolsLoadingStart(callback) {
-    ToolsLoading.css("width", "0%");
-    ToolsPageLoading.css("display", "block");
-    PageMain.stop(true, true).animate(
-      {
-        opacity: "0"
-      },
-      150,
-      callback
-    );
+    ToolsLoading.style.width = "0%";
+    ToolsPageLoading.style.display = "block";
+    let animations = [{ opacity: "0" }];
+    PageMain.animate(animations, 150).onfinish = () => {
+      for (let animate of animations) Object.assign(PageMain.style, animate);
+      callback();
+    }
   }
 
   function PageLoading() {
-    ToolsLoading.css("width", "70%");
+    ToolsLoading.style.width = "70%";
   }
 
   function ToolsLoadingEnd() {
-    ToolsLoading.css("width", "100%");
+    ToolsLoading.style.width = "100%";
 
-    PageMain.stop(true, true).animate(
-      {
-        opacity: "1"
-      },
-      150,
-      function () {
-        setTimeout(function () {
-          ToolsPageLoading.css("display", "none");
-        }, 150);
-      }
-    );
+    let animations = [{ opacity: "1" }];
+    PageMain.animate(animations, 150).onfinish = e => {
+      for (let animate of animations) Object.assign(PageMain.style, animate);
+      setTimeout(function () {
+        ToolsPageLoading.style.display = "none";
+      }, 150);
+    }
   }
 })();

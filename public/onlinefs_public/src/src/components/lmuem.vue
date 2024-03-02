@@ -56,7 +56,7 @@ export default {
   methods: {
     formSub(e) {
       this.allowUpload = false;
-      let file = $("#m-upload-file")[0].files[0];
+      let file = document.querySelector("#m-upload-file").files[0];
       functionMudule
         .upload(file, status => {
           this.items[2].name = "正在上传.." + status + "%";
@@ -84,7 +84,7 @@ export default {
           location.reload();
           break;
         case "上传文件":
-          if (this.allowUpload) $("#m-upload-file").click();
+          if (this.allowUpload) document.querySelector("#m-upload-file").click();
           else tools.popWindow("当前再禁止上传文件，请点击刷新即可再次上传。");
           break;
         case "复制":

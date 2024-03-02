@@ -31,20 +31,27 @@ class Ajax {
 			this.parameter['data'] = JSON.stringify(this.parameter['data']);
 
 		if (DEBUG) console.log("发起 Ajax:", this.parameter['url'], "数据:" + this.parameter.data);
-		$.ajax({
-			type: this.parameter['type'] || "POST",
-			url: encodeURI(this.parameter['url']),
-			data: {
+		AbortSignal.timeout ??= function timeout(ms) {
+			const ctrl = new AbortController;
+			setTimeout(() => ctrl.abort(), ms);
+			return ctrl.signal;
+		}
+
+		fetch(encodeURI(this.parameter['url']), {
+			method: this.parameter['type'] || "POST",
+			body: ["GET", "HEAD"].includes((this.parameter['type'] ?? "GET").toUpperCase()) ? undefined : JSON.stringify({
 				request: this.parameter['data']
-			}, //具体实例化
-			timeout: this.parameter['timeout'] || 8000,
-			success: function (data) {
-				that.success(data);
-			},
-			error: function (XML, textStatus, errorThrown) {
-				that.error(XML, textStatus, errorThrown);
-			},
-			cache: this.parameter['cache'] || false
+			}), //具体实例化
+			signal: AbortSignal.timeout(this.parameter['timeout'] || 8000),
+			cache: parameter["cache"] ? "force-cache" : "no-cache" ?? "no-cache"
+		}).then(res => {
+			if (!res.ok) {
+				that.error(null, res.statusText, new Error);
+			} else {
+				return res.text().then(text => {
+					that.success(text);
+				});
+			}
 		});
 	}
 

@@ -292,12 +292,12 @@
           // 若未填写cwd则自动默认
           if (this.cwd == "") this.cwd = "./server/server_core/" + this.name;
           if (this.uploadPercentComplete == 0) {
-            $("#PAGE_UploadFormButton").click();
+            document.querySelector("input#PAGE_UploadFormButton").click();
           }
         },
         uploadFormChange: function (e) {
           if (this.uploadPercentComplete == 0) {
-            var file = $("#PAGE_UploadFormButton")[0].files[0];
+            var file = document.querySelector("input#PAGE_UploadFormButton").files[0];
             var filename = file.name;
             this.jarName = filename;
             var that = this;
@@ -310,17 +310,17 @@
               function (percentComplete) {
                 console.log("上传进度:", percentComplete);
                 that.uploadPercentComplete = percentComplete;
-                $("#uploadPercentComplete").text(percentComplete + "%");
+                document.querySelector("#uploadPercentComplete").innerText = `${percentComplete}%`;
               },
               function () {
                 that.uploadPercentComplete = 100;
                 TOOLS.pushMsgWindow("上传成功");
-                $("#uploadPercentComplete").text("上传成功");
+                document.querySelector("#uploadPercentComplete").innerText = "上传成功";
               },
               function () {
                 that.uploadPercentComplete = -1;
                 TOOLS.pushMsgWindow("上传失败，请稍后再进行尝试");
-                $("#uploadPercentComplete").text("上传错误，请刷新网页再重试");
+                document.querySelector("#uploadPercentComplete").innerText = "上传错误，请刷新网页再重试";
               }
             );
           }

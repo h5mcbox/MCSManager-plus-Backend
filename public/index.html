@@ -165,8 +165,6 @@
   <!--JavaScript 文件引用，顺序不能乱，大部分 js 都是依赖于前 js 的-->
   <!--Message Pack 序列化 & 反序列化 -->
   <script src="common/msgpack.js"></script>
-  <!--JQuery -->
-  <script src="common/jquery-3.2.1.min.js"></script>
   <!--Vue -->
   <script src="common/vue/vue.min.js"></script>
   <!--公用的js方法，公用的函数，类，模式-->
@@ -193,14 +191,14 @@
 
   <script>
     // 网络加载判断
-    if (!window.$) alert("[文件加载失败] 网络不通畅，请检查您的网络状态！");
+    //if (!window.$) alert("[文件加载失败] 网络不通畅，请检查您的网络状态！");
 
     // // 动态背景色，稍后会继续改变
     // $('body').css('background-color', 'rgb(243, 243, 243);');
 
     MCSERVER.website = {};
 
-    $(function () {
+    document.addEventListener("DOMContentLoaded",function () {
       //事件
       window.onresize = function () {
         MI.on("resize", null);

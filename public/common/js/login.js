@@ -63,7 +63,7 @@ addEventListener("DOMContentLoaded", function () {
     btnLogin.disabled = true;
 
     MCSERVER.login(
-      (location.pathname.endsWith("/2fa.html")) ? sessionStorage["username"] : $("#login-userid").val(),
+      (location.pathname.endsWith("/2fa.html")) ? sessionStorage["username"] : document.querySelector("#login-userid").value,
       (TwoFA ? document.querySelector("#login-code") : document.querySelector("#login-passwd")).value,
       function () {
         //成功登陆
@@ -94,7 +94,7 @@ addEventListener("DOMContentLoaded", function () {
         btnLogin.disabled = false;
       },
       TwoFA,
-      $("#login-passwd").val()
+      document.querySelector("#login-passwd").value
     );
   };
 });
