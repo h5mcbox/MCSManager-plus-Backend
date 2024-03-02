@@ -26,7 +26,6 @@ let exceptions = [
   "tmp_upload",
   "logs",
   "dist/",
-  "app.package.json",
   "cert.pem",
   "key.pem",
   "property.js",
@@ -36,6 +35,8 @@ let exceptions = [
 ].map(e => normalize(e));
 let exceptionsEnd = [
   ".js.map",
+  "package-lock.json",
+  ".md"
 ];
 let bufs = [];
 let cursor = 0;
