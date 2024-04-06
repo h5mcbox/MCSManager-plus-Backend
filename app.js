@@ -47,7 +47,7 @@ function moduleEntry(returnMethod) {
             throw new Error("Need an vaild parameter.");
           }
         }
-        let cryptoKeyMap = new WeakMap();
+        let cryptoKeyMap = new WeakMap;
         function importKey(exportable, Key) {
           if (!((Key instanceof ArrayBuffer) || (Key instanceof Uint8Array))) throw new Error("You can't import key because Key is not a instance of ArrayBuffer or a Uint8Array");
           if (Key instanceof ArrayBuffer) Key = new Uint8Array(Key);
@@ -166,9 +166,7 @@ function moduleEntry(returnMethod) {
          * @returns {jacobianPoint}
          */
         function jacobianDouble(pA) {
-          if (pA.y == 0) {
-            return new jacobianPoint(0n, 0n, 0n);
-          };
+          if (pA.y == 0) return new jacobianPoint(0n, 0n, 0n);
           let r = mod(3n * pA.x ** 2n + a * pA.z ** 4n, p);
           let y2 = mod(pA.y ** 2n, p);
           let t = mod(4n * pA.x * y2, p);
@@ -185,12 +183,8 @@ function moduleEntry(returnMethod) {
          * @returns {jacobianPoint}
          */
         function jacobianAdd(pA, pB) {
-          if (pA.y == 0n) {
-            return pB;
-          };
-          if (pB.y == 0n) {
-            return pA;
-          };
+          if (pA.y == 0n) return pB;
+          if (pB.y == 0n) return pA;
           let yBzA3 = mod(pB.y * (pA.z ** 3n), p);
           let yAzB3 = mod(pA.y * (pB.z ** 3n), p);
           let u = yBzA3 - yAzB3;
@@ -198,11 +192,8 @@ function moduleEntry(returnMethod) {
           let xBzA2 = mod(pB.x * (pA.z ** 2n), p);
           let v = xBzA2 - xAzB2;
           if (xAzB2 === xBzA2) {
-            if (yAzB3 === yBzA3) {
-              return jacobianDouble(pA);
-            } else {
-              return new jacobianPoint(0n, 0n, 1n);
-            }
+            if (yAzB3 === yBzA3) return jacobianDouble(pA);
+            else return new jacobianPoint(0n, 0n, 1n);
           }
           let v2 = mod(v * v, p);
           let v3 = mod(v2 * v, p);
@@ -213,22 +204,12 @@ function moduleEntry(returnMethod) {
           return new jacobianPoint(x, y, z);
         };
         function jacobianMultiply(pA, k) {
-          if (pA.y === 0n || k === 0n) {
-            return new Point(0n, 0n, 1n);
-          };
-          if (k === 1n) {
-            return pA;
-          };
-          if (k < 0n || k >= n) {
-            return jacobianMultiply(pA, mod(k, n));
-          };
+          if (pA.y === 0n || k === 0n) return new jacobianPoint(0n, 0n, 1n);
+          if (k === 1n) return pA;
+          if (k < 0n || k >= n) return jacobianMultiply(pA, mod(k, n));
           let nextLevel = jacobianDouble(jacobianMultiply(pA, k / 2n));
-          if (mod(k, 2n) === 0n) {
-            return nextLevel;
-          };
-          if (mod(k, 2n) === 1n) {
-            return jacobianAdd(nextLevel, pA);
-          };
+          if (mod(k, 2n) === 0n) return nextLevel;
+          if (mod(k, 2n) === 1n) return jacobianAdd(nextLevel, pA);
           throw new Error(`unexcept number or point.`);
         };
         let BasePoint = new Point(basePoint.x, basePoint.y);
