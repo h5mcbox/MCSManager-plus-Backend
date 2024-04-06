@@ -1,7 +1,7 @@
 const VERSION = 0;
 const PACKAGEFILE = "./app.apkg";
 const BACKUPPACKAGEFILE = "./app.backup.apkg";
-const PUBLICKEY = "02f0251528c2917ad1bb93ccf455b6576435560b2c7571d3c3792accdb544b8781";
+const PUBLICKEY = "AwyPvgDglBftqWVdnJVLfwLpK8sERtCt26+ZwehjRRPY";
 function moduleEntry(returnMethod) {
   //unpacker
   let unpack = (function () {
@@ -9,7 +9,7 @@ function moduleEntry(returnMethod) {
       const { createHash } = require('crypto');
       const hash = data => createHash('sha256').update(data).digest('hex');
 
-      const ECC = function simpleECC(basePoint, a, b, p, n, l, hl, hashFunction) {
+      const ECC = function simpleECC(basePoint, a, b, p, n, hl, hashFunction) {
         const curveSet = {
           "secp256k1": [
             {
@@ -20,7 +20,6 @@ function moduleEntry(returnMethod) {
             7n,
             2n ** 256n - 2n ** 32n - 2n ** 9n - 2n ** 8n - 2n ** 7n - 2n ** 6n - 2n ** 4n - 1n,
             2n ** 256n - 432420386565659656852420866394968145599n,
-            256,
             32,
             hash
           ]
@@ -71,15 +70,13 @@ function moduleEntry(returnMethod) {
         class cryptoKey {
           type;
           exportable;
-          revokeKey;
+          revokeKey() { cryptoKeyMap.delete(this); }
           constructor(type, exportable, key) {
             this.type = type;
             this.exportable = exportable;
             let KeyDescription = { type, key, exportable };
-            let KeyProxy = Proxy.revocable(KeyDescription, {});
-            this.revokeKey = KeyProxy.revoke;
             Object.freeze(this);
-            cryptoKeyMap.set(this, KeyProxy.proxy);
+            cryptoKeyMap.set(this, KeyDescription);
           }
         }
         //There passed curve check for performance
@@ -127,7 +124,10 @@ function moduleEntry(returnMethod) {
             this.x = x;
             this.y = y;
           }
+          /** @param {Point} pB */add(pB) { return pointAdd(this, pB); }
+          /** @param {BigInt} n */mul(n) { return pointMul(n, this); }
         }
+
         function pointAdd(p, q) {
           return fromJacobian(jacobianAdd(toJacobian(p), toJacobian(q)));
         };
@@ -214,7 +214,7 @@ function moduleEntry(returnMethod) {
         };
         function jacobianMultiply(pA, k) {
           if (pA.y === 0n || k === 0n) {
-            return new jacobianPoint(0n, 0n, 1n);
+            return new Point(0n, 0n, 1n);
           };
           if (k === 1n) {
             return pA;
@@ -237,28 +237,24 @@ function moduleEntry(returnMethod) {
         }
         function BufferToBigInt(b) {
           let r = 0n;
-          b.forEach((e, i) => {
-            r += BigInt(e);
-            if (i == b.length - 1) return true;
-            r *= 256n;
-          });
+          for (let num of b) r = r * 256n + BigInt(num);
           return r;
         }
         function verifysign(data, sign, PublicKey) {
           if (!cryptoKeyMap.has(PublicKey)) throw new Error("This cryptoKey cannot verify the data.");
           let z = HEXtoNumber(hashFunction(data));
           let entry = cryptoKeyMap.get(PublicKey);
-          if (Buffer && sign instanceof Buffer) sign = new Uint8Array(sign);
-          else if (sign instanceof ArrayBuffer) sign = new Uint8Array(sign);
+          if (typeof Buffer !== "undefined" && sign instanceof Buffer) sign = new Uint8Array(sign);
           let rB = sign.slice(0, hl), sB = sign.slice(hl, 2 * hl);
           let rrB = removePad(rB), rsB = removePad(sB);
           let r = BufferToBigInt(rrB), s = BufferToBigInt(rsB);
           let s_inverse = get_inverse(s, n);
           let u1 = (s_inverse * z) % n;
           let u2 = (s_inverse * r) % n;
-          let p1 = pointMul(u1, BasePoint);
-          let p2 = pointMul(u2, entry.key);
-          let p3 = pointAdd(p1, p2);
+          let p1 = BasePoint.mul(u1);
+          /** @type {Point} */let PublicPoint = entry.key;
+          let p2 = PublicPoint.mul(u2);
+          let p3 = p1.add(p2);
           return p3.x === r;
         }
         return {
@@ -302,7 +298,7 @@ function moduleEntry(returnMethod) {
         throw new TypeError("错误:资源文件头无效");
       }
       function isSigned() {
-        return ECC.ECDSA.verify(`${Header.version}:${JSON.stringify(Header.entries)}`, fromHEXString(Header.sign), ECC.importKey(true, fromHEXString(_PublicKey).buffer));
+        return ECC.ECDSA.verify(`${Header.version}:${JSON.stringify(Header.entries)}`, fromHEXString(Header.sign), ECC.importKey(true, Buffer.from(_PublicKey, "base64")));
       }
       /**
        * @returns {[boolean,Object.<string,typeof package>|null]}

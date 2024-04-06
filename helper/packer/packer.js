@@ -3,13 +3,10 @@ const { brotliCompressSync, constants } = require("node:zlib");
 let readdir = require("./readdirRecurively");
 let ECC = require("../../core/User/simpleecc")("secp256k1");
 let { hash } = require("../../core/User/CryptoMine");
-const fromHEXString = hexString =>
-  new Uint8Array(hexString.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-
 const toHEXString = bytes =>
   bytes.reduce((str, byte) => str + byte.toString(16).padStart(2, '0'), '');
 const now = Math.floor(Date.now() / 1000);
-let privateKey = ECC.importKey(false, fromHEXString(signKey).buffer);
+let privateKey = ECC.importKey(false, Buffer.from(signKey, "base64"));
 let fs = require("fs");
 let path = require("path");
 let Filenames = readdir(".");
