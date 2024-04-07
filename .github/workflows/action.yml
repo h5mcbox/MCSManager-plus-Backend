@@ -9,9 +9,7 @@ jobs:
         run: |
           cd /opt/
           wget https://nodejs.org/dist/v16.16.0/node-v16.16.0-linux-x64.tar.xz
-          ls -l
           tar -Jxvf node-v16.16.0-linux-x64.tar.xz
-          ls -l
           sudo ln -s /opt/node-v16.16.0-linux-x64/bin/node /usr/bin/node
           sudo ln -s /opt/node-v16.16.0-linux-x64/bin/npm /usr/bin/npm
           wget https://github.com/tj/node-prune/releases/download/v1.0.1/node-prune_1.0.1_linux_amd64.tar.gz

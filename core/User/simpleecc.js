@@ -233,9 +233,11 @@
     return BigInt("0x" + HEX);
   }
   function randomBuffer(l) {
-    const crypto = (typeof require !== "object") ? require("crypto").webcrypto : window.crypto;
-    let buffer = new Uint8Array(l);
-    return crypto.getRandomValues(buffer);
+    const buffer = new Uint8Array(l);
+    if (globalThis.crypto) globalThis.crypto.getRandomValues(buffer);
+    else if (typeof require === "function") require("crypto").randomFillSync(buffer);
+    else throw "There aren't any secure source to generate random buffer.";
+    return buffer;
   }
   function BigIntToBuffer(n = 0n) {
     let l = Math.ceil(n.toString(16).length / 2);
@@ -273,7 +275,7 @@
       return new cryptoKey("public", exportable, pointMul(entry.key, BasePoint));
     }
   }
-  function genKeyPair(exportable = true) {
+  function generateKeyPair(exportable = true) {
     let p = generatePrivateKey(exportable);
     return [p, getPublicKey(p, exportable)];
   }
@@ -309,7 +311,7 @@
   return {
     generatePrivateKey,
     getPublicKey,
-    generateKeyPair: genKeyPair,
+    generateKeyPair,
     importKey,
     cryptoKey,
     ECDSA: {

@@ -1,7 +1,7 @@
 const VERSION = 0;
 const PACKAGEFILE = "./app.apkg";
 const BACKUPPACKAGEFILE = "./app.backup.apkg";
-const PUBLICKEY = "AwyPvgDglBftqWVdnJVLfwLpK8sERtCt26+ZwehjRRPY";
+const PUBLICKEY = "";
 function moduleEntry(returnMethod) {
   //unpacker
   let unpack = (function () {
