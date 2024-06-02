@@ -323,8 +323,8 @@ function moduleEntry(returnMethod) {
     const textd = new TextDecoder;
     const originalResolve = mod._findPath;
     const exts = Object.keys(mod._extensions);
-    const slash = normalize("./node_modules").substring(1, 2);
-    const isDir = (filename) => Object.keys(entries).filter(e => e.startsWith(normalize(filename) + slash)).length != 0;
+    const slash = path.sep;
+    const isDir = filename => Object.keys(entries).filter(e => e.startsWith(normalize(filename) + slash)).length != 0;
     function normalize(_path) {
       let result = path.resolve(_path);
       if (result.length < root.length) return path.resolve(_path);
@@ -342,10 +342,9 @@ function moduleEntry(returnMethod) {
       "fstatSync"].forEach(e => originalFsFuncs[e] = fs[e]);
     fs.readFileSync = function (p, o) {
       if (typeof p === "string") {
-        if (o === "utf8" || o === "utf-8") {
+        if (o === "utf8" || o === "utf-8")
           return (new TextDecoder).decode(entries[normalize(p)]) || originalFsFuncs.readFileSync.apply(this, arguments);
-        }
-        return entries[normalize(p)] || originalFsFuncs.readFileSync.apply(this, arguments);
+        return entries[normalize(p)] ?? originalFsFuncs.readFileSync.apply(this, arguments);
       }
     }
     function existsInPackage(p) {
@@ -366,7 +365,6 @@ function moduleEntry(returnMethod) {
     }
     fs.writeFileSync = writeMethod(originalFsFuncs.writeFileSync);
     fs.createReadStream = function (p, opts = {}) {
-      let stream = new ReadableStream();
       let done = false;
       let data;
       try {
@@ -374,15 +372,16 @@ function moduleEntry(returnMethod) {
       } catch {
         return originalFsFuncs.createReadStream.apply(this, arguments);
       }
-      opts.start = opts.start || 0;
-      opts.end = opts.end || 0;
-      stream._read = function () {
-        if (done) return undefined;
-        done = true;
-        this.push(data.subarray(opts.start, opts.end + 1));
-        this.push(null);
-      }
-      return stream;
+      opts.start = opts.start ?? 0;
+      opts.end = opts.end ?? 0;
+      return new ReadableStream({
+        read() {
+          if (done) return undefined;
+          done = true;
+          this.push(data.subarray(opts.start, opts.end + 1));
+          this.push(null);
+        }
+      });
     }
     fs.createWriteStream = writeMethod(originalFsFuncs.createWriteStream);
     fs.existsSync = function (p) {
@@ -431,10 +430,8 @@ function moduleEntry(returnMethod) {
       p = normalize(p);
       let level = p.split(slash).length;
       let inPackageFiles = Object.keys(entries).filter(e => e.startsWith(normalize(p) + slash)).map(e => path.resolve(e));
-      let inPkgFileSet = new Set();
-      for (let path of inPackageFiles) {
-        inPkgFileSet.add(normalize(path).split(slash)[level]);
-      };
+      let inPkgFileSet = new Set;
+      for (let path of inPackageFiles) inPkgFileSet.add(normalize(path).split(slash)[level]);
       let inPackage = [...inPkgFileSet];
       let originalResult;
       try {
@@ -442,8 +439,7 @@ function moduleEntry(returnMethod) {
       } catch {
         originalResult = [];
       }
-      let result = [...(new Set([...inPackage, ...originalResult]))];
-      return result;
+      return [...(new Set([...inPackage, ...originalResult]))];
     };
     ["stat", "lstat", "fstat", "readdir", "exists"].forEach(function (fn) {
       fs[fn] = function (path, optArg, callback) {
@@ -453,35 +449,29 @@ function moduleEntry(returnMethod) {
             optArg = undefined;
           }
           let result = fs[`${fn}Sync`](path);
-          setImmediate(function () {
+          setImmediate(() => {
             callback && callback(null, result);
           });
         } catch (e) {
-          setImmediate(function () {
+          setImmediate(() => {
             callback && callback(e, null);
           });
         }
       };
     });
-    ["readFile"].forEach(function (fn) {
+    ["readFile"].forEach(fn => {
       originalFsFuncs[fn] = fs[fn];
       fs[fn] = function (path, optArg, callback) {
         if (!callback) {
           callback = optArg;
           optArg = undefined;
         }
-        let result;
         try {
-          result = fs[`${fn}Sync`](path, optArg);
+          let result = fs[`${fn}Sync`](path, optArg);
+          setImmediate(() => callback(null, result));
         } catch (e) {
-          setImmediate(function () {
-            callback(e);
-          });
-          return;
+          setImmediate(() => callback(e));
         }
-        setImmediate(function () {
-          callback(null, result);
-        });
       };
     });
 
@@ -504,18 +494,14 @@ function moduleEntry(returnMethod) {
       try {
         _module.exports = JSON.parse(targetCode);
       } catch (e) {
-        err.message = filename + ': ' + err.message;
+        err.message = `${filename}: ${err.message}`;
         throw err;
       }
     };
-    const originalLookup = mod._resolveLookupPaths;
-    mod._resolveLookupPaths = function () {
-      let result = originalLookup.apply(this, arguments);
-      return result;
-    }
     mod._findPath = function () {
       arguments[1] = arguments[1]
         .map(e => path.resolve(e))
+        .map(e => e.replaceAll(fs.realpathSync("."), path.resolve(".")))
         .filter(e => e.startsWith(root));
       let result = originalResolve.apply(this, arguments);
       if (result) return result;
@@ -599,7 +585,7 @@ function DaemonEntry() {
         ProcessClosed.add(instance)
       })
       instance.off("close", exithandler);
-      setTimeout(function _() {
+      setImmediate(function _() {
         if (!ProcessClosed.has(instance)) {
           setTimeout(_, 100);
           return;
@@ -607,7 +593,7 @@ function DaemonEntry() {
         instance = cp.fork(msg.restart)
         instance.on("message", handler);
         instance.on("close", exithandler);
-      }, 0);
+      });
     }
   }
   instance.on("message", handler);

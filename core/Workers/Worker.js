@@ -48,10 +48,9 @@ class Worker {
     let nowStr = new Date().toLocaleString();
     let now = Math.floor(Date.now() / 1000);
     try {
-      let u = new URL(this.dataModel.RemoteDescription.endpoint);
+      let u = new URL("/token", this.dataModel.RemoteDescription.endpoint);
       let timeWindow = Math.floor(now / 10);
       let timeKey = hash.hmac(this.dataModel.MasterKey, timeWindow.toString());
-      u.pathname = "/token";
       u.searchParams.set("apikey", timeKey);
       let res = await fetch(u);
       let reso = await res.json();
